@@ -1,0 +1,115 @@
+.code-viewer {
+  flex: 1;
+  overflow-y: auto;
+  background: var(--bg-primary);
+  border-right: 1px solid var(--border);
+}
+
+.code-section {
+  border-bottom: 1px solid var(--border);
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  cursor: pointer;
+  user-select: none;
+  gap: 8px;
+  transition: background-color var(--transition);
+  position: relative;
+}
+
+.section-header:hover {
+  background: var(--bg-secondary);
+}
+
+.section-header.active {
+  background: var(--bg-secondary);
+}
+
+.section-category-bar {
+  width: 3px;
+  height: 100%;
+  position: absolute;
+  left: 0;
+  top: 0;
+  border-radius: 0 2px 2px 0;
+}
+
+.section-chevron {
+  font-size: 10px;
+  transition: transform var(--transition);
+  color: var(--text-secondary);
+  width: 16px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.section-chevron.expanded {
+  transform: rotate(90deg);
+}
+
+.section-number {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  min-width: 20px;
+}
+
+.section-title {
+  font-size: 13px;
+  font-weight: 500;
+  flex: 1;
+}
+
+.section-lines {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.code-block {
+  background: var(--code-bg);
+  color: var(--code-text);
+  font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
+  font-size: 12px;
+  line-height: 1.6;
+  overflow-x: auto;
+  padding: 8px 0;
+}
+
+/* Override Prism theme background to use our custom code background */
+.code-block code[class*="language-"],
+.code-block pre[class*="language-"] {
+  background: none;
+  text-shadow: none;
+}
+
+.code-line {
+  display: flex;
+  padding: 0 12px;
+  min-height: 20px;
+}
+
+.code-line:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.line-number {
+  color: #666;
+  min-width: 40px;
+  text-align: right;
+  padding-right: 16px;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.line-content {
+  white-space: pre;
+  flex: 1;
+}
+
+.variable-hover {
+  cursor: help;
+  border-bottom: 1px dotted var(--accent);
+}

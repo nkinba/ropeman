@@ -1,0 +1,26 @@
+export interface SkeletonSymbol {
+	name: string;
+	kind: 'function' | 'class' | 'method' | 'import';
+	badges?: string[];
+	children?: SkeletonSymbol[];
+}
+
+export interface SkeletonImport {
+	source: string;
+	specifiers: string[];
+}
+
+export interface SkeletonFile {
+	path: string;
+	language: string | null;
+	symbols: SkeletonSymbol[];
+	imports: SkeletonImport[];
+}
+
+export interface SkeletonPayload {
+	projectName: string;
+	totalFiles: number;
+	totalSymbols: number;
+	files: SkeletonFile[];
+	generatedAt: string;
+}

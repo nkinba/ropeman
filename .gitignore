@@ -1,0 +1,38 @@
+# Dependencies
+node_modules/
+
+# Build output
+build/
+dist/
+.svelte-kit/
+
+# Test
+test-results/
+tests/screenshots/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Claude Code (session-local)
+.claude/
+CLAUDE.md
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor swap
+*.swp
+*.swo
+*~
+
+# Lock files (bun)
+bun.lock
+
+docs/private/
