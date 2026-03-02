@@ -2,49 +2,92 @@
   import { settingsStore } from '$lib/stores/settingsStore.svelte';
   import { authStore } from '$lib/stores/authStore.svelte';
   import { connectBridge, disconnectBridge } from '$lib/services/bridgeService';
+  import { AI_PROVIDERS, getProvider, getDefaultModel } from '$lib/data/aiProviders';
+  import type { AIProviderId } from '$lib/stores/settingsStore.svelte';
 
   let { open, onclose }: { open: boolean; onclose: () => void } = $props();
 
   let activeTab = $state<'byok' | 'bridge'>('byok');
-  let apiKey = $state(settingsStore.geminiApiKey);
   let testStatus = $state<'idle' | 'testing' | 'success' | 'error'>('idle');
   let testError = $state('');
   let bridgePort = $state(authStore.bridgePort);
 
+  // Provider/model selection
+  let selectedProvider = $state<AIProviderId>(settingsStore.aiProvider);
+  let selectedModel = $state(settingsStore.aiModel);
+
+  const currentProvider = $derived(getProvider(selectedProvider));
+  const providerModels = $derived(currentProvider?.models ?? []);
+  const requiresBridge = $derived(currentProvider?.requiresBridge ?? false);
+
+  // API key based on selected provider
+  const apiKeyValue = $derived.by(() => {
+    if (selectedProvider === 'google') return settingsStore.geminiApiKey;
+    if (selectedProvider === 'anthropic') return settingsStore.anthropicApiKey;
+    return '';
+  });
+
   $effect(() => {
     if (open) {
-      apiKey = settingsStore.geminiApiKey;
+      selectedProvider = settingsStore.aiProvider;
+      selectedModel = settingsStore.aiModel;
       testStatus = 'idle';
       bridgePort = authStore.bridgePort;
     }
   });
 
+  function handleProviderChange(e: Event) {
+    const newProvider = (e.target as HTMLSelectElement).value as AIProviderId;
+    selectedProvider = newProvider;
+    settingsStore.aiProvider = newProvider;
+    // Auto-select default model for new provider
+    const defaultModel = getDefaultModel(newProvider);
+    selectedModel = defaultModel;
+    settingsStore.aiModel = defaultModel;
+    testStatus = 'idle';
+  }
+
+  function handleModelChange(e: Event) {
+    selectedModel = (e.target as HTMLSelectElement).value;
+    settingsStore.aiModel = selectedModel;
+  }
+
   function handleApiKeyInput(e: Event) {
-    apiKey = (e.target as HTMLInputElement).value;
-    settingsStore.geminiApiKey = apiKey;
+    const value = (e.target as HTMLInputElement).value;
+    if (selectedProvider === 'google') {
+      settingsStore.geminiApiKey = value;
+    } else if (selectedProvider === 'anthropic') {
+      settingsStore.anthropicApiKey = value;
+    }
   }
 
   async function testKey() {
-    if (!apiKey) return;
+    const key = apiKeyValue;
+    if (!key) return;
     testStatus = 'testing';
     testError = '';
+
     try {
-      const res = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`,
-        {
+      if (selectedProvider === 'google') {
+        const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${selectedModel}:generateContent`;
+        const res = await fetch(`${endpoint}?key=${key}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             contents: [{ parts: [{ text: 'Say "ok"' }] }],
             generationConfig: { maxOutputTokens: 8 },
           }),
+        });
+        if (res.ok) {
+          testStatus = 'success';
+        } else {
+          const data = await res.json().catch(() => ({}));
+          testError = (data as { error?: { message?: string } })?.error?.message || `HTTP ${res.status}`;
+          testStatus = 'error';
         }
-      );
-      if (res.ok) {
-        testStatus = 'success';
-      } else {
-        const data = await res.json().catch(() => ({}));
-        testError = (data as { error?: { message?: string } })?.error?.message || `HTTP ${res.status}`;
+      } else if (selectedProvider === 'anthropic') {
+        // Anthropic has CORS restrictions for browser direct calls
+        testError = 'Anthropic API cannot be called directly from the browser due to CORS. Use Local Bridge mode instead.';
         testStatus = 'error';
       }
     } catch (err) {
@@ -113,25 +156,52 @@
       <div class="connect-body">
         {#if activeTab === 'byok'}
           <section class="connect-section">
-            <label class="connect-label">Gemini API Key</label>
-            <div class="connect-row">
-              <input
-                type="password"
-                class="connect-input"
-                placeholder="Enter Gemini API key"
-                value={apiKey}
-                oninput={handleApiKeyInput}
-              />
-              <button class="connect-btn" onclick={testKey} disabled={!apiKey || testStatus === 'testing'}>
-                {testStatus === 'testing' ? '...' : 'Test'}
-              </button>
-            </div>
-            {#if testStatus === 'success'}
-              <span class="connect-status success">Valid key</span>
-            {:else if testStatus === 'error'}
-              <span class="connect-status error">{testError || 'Invalid key'}</span>
+            <!-- Provider Selection -->
+            <label class="connect-label">Provider</label>
+            <select class="connect-select" value={selectedProvider} onchange={handleProviderChange}>
+              {#each AI_PROVIDERS as provider}
+                <option value={provider.id}>{provider.label}</option>
+              {/each}
+            </select>
+
+            <!-- Model Selection -->
+            <label class="connect-label">Model</label>
+            <select class="connect-select" value={selectedModel} onchange={handleModelChange}>
+              {#each providerModels as model}
+                <option value={model.id}>{model.label}</option>
+              {/each}
+            </select>
+
+            {#if requiresBridge}
+              <div class="bridge-notice">
+                <span class="notice-icon">&#9888;</span>
+                <span class="notice-text">
+                  {currentProvider?.label} API cannot be called directly from the browser due to CORS restrictions.
+                  Please use the <button class="notice-link" onclick={() => activeTab = 'bridge'}>Local Bridge</button> mode instead.
+                </span>
+              </div>
+            {:else}
+              <!-- API Key Input -->
+              <label class="connect-label">{currentProvider?.label ?? ''} API Key</label>
+              <div class="connect-row">
+                <input
+                  type="password"
+                  class="connect-input"
+                  placeholder="Enter API key"
+                  value={apiKeyValue}
+                  oninput={handleApiKeyInput}
+                />
+                <button class="connect-btn" onclick={testKey} disabled={!apiKeyValue || testStatus === 'testing'}>
+                  {testStatus === 'testing' ? '...' : 'Test'}
+                </button>
+              </div>
+              {#if testStatus === 'success'}
+                <span class="connect-status success">Valid key</span>
+              {:else if testStatus === 'error'}
+                <span class="connect-status error">{testError || 'Invalid key'}</span>
+              {/if}
+              <p class="connect-hint">Your API key is stored locally and never sent to our servers.</p>
             {/if}
-            <p class="connect-hint">Your API key is stored locally and never sent to our servers.</p>
           </section>
         {:else}
           <section class="connect-section">
@@ -280,6 +350,19 @@
   .connect-input:focus {
     border-color: var(--accent-color, #89b4fa);
   }
+  .connect-select {
+    padding: 8px 12px;
+    background: var(--bg-secondary, #181825);
+    border: 1px solid var(--border-color, #333);
+    border-radius: 6px;
+    color: var(--text-primary, #cdd6f4);
+    font-size: 13px;
+    outline: none;
+    cursor: pointer;
+  }
+  .connect-select:focus {
+    border-color: var(--accent-color, #89b4fa);
+  }
   .connect-btn {
     padding: 8px 14px;
     background: var(--accent-color, #89b4fa);
@@ -312,6 +395,34 @@
     color: var(--text-secondary, #a6adc8);
     margin: 0;
     opacity: 0.7;
+  }
+  .bridge-notice {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 10px 12px;
+    background: rgba(249, 226, 175, 0.08);
+    border: 1px solid rgba(249, 226, 175, 0.2);
+    border-radius: 6px;
+  }
+  .notice-icon {
+    font-size: 16px;
+    flex-shrink: 0;
+    color: #f9e2af;
+  }
+  .notice-text {
+    font-size: 12px;
+    color: var(--text-secondary, #a6adc8);
+    line-height: 1.5;
+  }
+  .notice-link {
+    background: none;
+    border: none;
+    color: var(--accent-color, #89b4fa);
+    cursor: pointer;
+    padding: 0;
+    font-size: 12px;
+    text-decoration: underline;
   }
   .bridge-status {
     display: flex;

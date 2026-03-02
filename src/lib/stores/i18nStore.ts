@@ -17,6 +17,14 @@ interface LandingTranslations {
   featureBrowserDesc: string;
 }
 
+interface SnippetTranslations {
+  divider: string;
+  placeholder: string;
+  analyze: string;
+  lines: string;
+  emptyError: string;
+}
+
 interface TranslationSet {
   title: string;
   subtitle: string;
@@ -36,6 +44,7 @@ interface TranslationSet {
   clearCache: string;
   apiKeyPlaceholder: string;
   landing: LandingTranslations;
+  snippet: SnippetTranslations;
 }
 
 const translations: Record<Locale, TranslationSet> = {
@@ -69,6 +78,13 @@ const translations: Record<Locale, TranslationSet> = {
       featureBrowserTitle: '100% 브라우저',
       featureBrowserDesc: '코드가 브라우저를 떠나지 않음. WASM 파싱 + 로컬 분석',
     },
+    snippet: {
+      divider: '또는 코드 스니펫으로 체험하기',
+      placeholder: '여기에 코드를 붙여넣으세요...',
+      analyze: '분석하기',
+      lines: '줄',
+      emptyError: '코드를 입력해주세요',
+    },
   },
   en: {
     title: 'CodeViz',
@@ -99,6 +115,13 @@ const translations: Record<Locale, TranslationSet> = {
       featureDrillDesc: 'Click any area and AI progressively analyzes deeper structures',
       featureBrowserTitle: '100% Browser-based',
       featureBrowserDesc: 'Your code never leaves the browser. WASM parsing + local analysis',
+    },
+    snippet: {
+      divider: 'or try a code snippet',
+      placeholder: 'Paste your code here...',
+      analyze: 'Analyze',
+      lines: 'lines',
+      emptyError: 'Please enter some code',
     },
   }
 };

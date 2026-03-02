@@ -2,6 +2,7 @@
 	import { settingsStore } from '$lib/stores/settingsStore.svelte';
 	import { projectStore } from '$lib/stores/projectStore.svelte';
 	import { extractSkeleton, estimatePayloadSize, formatPayloadPreview } from '$lib/services/skeletonExtractor';
+	import { getProvider } from '$lib/data/aiProviders';
 
 	let { open, onclose, onselect }: {
 		open: boolean;
@@ -12,6 +13,10 @@
 	let showPreview = $state(false);
 
 	const hasApiKey = $derived(settingsStore.hasApiKey);
+	const currentProviderInfo = $derived(getProvider(settingsStore.aiProvider));
+	const currentModelLabel = $derived(
+		currentProviderInfo?.models.find(m => m.id === settingsStore.aiModel)?.label ?? settingsStore.aiModel
+	);
 
 	const skeleton = $derived(
 		projectStore.fileTree
@@ -71,9 +76,11 @@
 								<span class="badge success">API 키 설정됨 ✓</span>
 							{/if}
 						</div>
-						<div class="track-subtitle">100% 브라우저에서 직접 분석</div>
+						<div class="track-subtitle">
+							{currentProviderInfo?.label ?? 'Google Gemini'} &middot; {currentModelLabel}
+						</div>
 						<p class="track-desc">
-							Gemini API 키를 입력하면 브라우저에서 직접 API를 호출합니다. 키는 로컬에만 저장됩니다.
+							API 키를 입력하면 브라우저에서 직접 API를 호출합니다. 키는 로컬에만 저장됩니다.
 						</p>
 					</div>
 					<button class="track-btn" onclick={() => onselect('byok')}>

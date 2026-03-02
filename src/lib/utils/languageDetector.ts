@@ -19,7 +19,7 @@ const EXTENSION_MAP: Record<string, string> = {
 	'.cs': 'csharp',
 };
 
-const SUPPORTED_LANGUAGES = new Set(['python', 'javascript', 'typescript']);
+const SUPPORTED_LANGUAGES = new Set(['python', 'javascript', 'typescript', 'go', 'rust', 'java', 'c', 'cpp']);
 
 export function detectLanguage(filename: string): string | null {
 	const ext = filename.substring(filename.lastIndexOf('.'));
@@ -35,6 +35,11 @@ export function getGrammarFile(language: string): string | null {
 		python: 'tree-sitter-python.wasm',
 		javascript: 'tree-sitter-javascript.wasm',
 		typescript: 'tree-sitter-typescript.wasm',
+		go: 'tree-sitter-go.wasm',
+		rust: 'tree-sitter-rust.wasm',
+		java: 'tree-sitter-java.wasm',
+		c: 'tree-sitter-c.wasm',
+		cpp: 'tree-sitter-cpp.wasm',
 	};
 	return grammarMap[language] ?? null;
 }

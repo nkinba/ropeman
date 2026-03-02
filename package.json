@@ -24,6 +24,11 @@
     "@xyflow/svelte": "^1.0.0",
     "marked": "^17.0.3",
     "prismjs": "^1.30.0",
-    "web-tree-sitter": "^0.24.7"
+    "tree-sitter-c": "^0.24.1",
+    "tree-sitter-cpp": "^0.23.4",
+    "tree-sitter-go": "^0.25.0",
+    "tree-sitter-java": "^0.23.5",
+    "tree-sitter-rust": "^0.24.0",
+    "web-tree-sitter": "^0.25.10"
   }
 }

@@ -7,7 +7,9 @@ import { extractSubSkeleton } from './skeletonExtractor';
 import { sendViaBridge } from './bridgeService';
 import type { SemanticLevel, SemanticNode, SemanticEdge } from '$lib/types/semantic';
 
-const GEMINI_ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent';
+function getGeminiEndpoint(model: string): string {
+	return `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
+}
 
 const SEMANTIC_COLORS = [
 	'#89b4fa', '#a6e3a1', '#f9e2af', '#f38ba8',
@@ -166,6 +168,10 @@ async function callAI(systemPrompt: string, userPrompt: string): Promise<string>
 	if (track === 'bridge') {
 		return await sendViaBridge(systemPrompt + '\n\n' + userPrompt);
 	} else if (track === 'byok') {
+		// Anthropic requires bridge due to CORS
+		if (settingsStore.aiProvider === 'anthropic') {
+			throw new Error('Anthropic API requires Local Bridge mode due to browser CORS restrictions. Please connect via Local Bridge.');
+		}
 		return await callGemini(systemPrompt, userPrompt);
 	} else {
 		throw new Error('AI not connected');
@@ -176,7 +182,10 @@ async function callGemini(systemPrompt: string, userPrompt: string): Promise<str
 	const apiKey = settingsStore.geminiApiKey;
 	if (!apiKey) throw new Error('No API key');
 
-	const response = await fetch(`${GEMINI_ENDPOINT}?key=${apiKey}`, {
+	const model = settingsStore.aiProvider === 'google' ? settingsStore.aiModel : 'gemini-2.5-flash-lite';
+	const endpoint = getGeminiEndpoint(model);
+
+	const response = await fetch(`${endpoint}?key=${apiKey}`, {
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
 		body: JSON.stringify({
@@ -184,7 +193,8 @@ async function callGemini(systemPrompt: string, userPrompt: string): Promise<str
 			contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
 			generationConfig: {
 				temperature: 0.3,
-				maxOutputTokens: 4096,
+				maxOutputTokens: 16384,
+				response_mime_type: 'application/json',
 			},
 		}),
 	});
@@ -197,12 +207,78 @@ async function callGemini(systemPrompt: string, userPrompt: string): Promise<str
 	return data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
 }
 
+function repairJSON(text: string): string {
+	// Remove trailing commas before ] or }
+	let fixed = text.replace(/,\s*([\]}])/g, '$1');
+
+	// Try parsing as-is first
+	try {
+		JSON.parse(fixed);
+		return fixed;
+	} catch {
+		// If truncated, try to close open brackets/braces
+	}
+
+	// Count unclosed brackets and braces
+	let braces = 0;
+	let brackets = 0;
+	let inString = false;
+	let escape = false;
+
+	for (const ch of fixed) {
+		if (escape) { escape = false; continue; }
+		if (ch === '\\') { escape = true; continue; }
+		if (ch === '"') { inString = !inString; continue; }
+		if (inString) continue;
+		if (ch === '{') braces++;
+		else if (ch === '}') braces--;
+		else if (ch === '[') brackets++;
+		else if (ch === ']') brackets--;
+	}
+
+	// If we're inside a string, close it
+	if (inString) fixed += '"';
+
+	// Remove any trailing partial value (e.g., truncated string or number)
+	// Trim to last complete element
+	const lastValid = Math.max(
+		fixed.lastIndexOf(','),
+		fixed.lastIndexOf('}'),
+		fixed.lastIndexOf(']'),
+		fixed.lastIndexOf('"')
+	);
+	if (lastValid > 0 && (braces > 0 || brackets > 0)) {
+		fixed = fixed.substring(0, lastValid + 1);
+		// Remove trailing comma if we just truncated
+		fixed = fixed.replace(/,\s*$/, '');
+		// Recount
+		braces = 0; brackets = 0; inString = false; escape = false;
+		for (const ch of fixed) {
+			if (escape) { escape = false; continue; }
+			if (ch === '\\') { escape = true; continue; }
+			if (ch === '"') { inString = !inString; continue; }
+			if (inString) continue;
+			if (ch === '{') braces++;
+			else if (ch === '}') braces--;
+			else if (ch === '[') brackets++;
+			else if (ch === ']') brackets--;
+		}
+	}
+
+	// Close unclosed brackets/braces
+	for (let i = 0; i < brackets; i++) fixed += ']';
+	for (let i = 0; i < braces; i++) fixed += '}';
+
+	return fixed;
+}
+
 function parseSemanticLevel(text: string, parentId: string | null, depth: number): SemanticLevel {
 	// Extract JSON from response (may be wrapped in markdown code block)
 	const jsonMatch = text.match(/\{[\s\S]*\}/);
 	if (!jsonMatch) throw new Error('No JSON found in response');
 
-	const raw = JSON.parse(jsonMatch[0]) as {
+	const repaired = repairJSON(jsonMatch[0]);
+	const raw = JSON.parse(repaired) as {
 		roles: Array<{
 			id: string;
 			label: string;

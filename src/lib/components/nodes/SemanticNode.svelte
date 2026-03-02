@@ -6,6 +6,7 @@
 	const maxSymbols = 4;
 	const displaySymbols = data.keySymbols?.slice(0, maxSymbols) ?? [];
 	const moreCount = (data.keySymbols?.length ?? 0) - maxSymbols;
+	const isLeaf = data.fileCount === 1;
 </script>
 
 <Handle type="target" position={Position.Left} />
@@ -21,7 +22,7 @@
 	<div class="node-header">
 		<span class="node-label" style="color: {data.color};">{data.label}</span>
 		<span class="node-badge" style="background: {data.color}30; color: {data.color};">
-			{data.fileCount} files
+			{#if isLeaf}&#128196; {/if}{data.fileCount} {data.fileCount === 1 ? 'file' : 'files'}
 		</span>
 	</div>
 
@@ -40,9 +41,11 @@
 		</div>
 	{/if}
 
-	<div class="drilldown-hint">
-		<span class="drilldown-icon">&#x25B6;</span>
-	</div>
+	{#if !isLeaf}
+		<div class="drilldown-hint">
+			<span class="drilldown-icon">&#x25B6;</span>
+		</div>
+	{/if}
 </div>
 
 <Handle type="source" position={Position.Right} />

@@ -2,6 +2,7 @@
 	import Header from '$lib/components/Header.svelte';
 	import Dropzone from '$lib/components/Dropzone.svelte';
 	import ZUICanvas from '$lib/components/ZUICanvas.svelte';
+	import CodeViewer from '$lib/components/CodeViewer.svelte';
 	import NodeDetailPanel from '$lib/components/NodeDetailPanel.svelte';
 	import FileExplorer from '$lib/components/FileExplorer.svelte';
 	import ChatPopup from '$lib/components/ChatPopup.svelte';
@@ -11,8 +12,8 @@
 	import OnboardingModal from '$lib/components/OnboardingModal.svelte';
 	import { projectStore } from '$lib/stores/projectStore.svelte';
 	import { selectionStore } from '$lib/stores/selectionStore.svelte';
+	import { semanticStore } from '$lib/stores/semanticStore.svelte';
 	import { authStore } from '$lib/stores/authStore.svelte';
-	import { analyzeArchitecture } from '$lib/services/architectureService';
 	import { analyzeTopLevel } from '$lib/services/semanticAnalysisService';
 	import { loadTestProject } from '$lib/services/testLoader';
 	import { onMount } from 'svelte';
@@ -92,7 +93,11 @@
 				ontoggle={() => explorerCollapsed = !explorerCollapsed}
 			/>
 			<div class="canvas-area">
-				<ZUICanvas />
+				{#if semanticStore.viewMode === 'semantic'}
+					<ZUICanvas />
+				{:else}
+					<CodeViewer />
+				{/if}
 			</div>
 			{#if hasSelection}
 				<div class="detail-panel">

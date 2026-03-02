@@ -10,6 +10,7 @@
 	import { parseAllFiles } from '$lib/services/parserService';
 	import { t } from '$lib/stores/i18nStore';
 	import HeroIllustration from './HeroIllustration.svelte';
+	import SnippetEditor from './SnippetEditor.svelte';
 
 	let { oncancel, onload }: { oncancel?: () => void; onload?: () => void } = $props();
 
@@ -217,6 +218,8 @@
 						</span>
 					{/each}
 				</section>
+
+				<SnippetEditor {oncancel} {onload} />
 			</div>
 		{/if}
 	</div>

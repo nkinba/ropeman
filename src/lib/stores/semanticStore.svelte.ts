@@ -1,11 +1,11 @@
 import type { SemanticLevel, SemanticNode } from '$lib/types/semantic';
 
-export type ViewMode = 'semantic' | 'filetree';
+export type ViewMode = 'semantic' | 'code';
 
 function createSemanticStore() {
 	let currentLevel = $state<SemanticLevel | null>(null);
 	let drilldownPath = $state<{ nodeId: string; label: string }[]>([]);
-	let viewMode = $state<ViewMode>('filetree');
+	let viewMode = $state<ViewMode>('code');
 	let isAnalyzing = $state(false);
 	let cache = $state<Map<string, SemanticLevel>>(new Map());
 	let selectedSemanticNode = $state<SemanticNode | null>(null);
@@ -30,6 +30,19 @@ function createSemanticStore() {
 
 		get highlightedFilePaths(): string[] {
 			return selectedSemanticNode?.filePaths ?? [];
+		},
+
+		get highlightedDirPaths(): string[] {
+			const filePaths = selectedSemanticNode?.filePaths ?? [];
+			if (filePaths.length === 0) return [];
+			const dirs = new Set<string>();
+			for (const fp of filePaths) {
+				const parts = fp.split('/');
+				for (let i = 1; i < parts.length; i++) {
+					dirs.add(parts.slice(0, i).join('/'));
+				}
+			}
+			return [...dirs];
 		},
 
 		cacheLevel(key: string, level: SemanticLevel) {
@@ -104,7 +117,7 @@ function createSemanticStore() {
 		clear() {
 			currentLevel = null;
 			drilldownPath = [];
-			viewMode = 'filetree';
+			viewMode = 'code';
 			isAnalyzing = false;
 			cache = new Map();
 			selectedSemanticNode = null;

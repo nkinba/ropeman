@@ -28,6 +28,7 @@
 	};
 
 	const highlightedPaths = $derived(semanticStore.highlightedFilePaths);
+	const highlightedDirPaths = $derived(semanticStore.highlightedDirPaths);
 
 	function toggleDir(path: string) {
 		const next = new Set(expandedDirs);
@@ -64,7 +65,7 @@
 	}
 
 	function isHighlighted(path: string): boolean {
-		return highlightedPaths.includes(path);
+		return highlightedPaths.includes(path) || highlightedDirPaths.includes(path);
 	}
 
 	function inferLang(path: string): string | null {
@@ -89,6 +90,23 @@
 		const tree = projectStore.fileTree;
 		if (tree && tree.kind === 'directory' && !expandedDirs.has(tree.path)) {
 			expandedDirs = new Set([tree.path]);
+		}
+	});
+
+	// Auto-expand parent directories when highlighted paths change
+	$effect(() => {
+		if (highlightedDirPaths.length > 0) {
+			const next = new Set(expandedDirs);
+			let changed = false;
+			for (const dir of highlightedDirPaths) {
+				if (!next.has(dir)) {
+					next.add(dir);
+					changed = true;
+				}
+			}
+			if (changed) {
+				expandedDirs = next;
+			}
 		}
 	});
 

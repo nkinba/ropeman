@@ -6,7 +6,9 @@ import type { GraphNode } from '$lib/types/graph';
 import { searchCache, addToCache, initCache } from '$lib/services/cacheService';
 import { getEmbedding } from '$lib/services/embeddingService';
 
-const GEMINI_ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent';
+function getGeminiEndpoint(model: string): string {
+	return `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
+}
 
 export interface AIResponse {
 	content: string;
@@ -77,8 +79,18 @@ export async function sendMessage(
 		}
 	}
 
+	// BYOK track: Anthropic requires bridge
+	if (settingsStore.aiProvider === 'anthropic') {
+		return {
+			content: 'Anthropic API requires Local Bridge mode due to browser CORS restrictions. Please connect via the Local Bridge tab in AI Connection settings.',
+			relatedNodes: [],
+		};
+	}
+
 	// BYOK track: use Gemini REST API
 	const apiKey = settingsStore.geminiApiKey;
+	const model = settingsStore.aiProvider === 'google' ? settingsStore.aiModel : 'gemini-2.5-flash-lite';
+	const endpoint = getGeminiEndpoint(model);
 
 	// Cache lookup (only for first messages without history for simplicity)
 	if (settingsStore.cacheEnabled && history.length === 0) {
@@ -106,7 +118,7 @@ export async function sendMessage(
 
 	for (let attempt = 0; attempt < maxRetries; attempt++) {
 		try {
-			const response = await fetch(`${GEMINI_ENDPOINT}?key=${apiKey}`, {
+			const response = await fetch(`${endpoint}?key=${apiKey}`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify(body),

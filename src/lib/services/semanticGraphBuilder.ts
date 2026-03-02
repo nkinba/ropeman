@@ -69,7 +69,7 @@ export function toSemanticFlowEdges(level: SemanticLevel): Edge[] {
 		target: edge.target,
 		type: 'smoothstep',
 		animated: true,
-		label: edge.label ?? '',
+		...(edge.label ? { label: edge.label } : {}),
 		style: EDGE_TYPE_STYLES[edge.type] ?? EDGE_TYPE_STYLES.uses,
 		data: { edgeType: edge.type }
 	}));
