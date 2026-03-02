@@ -4,6 +4,28 @@
 	import { selectionStore } from '$lib/stores/selectionStore.svelte';
 	import type { FileNode } from '$lib/types/fileTree';
 	import type { ASTSymbol } from '$lib/types/ast';
+	import { detectLanguage } from '$lib/utils/languageDetector';
+	import Prism from 'prismjs';
+	import 'prismjs/components/prism-python';
+	import 'prismjs/components/prism-javascript';
+	import 'prismjs/components/prism-typescript';
+	import 'prismjs/components/prism-go';
+	import 'prismjs/components/prism-rust';
+	import 'prismjs/components/prism-java';
+	import 'prismjs/components/prism-c';
+	import 'prismjs/components/prism-cpp';
+
+	// Prism language name mapping (our detector names → Prism grammar keys)
+	const PRISM_LANG_MAP: Record<string, string> = {
+		python: 'python',
+		javascript: 'javascript',
+		typescript: 'typescript',
+		go: 'go',
+		rust: 'rust',
+		java: 'java',
+		c: 'c',
+		cpp: 'cpp',
+	};
 
 	let fileContent = $state('');
 	let currentFilePath = $state('');
@@ -31,6 +53,29 @@
 	const fileSymbols = $derived.by(() => {
 		if (!currentFilePath) return [];
 		return projectStore.astMap.get(currentFilePath) ?? [];
+	});
+
+	// Detect language for current file
+	const detectedLang = $derived.by(() => {
+		if (!currentFilePath) return null;
+		const lang = detectLanguage(currentFilePath);
+		if (!lang) return null;
+		const prismKey = PRISM_LANG_MAP[lang];
+		if (!prismKey || !Prism.languages[prismKey]) return null;
+		return prismKey;
+	});
+
+	// Highlighted lines (split per line, with HTML)
+	const highlightedLines = $derived.by(() => {
+		if (!fileContent) return [];
+		if (detectedLang) {
+			const html = Prism.highlight(fileContent, Prism.languages[detectedLang], detectedLang);
+			return html.split('\n');
+		}
+		// Plain text fallback — escape HTML
+		return fileContent.split('\n').map(line =>
+			line.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+		);
 	});
 
 	// Load file content when target changes
@@ -61,23 +106,30 @@
 			const tree = projectStore.fileTree;
 			if (!tree) throw new Error('No project loaded');
 
-			const fileNode = findFileNode(tree, path);
-			if (!fileNode || !fileNode.handle || fileNode.handle.kind !== 'file') {
-				// Try dev mode API
-				if (import.meta.env.DEV) {
-					const res = await fetch(`/__dev/read?path=${encodeURIComponent(path)}`);
+			const fileNode = findFileNode(tree, path) as (FileNode & { _absolutePath?: string }) | null;
+
+			// Try FileSystemFileHandle first (production mode)
+			if (fileNode?.handle && fileNode.handle.kind === 'file') {
+				const file = await (fileNode.handle as FileSystemFileHandle).getFile();
+				fileContent = await file.text();
+				currentFilePath = path;
+				return;
+			}
+
+			// Try dev mode API with absolute path
+			if (import.meta.env.DEV) {
+				const absPath = fileNode?._absolutePath;
+				if (absPath) {
+					const res = await fetch(`/__dev/read?file=${encodeURIComponent(absPath)}`);
 					if (res.ok) {
 						fileContent = await res.text();
 						currentFilePath = path;
 						return;
 					}
 				}
-				throw new Error('File not accessible');
 			}
 
-			const file = await (fileNode.handle as FileSystemFileHandle).getFile();
-			fileContent = await file.text();
-			currentFilePath = path;
+			throw new Error('File not accessible');
 		} catch (err) {
 			loadError = `Failed to load file: ${(err as Error).message}`;
 		} finally {
@@ -93,12 +145,11 @@
 		}
 	}
 
-	const lines = $derived(fileContent.split('\n'));
 	const fileName = $derived(currentFilePath.split('/').pop() ?? '');
 </script>
 
 <div class="code-viewer">
-	{#if !targetFilePath}
+	{#if !currentFilePath && !targetFilePath}
 		<div class="code-empty">
 			<div class="empty-icon">&#128196;</div>
 			<p class="empty-text">Select a file from the Explorer or a semantic node to view code</p>
@@ -115,7 +166,10 @@
 	{:else}
 		<div class="code-header">
 			<span class="code-filepath" title={currentFilePath}>{currentFilePath}</span>
-			<span class="code-line-count">{lines.length} lines</span>
+			{#if detectedLang}
+				<span class="code-lang-badge">{detectedLang}</span>
+			{/if}
+			<span class="code-line-count">{highlightedLines.length} lines</span>
 		</div>
 
 		<div class="code-layout">
@@ -147,10 +201,10 @@
 			<!-- Code content -->
 			<div class="code-content">
 				<div class="code-lines">
-					{#each lines as line, i}
+					{#each highlightedLines as line, i}
 						<div class="code-line" data-line={i + 1}>
 							<span class="line-number">{i + 1}</span>
-							<pre class="line-text">{line}</pre>
+							<pre class="line-text">{@html line}</pre>
 						</div>
 					{/each}
 				</div>
@@ -231,6 +285,7 @@
 		background: var(--bg-secondary);
 		border-bottom: 1px solid var(--border);
 		flex-shrink: 0;
+		gap: 8px;
 	}
 
 	.code-filepath {
@@ -244,11 +299,21 @@
 		min-width: 0;
 	}
 
+	.code-lang-badge {
+		font-size: 10px;
+		font-weight: 600;
+		text-transform: uppercase;
+		color: var(--accent, #89b4fa);
+		background: rgba(137, 180, 250, 0.12);
+		padding: 2px 6px;
+		border-radius: 4px;
+		flex-shrink: 0;
+	}
+
 	.code-line-count {
 		font-size: 11px;
 		color: var(--text-muted);
 		flex-shrink: 0;
-		margin-left: 12px;
 	}
 
 	.code-layout {
@@ -367,7 +432,6 @@
 		padding: 0 16px 0 0;
 		font-family: 'SF Mono', 'Fira Code', monospace;
 		font-size: 12px;
-		color: var(--text-primary);
 		white-space: pre;
 		tab-size: 4;
 		min-width: 0;

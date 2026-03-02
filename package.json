@@ -23,6 +23,7 @@
     "@orama/orama": "^3.1.5",
     "@xyflow/svelte": "^1.0.0",
     "marked": "^17.0.3",
+    "prism-themes": "^1.9.0",
     "prismjs": "^1.30.0",
     "tree-sitter-c": "^0.24.1",
     "tree-sitter-cpp": "^0.23.4",

@@ -25,6 +25,14 @@ interface SnippetTranslations {
   emptyError: string;
 }
 
+interface LegendTranslations {
+  title: string;
+  depends_on: string;
+  calls: string;
+  extends: string;
+  uses: string;
+}
+
 interface TranslationSet {
   title: string;
   subtitle: string;
@@ -42,9 +50,12 @@ interface TranslationSet {
   noApiKey: string;
   cacheEnabled: string;
   clearCache: string;
+  codeTheme: string;
   apiKeyPlaceholder: string;
+  analyzing: string;
   landing: LandingTranslations;
   snippet: SnippetTranslations;
+  legend: LegendTranslations;
 }
 
 const translations: Record<Locale, TranslationSet> = {
@@ -65,7 +76,9 @@ const translations: Record<Locale, TranslationSet> = {
     noApiKey: 'Settings에서 Gemini API 키를 입력하세요',
     cacheEnabled: '캐시 활성화',
     clearCache: '캐시 초기화',
+    codeTheme: '코드 테마',
     apiKeyPlaceholder: 'Gemini API 키 입력',
+    analyzing: '분석 중...',
     landing: {
       headline: '코드를 읽기 전에, 먼저 구조를 보세요',
       subheadline: 'AI가 코드베이스를 분석하여 의미 기반 다이어그램을 자동 생성합니다. 폴더를 열면 바로 시작됩니다.',
@@ -85,6 +98,13 @@ const translations: Record<Locale, TranslationSet> = {
       lines: '줄',
       emptyError: '코드를 입력해주세요',
     },
+    legend: {
+      title: '범례',
+      depends_on: '의존',
+      calls: '호출',
+      extends: '상속',
+      uses: '사용',
+    },
   },
   en: {
     title: 'CodeViz',
@@ -103,7 +123,9 @@ const translations: Record<Locale, TranslationSet> = {
     noApiKey: 'Enter your Gemini API key in Settings',
     cacheEnabled: 'Cache Enabled',
     clearCache: 'Clear Cache',
+    codeTheme: 'Code Theme',
     apiKeyPlaceholder: 'Enter Gemini API key',
+    analyzing: 'Analyzing...',
     landing: {
       headline: 'See the structure before reading the code',
       subheadline: 'AI analyzes your codebase and generates semantic architecture diagrams. Just open a folder to start.',
@@ -122,6 +144,13 @@ const translations: Record<Locale, TranslationSet> = {
       analyze: 'Analyze',
       lines: 'lines',
       emptyError: 'Please enter some code',
+    },
+    legend: {
+      title: 'Legend',
+      depends_on: 'Depends on',
+      calls: 'Calls',
+      extends: 'Extends',
+      uses: 'Uses',
     },
   }
 };

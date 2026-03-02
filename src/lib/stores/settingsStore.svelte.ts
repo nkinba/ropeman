@@ -10,6 +10,7 @@ function createSettingsStore() {
 	let aiModel = $state<string>(initial.aiModel ?? 'gemini-2.5-flash-lite');
 	let cacheEnabled = $state<boolean>(initial.cacheEnabled ?? true);
 	let language = $state<'ko' | 'en'>(initial.language ?? 'ko');
+	let syntaxTheme = $state<string>(initial.syntaxTheme ?? 'tomorrow');
 
 	function persist() {
 		if (typeof window !== 'undefined') {
@@ -19,7 +20,8 @@ function createSettingsStore() {
 				aiProvider,
 				aiModel,
 				cacheEnabled,
-				language
+				language,
+				syntaxTheme
 			}));
 		}
 	}
@@ -43,6 +45,9 @@ function createSettingsStore() {
 		get language() { return language; },
 		set language(v: 'ko' | 'en') { language = v; persist(); },
 
+		get syntaxTheme() { return syntaxTheme; },
+		set syntaxTheme(v: string) { syntaxTheme = v; persist(); },
+
 		get hasApiKey() {
 			if (aiProvider === 'google') return geminiApiKey.length > 0;
 			if (aiProvider === 'anthropic') return anthropicApiKey.length > 0;
@@ -62,6 +67,7 @@ function createSettingsStore() {
 			aiModel = 'gemini-2.5-flash-lite';
 			cacheEnabled = true;
 			language = 'ko';
+			syntaxTheme = 'tomorrow';
 			if (typeof window !== 'undefined') {
 				localStorage.removeItem('codeviz-settings');
 			}

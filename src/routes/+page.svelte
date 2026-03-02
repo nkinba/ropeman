@@ -4,6 +4,7 @@
 	import ZUICanvas from '$lib/components/ZUICanvas.svelte';
 	import CodeViewer from '$lib/components/CodeViewer.svelte';
 	import NodeDetailPanel from '$lib/components/NodeDetailPanel.svelte';
+	import SemanticDetailPanel from '$lib/components/SemanticDetailPanel.svelte';
 	import FileExplorer from '$lib/components/FileExplorer.svelte';
 	import ChatPopup from '$lib/components/ChatPopup.svelte';
 	import LoadingOverlay from '$lib/components/LoadingOverlay.svelte';
@@ -36,6 +37,7 @@
 
 	const hasProject = $derived(projectStore.fileTree !== null);
 	const hasSelection = $derived(selectionStore.selectedNode !== null);
+	const hasSemanticSelection = $derived(semanticStore.viewMode === 'semantic' && semanticStore.selectedSemanticNode !== null);
 
 	// Dev-only: auto-load test project from ?testDir= URL parameter
 	onMount(() => {
@@ -99,7 +101,11 @@
 					<CodeViewer />
 				{/if}
 			</div>
-			{#if hasSelection}
+			{#if hasSemanticSelection}
+				<div class="detail-panel">
+					<SemanticDetailPanel />
+				</div>
+			{:else if hasSelection}
 				<div class="detail-panel">
 					<NodeDetailPanel onclose={() => selectionStore.clear()} />
 				</div>

@@ -35,4 +35,5 @@ Thumbs.db
 # Lock files (bun)
 bun.lock
 
-docs/private/
+docs/history
+docs/PRDs/archive

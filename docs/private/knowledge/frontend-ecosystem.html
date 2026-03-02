@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>프론트엔드 기술 스택 — CodeViz 배경지식</title>
+<style>
+  :root { --bg: #1a1a2e; --surface: #16213e; --border: #334; --text: #e0e0e0; --muted: #999; --accent: #6ec6ff; --code-bg: #0f1629; --green: #4ec9b0; --orange: #ce9178; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, 'Pretendard', sans-serif; background: var(--bg); color: var(--text); line-height: 1.75; padding: 2rem; max-width: 52rem; margin: 0 auto; }
+  h1 { font-size: 1.6rem; margin-bottom: 0.5rem; color: #fff; }
+  h2 { font-size: 1.25rem; margin: 2.5rem 0 0.75rem; padding-bottom: 0.4rem; border-bottom: 1px solid var(--border); color: var(--accent); }
+  h3 { font-size: 1.05rem; margin: 1.5rem 0 0.5rem; color: #ccc; }
+  p, li { margin-bottom: 0.6rem; }
+  ul, ol { padding-left: 1.5rem; }
+  code { font-family: 'Fira Code', 'JetBrains Mono', monospace; font-size: 0.88em; background: var(--code-bg); padding: 0.15em 0.4em; border-radius: 3px; }
+  pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 1rem 1.2rem; overflow-x: auto; margin: 0.8rem 0 1.2rem; line-height: 1.6; }
+  pre code { background: none; padding: 0; font-size: 0.85em; }
+  .comment { color: #6a9955; }
+  .keyword { color: #c586c0; }
+  .type { color: #4ec9b0; }
+  .string { color: #ce9178; }
+  .note { background: var(--surface); border-left: 3px solid var(--accent); padding: 0.8rem 1rem; margin: 1rem 0; border-radius: 0 4px 4px 0; }
+  .warn { background: var(--surface); border-left: 3px solid #e6a23c; padding: 0.8rem 1rem; margin: 1rem 0; border-radius: 0 4px 4px 0; }
+  .nav { margin-bottom: 2rem; font-size: 0.9rem; color: var(--muted); }
+  .nav a { color: var(--accent); text-decoration: none; }
+  .nav a:hover { text-decoration: underline; }
+  table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
+  th, td { text-align: left; padding: 0.5rem 0.75rem; border: 1px solid var(--border); font-size: 0.9rem; }
+  th { background: var(--surface); color: var(--accent); }
+  .diagram { background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 1rem 1.2rem; overflow-x: auto; margin: 0.8rem 0 1.2rem; font-family: 'Fira Code', monospace; font-size: 0.82em; line-height: 1.5; white-space: pre; color: var(--muted); }
+  .subtitle { color: var(--muted); margin-bottom: 1.5rem; }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="../codebase-reading-guide.md">← 코드베이스 읽기 가이드</a> &nbsp;|&nbsp;
+  <a href="./typescript-patterns.html">TypeScript 패턴</a> &nbsp;|&nbsp;
+  <a href="./domain-concepts.html">도메인 지식 →</a>
+</nav>
+
+<h1>프론트엔드 기술 스택</h1>
+<p class="subtitle">CodeViz가 의존하는 핵심 기술들의 역할, 관계, 그리고 코드에서 어떻게 나타나는지 설명합니다.</p>
+
+<!-- ═══════════════════════════════════════ -->
+<h2>1. SvelteKit — 앱 프레임워크</h2>
+
+<h3>Svelte와 SvelteKit의 관계</h3>
+
+<div class="diagram">Svelte  = UI 컴파일러. .svelte 파일 → 순수 JS로 변환
+SvelteKit = Svelte + 라우팅 + 빌드 시스템 + SSR 프레임워크
+
+대응 관계:
+  React     →  Next.js
+  Vue       →  Nuxt.js
+  Svelte    →  SvelteKit     ← 이 프로젝트</div>
+
+<p><strong>Svelte의 핵심 차이점:</strong> React/Vue는 런타임에 가상 DOM을 비교(diffing)하지만,
+Svelte는 <strong>빌드 시점에 컴파일</strong>하여 DOM을 직접 조작하는 코드를 생성합니다.
+따라서 런타임 라이브러리가 필요 없고, 번들이 작고 빠릅니다.</p>
+
+<h3>SvelteKit의 파일 기반 라우팅</h3>
+
+<pre><code>src/
+├── routes/
+│   ├── +layout.svelte      <span class="comment">// 모든 페이지에 적용되는 글로벌 레이아웃</span>
+│   └── +page.svelte        <span class="comment">// "/" 경로의 페이지 컴포넌트</span>
+├── lib/                    <span class="comment">// $lib 별칭으로 접근하는 라이브러리 코드</span>
+│   ├── components/         <span class="comment">// UI 컴포넌트</span>
+│   ├── stores/             <span class="comment">// 상태 관리</span>
+│   ├── services/           <span class="comment">// 비즈니스 로직</span>
+│   └── types/              <span class="comment">// TypeScript 타입</span>
+└── app.html                <span class="comment">// HTML 템플릿 (SvelteKit이 관리)</span></code></pre>
+
+<div class="note">
+<strong>이 프로젝트의 특수성:</strong> <code>adapter-static</code>을 사용하여 SSR(서버 사이드 렌더링) 없이 순수 정적 사이트로 빌드합니다.
+서버 코드가 전혀 없으며, 모든 로직이 브라우저에서 실행됩니다. 페이지도 <code>+page.svelte</code> 하나뿐인 SPA(Single Page Application)입니다.
+</div>
+
+<h3><code>$lib</code> 경로 별칭</h3>
+<pre><code><span class="comment">// 코드에서 이런 import를 자주 보게 됩니다:</span>
+<span class="keyword">import</span> { graphStore } <span class="keyword">from</span> <span class="string">'$lib/stores/graphStore.svelte'</span>;
+
+<span class="comment">// $lib = src/lib/의 별칭 (SvelteKit이 자동 설정)</span>
+<span class="comment">// '../../../lib/stores/...' 같은 상대경로를 피할 수 있음</span></code></pre>
+
+<!-- ═══════════════════════════════════════ -->
+<h2>2. Svelte 5 Runes — 반응형 시스템</h2>
+
+<p>Svelte 5에서 도입된 새로운 반응형 프리미티브입니다. 이 프로젝트의 <strong>모든 상태 관리</strong>가 runes 기반이므로 이해가 필수적입니다.</p>
+
+<h3>핵심 4개 rune</h3>
+
+<table>
+<tr><th>Rune</th><th>역할</th><th>React 대응</th><th>실행 시점</th></tr>
+<tr><td><code>$state(값)</code></td><td>반응형 상태 선언</td><td><code>useState</code></td><td>초기화 시 1회</td></tr>
+<tr><td><code>$derived(표현식)</code></td><td>파생 값 (자동 재계산)</td><td><code>useMemo</code></td><td>의존값 변경 시</td></tr>
+<tr><td><code>$effect(() =&gt; ...)</code></td><td>부수효과 실행</td><td><code>useEffect</code></td><td>의존값 변경 시</td></tr>
+<tr><td><code>$props()</code></td><td>컴포넌트 속성 받기</td><td>함수 인자</td><td>부모 렌더 시</td></tr>
+</table>
+
+<h3><code>$state</code> — 반응형 상태</h3>
+<pre><code><span class="keyword">let</span> count = $state(0);
+<span class="comment">// count가 변경되면 이를 읽는 모든 곳이 자동으로 업데이트</span>
+
+count = 5;  <span class="comment">// 단순 할당으로 상태 변경 (React의 setCount(5)에 대응)</span></code></pre>
+
+<h3><code>$derived</code> — 파생 값</h3>
+<pre><code><span class="keyword">let</span> count = $state(0);
+<span class="keyword">const</span> doubled = $derived(count * 2);
+<span class="comment">// count가 3이면 doubled는 자동으로 6</span>
+<span class="comment">// 명시적 의존성 배열이 필요 없음 — Svelte가 자동 추적</span></code></pre>
+
+<h3><code>$effect</code> — 부수효과</h3>
+<pre><code>$effect(() =&gt; {
+  console.log(`count is now ${count}`);
+  <span class="comment">// count를 읽으므로 count 변경 시 자동 재실행</span>
+  <span class="comment">// React useEffect와 달리 의존성 배열을 직접 쓸 필요 없음</span>
+});
+
+<span class="comment">// 이 프로젝트의 ZUICanvas.svelte에서:</span>
+$effect(() =&gt; {
+  <span class="keyword">const</span> level = semanticStore.currentLevel;  <span class="comment">// 의존성 자동 추적</span>
+  <span class="keyword">if</span> (!level) <span class="keyword">return</span>;
+  nodes = toSemanticFlowNodes(level);         <span class="comment">// level 변경 시 노드 재생성</span>
+});</code></pre>
+
+<h3><code>$state.raw</code> — 성능 최적화</h3>
+<pre><code><span class="keyword">let</span> nodes = $state.raw&lt;<span class="type">Node</span>[]&gt;([]);
+<span class="comment">// 일반 $state는 깊은(deep) 반응성 — 배열 내부 요소 변경도 감지</span>
+<span class="comment">// $state.raw는 참조(reference)만 추적 — 재할당만 감지</span>
+<span class="comment">// 노드/엣지 배열처럼 큰 데이터에 사용하여 불필요한 Proxy 오버헤드 방지</span>
+
+nodes = [...nodes, newNode];  <span class="comment">// 재할당 → 반응 O</span>
+nodes[0].x = 100;             <span class="comment">// 내부 변경 → 반응 X (raw이므로)</span></code></pre>
+
+<div class="warn">
+<strong>Svelte 5 Proxy 주의점:</strong> <code>$state</code>로 만든 값은 JavaScript <code>Proxy</code> 객체로 감싸집니다.
+<code>.sort()</code>, <code>.reverse()</code>, <code>.splice()</code> 같은 in-place 변경 메서드를 호출하면
+<code>state_unsafe_mutation</code> 에러가 발생합니다.
+
+<pre><code><span class="comment">// 에러 발생:</span>
+{#each node.children.sort(compareFn) as child}
+
+<span class="comment">// 해결: 스프레드로 복사 후 정렬</span>
+{#each [...node.children].sort(compareFn) as child}</code></pre>
+</div>
+
+<h3><code>.svelte.ts</code> 파일 확장자</h3>
+<pre><code><span class="comment">// Runes($state, $derived 등)는 두 곳에서만 사용 가능:</span>
+<span class="comment">// 1. .svelte 컴포넌트 파일</span>
+<span class="comment">// 2. .svelte.ts 모듈 파일 ← 스토어에서 사용</span>
+
+<span class="comment">// 일반 .ts 파일에서는 $state를 쓸 수 없음</span>
+<span class="comment">// 그래서 스토어 파일이 xxxStore.svelte.ts 확장자를 가짐</span></code></pre>
+
+<h3>이 프로젝트의 스토어 패턴</h3>
+
+<p>Svelte 5에서는 runes를 활용한 클로저 싱글턴 패턴으로 상태를 관리합니다.
+이 패턴이 <strong>모든 스토어에서 동일하게</strong> 반복됩니다:</p>
+
+<pre><code><span class="comment">// src/lib/stores/xxxStore.svelte.ts</span>
+<span class="keyword">function</span> createXxxStore() {
+  <span class="keyword">let</span> value = $state(초기값);        <span class="comment">// 반응형 상태 (외부에서 직접 접근 불가)</span>
+
+  <span class="keyword">return</span> {
+    <span class="keyword">get</span> value() { <span class="keyword">return</span> value; },   <span class="comment">// getter로 읽기 노출</span>
+    <span class="keyword">set</span> value(v) { value = v; },     <span class="comment">// setter로 쓰기 노출</span>
+    someMethod() { ... },            <span class="comment">// 복잡한 상태 변경 로직</span>
+  };
+}
+
+<span class="keyword">export const</span> xxxStore = createXxxStore(); <span class="comment">// 모듈 레벨 싱글턴</span>
+<span class="comment">// → 어디서 import해도 같은 인스턴스</span></code></pre>
+
+<div class="note">
+<strong>왜 클로저인가:</strong> <code>$state</code> 변수를 함수 스코프 안에 가두고, getter/setter만 노출합니다.
+외부에서 <code>xxxStore.value = 5</code>로 변경하면 setter가 호출되어 반응형 업데이트가 트리거됩니다.
+이것은 React의 Context + useReducer나 Zustand의 create()와 유사한 역할입니다.
+</div>
+
+<!-- ═══════════════════════════════════════ -->
+<h2>3. Vite — 빌드 도구</h2>
+
+<div class="diagram">Vite = 개발 서버 (ESM 네이티브, HMR) + 프로덕션 번들러 (Rollup 기반)
+
+대응 관계:
+  Create React App / webpack  →  Vite     ← 이 프로젝트
+  Next.js (내장 번들러)        →  SvelteKit + Vite</div>
+
+<h3>개발 시 (Development)</h3>
+<ul>
+  <li>브라우저의 네이티브 ES Modules를 활용하여 <strong>번들링 없이</strong> 파일을 직접 서빙</li>
+  <li>파일 변경 시 HMR(Hot Module Replacement)로 <strong>밀리초 단위</strong> 반영. 전체 빌드 불필요</li>
+  <li><code>npm run dev</code> → <code>http://localhost:5173</code> (또는 다음 빈 포트)</li>
+</ul>
+
+<h3>빌드 시 (Production)</h3>
+<ul>
+  <li><code>npm run build</code> → Rollup 기반 번들링: 트리쉐이킹, 코드 스플리팅, minification</li>
+  <li>결과물은 <code>build/</code> 폴더에 정적 파일로 출력 (adapter-static)</li>
+</ul>
+
+<h3>이 프로젝트에서 Vite가 하는 특수한 일</h3>
+
+<pre><code><span class="comment">// vite.config.js에서 주목할 설정들:</span>
+
+<span class="comment">// 1. $lib 경로 별칭 — SvelteKit이 자동 설정</span>
+<span class="comment">//    import { x } from '$lib/stores/...'</span>
+
+<span class="comment">// 2. WASM 파일 서빙</span>
+<span class="comment">//    static/ 폴더의 .wasm 파일을 개발 서버가 그대로 서빙</span>
+<span class="comment">//    tree-sitter-python.wasm, tree-sitter-javascript.wasm 등</span>
+
+<span class="comment">// 3. ?testDir= dev 미들웨어</span>
+<span class="comment">//    개발 시 ?testDir=/tmp/micrograd 파라미터로 로컬 디렉토리를 읽어</span>
+<span class="comment">//    File System Access API 없이 테스트 데이터를 제공</span></code></pre>
+
+<div class="note">
+<strong><code>import.meta.env</code></strong>: Vite가 제공하는 환경 변수 접근법입니다.
+<code>import.meta.env.DEV</code>는 개발 모드에서 <code>true</code>, 프로덕션에서 <code>false</code>.
+이 프로젝트에서 dev-only 디버그 코드를 분기할 때 사용합니다.
+</div>
+
+<!-- ═══════════════════════════════════════ -->
+<h2>4. @xyflow/svelte (SvelteFlow) — 그래프 렌더링</h2>
+
+<div class="diagram">SvelteFlow = 노드 + 엣지 기반 인터랙티브 다이어그램 라이브러리
+           React Flow의 Svelte 포팅
+
+용도: 플로차트, 마인드맵, 데이터 파이프라인 시각화, 코드 구조 시각화 등</div>
+
+<h3>핵심 개념</h3>
+
+<table>
+<tr><th>개념</th><th>설명</th><th>이 프로젝트에서</th></tr>
+<tr><td><strong>Node</strong></td><td>캔버스 위의 사각형 요소</td><td>파일, 함수, 시맨틱 역할 블록</td></tr>
+<tr><td><strong>Edge</strong></td><td>노드 간 연결선</td><td>import 관계, 의존성, 호출 관계</td></tr>
+<tr><td><strong>Handle</strong></td><td>노드의 연결 포인트</td><td>top/bottom (TB 레이아웃), left/right (LR 레이아웃)</td></tr>
+<tr><td><strong>Viewport</strong></td><td>현재 보이는 캔버스 영역</td><td>pan(드래그), zoom(스크롤) 상태</td></tr>
+<tr><td><strong>nodeTypes</strong></td><td>커스텀 노드 타입 등록 맵</td><td>5종의 커스텀 노드 컴포넌트 매핑</td></tr>
+</table>
+
+<h3>데이터 형태</h3>
+
+<pre><code><span class="comment">// SvelteFlow가 기대하는 노드 데이터:</span>
+{
+  id: <span class="string">'file-1'</span>,
+  type: <span class="string">'fileNode'</span>,              <span class="comment">// nodeTypes 맵의 키 → 렌더링할 컴포넌트 결정</span>
+  position: { x: 100, y: 200 },   <span class="comment">// 캔버스 위의 절대 좌표</span>
+  data: { label: <span class="string">'main.py'</span>, ... } <span class="comment">// 커스텀 데이터 (컴포넌트가 props로 받음)</span>
+}
+
+<span class="comment">// SvelteFlow가 기대하는 엣지 데이터:</span>
+{
+  id: <span class="string">'e1'</span>,
+  source: <span class="string">'file-1'</span>,               <span class="comment">// 출발 노드 id</span>
+  target: <span class="string">'file-2'</span>,               <span class="comment">// 도착 노드 id</span>
+  type: <span class="string">'smoothstep'</span>,             <span class="comment">// 엣지 곡선 스타일</span>
+  animated: <span class="keyword">true</span>,                 <span class="comment">// 점선 애니메이션</span>
+}</code></pre>
+
+<h3>컴포넌트 사용</h3>
+
+<pre><code><span class="comment">&lt;!-- ZUICanvas.svelte에서 --&gt;</span>
+&lt;<span class="type">SvelteFlow</span>
+  {nodes}                         <span class="comment">&lt;!-- 노드 배열 바인딩 --&gt;</span>
+  {edges}                         <span class="comment">&lt;!-- 엣지 배열 바인딩 --&gt;</span>
+  {nodeTypes}                     <span class="comment">&lt;!-- 커스텀 노드 타입 맵 --&gt;</span>
+  on:nodeclick={handleNodeClick}  <span class="comment">&lt;!-- 노드 클릭 이벤트 --&gt;</span>
+  on:paneclick={handlePaneClick}  <span class="comment">&lt;!-- 빈 캔버스 클릭 이벤트 --&gt;</span>
+  fitView                         <span class="comment">&lt;!-- 초기 뷰포트 자동 맞춤 --&gt;</span>
+&gt;
+  &lt;<span class="type">Controls</span> /&gt;                    <span class="comment">&lt;!-- 줌인/아웃/fitView 컨트롤 --&gt;</span>
+  &lt;<span class="type">MiniMap</span> /&gt;                     <span class="comment">&lt;!-- 미니맵 --&gt;</span>
+&lt;/<span class="type">SvelteFlow</span>&gt;</code></pre>
+
+<h3>커스텀 노드 만들기</h3>
+
+<pre><code><span class="comment">&lt;!-- SemanticNode.svelte (예시) --&gt;</span>
+&lt;script&gt;
+  <span class="keyword">import</span> { Handle, Position } <span class="keyword">from</span> <span class="string">'@xyflow/svelte'</span>;
+  <span class="keyword">let</span> { data } = $props();  <span class="comment">// SvelteFlow가 전달하는 노드 data</span>
+&lt;/script&gt;
+
+<span class="comment">&lt;!-- Handle: 엣지가 연결되는 포인트 --&gt;</span>
+&lt;<span class="type">Handle</span> type="target" position={Position.Left} /&gt;
+
+&lt;div class="semantic-node"&gt;
+  &lt;h3&gt;{data.label}&lt;/h3&gt;
+  &lt;p&gt;{data.description}&lt;/p&gt;
+&lt;/div&gt;
+
+&lt;<span class="type">Handle</span> type="source" position={Position.Right} /&gt;</code></pre>
+
+<!-- ═══════════════════════════════════════ -->
+<h2>5. web-tree-sitter — 브라우저에서 코드 파싱</h2>
+
+<h3>tree-sitter란?</h3>
+
+<div class="diagram">tree-sitter = 증분(incremental) 파서 생성기
+
+                 문법 파일 (.grammar.js)
+                      │
+              ┌───────┴───────┐
+              ▼               ▼
+         네이티브 파서       WASM 파서
+         (C 라이브러리)    (브라우저용)
+              │               │
+              ▼               ▼
+           CLI 도구       web-tree-sitter  ← 이 프로젝트
+           (에디터 등)    (브라우저에서 실행)</div>
+
+<ul>
+  <li>원래 GitHub의 코드 분석을 위해 만들어진 C 라이브러리</li>
+  <li>VSCode, Neovim 등 에디터의 구문 강조, 코드 접기 등에 사용</li>
+  <li><strong>web-tree-sitter</strong>는 이를 WebAssembly(WASM)으로 컴파일한 버전</li>
+</ul>
+
+<h3>파싱 흐름</h3>
+
+<pre><code><span class="comment">// 1. WASM 초기화 (한 번만)</span>
+<span class="keyword">await</span> Parser.init();
+<span class="keyword">const</span> parser = <span class="keyword">new</span> Parser();
+
+<span class="comment">// 2. 언어별 문법 로드</span>
+<span class="keyword">const</span> Python = <span class="keyword">await</span> Parser.Language.load(<span class="string">'tree-sitter-python.wasm'</span>);
+parser.setLanguage(Python);
+
+<span class="comment">// 3. 소스 코드 파싱 → CST(Concrete Syntax Tree)</span>
+<span class="keyword">const</span> tree = parser.parse(<span class="string">`def add(a, b):\n    return a + b`</span>);
+
+<span class="comment">// 4. 트리 순회하며 심볼 추출</span>
+tree.rootNode.children.forEach(node =&gt; {
+  <span class="keyword">if</span> (node.type === <span class="string">'function_definition'</span>) {
+    <span class="comment">// → ASTSymbol { name: 'add', kind: 'function', ... }</span>
+  }
+});</code></pre>
+
+<h3>Web Worker에서 실행하는 이유</h3>
+
+<div class="note">
+WASM 파싱은 CPU 집약적 작업입니다. 수백 개 파일을 메인 스레드에서 파싱하면 UI가 멈춥니다.
+이 프로젝트에서는 <strong>Web Worker</strong>(별도 스레드)에서 파싱을 실행하고,
+<code>postMessage</code>/<code>onmessage</code>로 메인 스레드와 통신합니다.
+
+<pre><code><span class="comment">// 메인 스레드 (parserService.ts)</span>
+worker.postMessage({ type: <span class="string">'parse'</span>, code, lang });
+
+<span class="comment">// Worker 스레드 (parserWorker.ts)</span>
+self.onmessage = (e) =&gt; {
+  <span class="keyword">const</span> symbols = parse(e.data.code, e.data.lang);
+  self.postMessage({ symbols });
+};</code></pre>
+</div>
+
+<h3>CST vs AST</h3>
+
+<table>
+<tr><th></th><th>CST (Concrete Syntax Tree)</th><th>AST (Abstract Syntax Tree)</th></tr>
+<tr><td>포함 내용</td><td>모든 토큰 (괄호, 콤마, 키워드 등 포함)</td><td>의미있는 구조만 (키워드, 구두점 제거)</td></tr>
+<tr><td>tree-sitter 출력</td><td>CST를 반환</td><td>-</td></tr>
+<tr><td>이 프로젝트</td><td>CST에서 최상위 심볼만 추출하여 <code>ASTSymbol[]</code>로 변환</td><td>이 변환 결과를 편의상 "AST"라고 부름</td></tr>
+</table>
+
+<!-- ═══════════════════════════════════════ -->
+<h2>6. @dagrejs/dagre — 자동 그래프 레이아웃</h2>
+
+<h3>dagre란?</h3>
+
+<div class="diagram">dagre = Directed Acyclic Graph Rendering Engine
+      = Graphviz의 "dot" 레이아웃 알고리즘을 JS로 구현
+
+입력: 노드 목록 + 엣지 목록 + 옵션
+출력: 각 노드의 (x, y) 좌표  ← 겹치지 않게 자동 배치</div>
+
+<h3>사용 방법</h3>
+
+<pre><code><span class="keyword">import</span> dagre <span class="keyword">from</span> <span class="string">'@dagrejs/dagre'</span>;
+
+<span class="keyword">const</span> g = <span class="keyword">new</span> dagre.graphlib.Graph();
+g.setGraph({
+  rankdir: <span class="string">'LR'</span>,   <span class="comment">// 배치 방향: LR(좌→우), TB(위→아래), RL, BT</span>
+  nodesep: 80,      <span class="comment">// 같은 계층 노드 간 간격 (px)</span>
+  ranksep: 120,     <span class="comment">// 계층 간 간격 (px)</span>
+});
+
+<span class="comment">// 노드 등록 (크기 필수)</span>
+g.setNode(<span class="string">'A'</span>, { width: 280, height: 160 });
+g.setNode(<span class="string">'B'</span>, { width: 280, height: 160 });
+
+<span class="comment">// 엣지 등록</span>
+g.setEdge(<span class="string">'A'</span>, <span class="string">'B'</span>);
+
+<span class="comment">// 레이아웃 계산</span>
+dagre.layout(g);
+
+<span class="comment">// 결과: 각 노드의 중심 좌표</span>
+g.node(<span class="string">'A'</span>);  <span class="comment">// { x: 140, y: 80, width: 280, height: 160 }</span></code></pre>
+
+<h3>이 프로젝트에서의 사용처</h3>
+
+<table>
+<tr><th>파일</th><th>방향</th><th>용도</th></tr>
+<tr><td><code>graphBuilder.ts</code></td><td><code>TB</code> (위→아래)</td><td>아키텍처 그룹 레이아웃</td></tr>
+<tr><td><code>semanticGraphBuilder.ts</code></td><td><code>LR</code> (좌→우)</td><td>시맨틱 역할 다이어그램 레이아웃</td></tr>
+</table>
+
+<div class="note">
+<strong>dagre의 한계:</strong> dagre는 좌표를 계산만 하고, 렌더링은 하지 않습니다.
+계산된 좌표를 SvelteFlow의 <code>position</code> 필드에 넣어주면 SvelteFlow가 렌더링합니다.
+또한 dagre는 매 호출마다 처음부터 레이아웃을 재계산하므로, 사용자가 노드를 드래그해도 다음 effect 실행 시 위치가 리셋됩니다.
+</div>
+
+<!-- ═══════════════════════════════════════ -->
+<h2>7. File System Access API — 브라우저에서 로컬 파일 접근</h2>
+
+<h3>개요</h3>
+
+<p>웹 앱이 사용자의 로컬 파일/폴더에 접근할 수 있게 하는 브라우저 네이티브 API입니다.
+서버 업로드 없이 <strong>브라우저만으로</strong> 로컬 파일을 읽을 수 있는 핵심 기술입니다.</p>
+
+<pre><code><span class="comment">// 사용자에게 폴더 선택 다이얼로그 표시</span>
+<span class="keyword">const</span> dirHandle = <span class="keyword">await</span> window.showDirectoryPicker();
+
+<span class="comment">// 디렉토리 내용 순회 (비동기 이터레이터)</span>
+<span class="keyword">for await</span> (<span class="keyword">const</span> entry <span class="keyword">of</span> dirHandle.values()) {
+  <span class="keyword">if</span> (entry.kind === <span class="string">'file'</span>) {
+    <span class="keyword">const</span> file = <span class="keyword">await</span> entry.getFile();
+    <span class="keyword">const</span> text = <span class="keyword">await</span> file.text();  <span class="comment">// 파일 내용 읽기</span>
+  } <span class="keyword">else if</span> (entry.kind === <span class="string">'directory'</span>) {
+    <span class="comment">// 재귀적으로 하위 디렉토리 순회</span>
+  }
+}</code></pre>
+
+<h3>브라우저 지원</h3>
+
+<table>
+<tr><th>브라우저</th><th>지원</th><th>비고</th></tr>
+<tr><td>Chrome / Edge</td><td>지원</td><td>Chromium 기반</td></tr>
+<tr><td>Firefox</td><td>미지원</td><td>fallback 필요</td></tr>
+<tr><td>Safari</td><td>미지원</td><td>fallback 필요</td></tr>
+</table>
+
+<div class="note">
+<strong>Fallback:</strong> 미지원 브라우저에서는 <code>&lt;input type="file" webkitdirectory&gt;</code>를 사용합니다.
+이 방식은 <code>FileSystemHandle</code> 대신 <code>File</code> 객체를 반환하므로, 프로젝트에서 두 경로를 모두 처리합니다.
+(<code>fileSystemService.ts</code>의 <code>handleFallbackInput()</code>)
+</div>
+
+<!-- ═══════════════════════════════════════ -->
+<h2>8. Orama — 클라이언트 사이드 검색 엔진</h2>
+
+<h3>개요</h3>
+
+<div class="diagram">Orama = 브라우저/Node에서 실행되는 벡터 + 전문(full-text) 검색 엔진
+
+전통적 검색: 서버 DB에 쿼리 → 결과 반환
+Orama:      브라우저 IndexedDB에 벡터 저장 → 클라이언트에서 직접 검색</div>
+
+<h3>이 프로젝트에서의 역할</h3>
+
+<p>AI 응답을 캐싱하는 데 사용됩니다. 정확히 같은 질문이 아니라
+<strong>유사한 질문</strong>에 대해 이전 응답을 재사용하기 위해 벡터 유사도 검색을 수행합니다:</p>
+
+<ol>
+  <li>사용자 질문 → Gemini embedding API로 벡터 변환</li>
+  <li>Orama DB에서 코사인 유사도로 가장 가까운 벡터 검색</li>
+  <li>유사도가 임계값 이상이면 캐시된 응답 반환 (API 호출 생략)</li>
+  <li>임계값 미만이면 새로 API 호출 → 결과를 Orama에 저장</li>
+</ol>
+
+<!-- ═══════════════════════════════════════ -->
+<h2>기술 스택 전체 관계도</h2>
+
+<div class="diagram">┌─────────────────────────────────────────────────────────────┐
+│                        SvelteKit                            │
+│  (파일 라우팅, adapter-static, $lib 별칭)                     │
+│                                                             │
+│  ┌──────────────┐  ┌───────────────┐  ┌──────────────────┐  │
+│  │   Svelte 5   │  │  SvelteFlow   │  │ File System      │  │
+│  │   Runes      │  │  (@xyflow)    │  │ Access API       │  │
+│  │              │  │              │  │                  │  │
+│  │  $state      │  │  Nodes       │  │  showDirectory   │  │
+│  │  $derived    │  │  Edges       │  │  Picker()        │  │
+│  │  $effect     │  │  Viewport    │  │                  │  │
+│  └──────┬───────┘  └──────┬───────┘  └────────┬─────────┘  │
+│         │                 │                    │            │
+│         ▼                 ▼                    ▼            │
+│  ┌──────────────────────────────────────────────────────┐   │
+│  │                      Vite                             │   │
+│  │  (HMR, ESM, WASM 서빙, $lib 별칭, ?testDir 미들웨어)  │   │
+│  └──────────────────────────────────────────────────────┘   │
+│                                                             │
+│  ┌──────────────┐  ┌───────────────┐  ┌──────────────────┐  │
+│  │ web-tree-    │  │    dagre      │  │    Orama         │  │
+│  │ sitter       │  │  (그래프      │  │  (벡터 검색      │  │
+│  │ (WASM 파싱)  │  │   레이아웃)   │  │   + IndexedDB)   │  │
+│  │ ← Worker     │  │              │  │                  │  │
+│  └──────────────┘  └───────────────┘  └──────────────────┘  │
+└─────────────────────────────────────────────────────────────┘</div>
+
+</body>
+</html>

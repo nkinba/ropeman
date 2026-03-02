@@ -4,6 +4,7 @@
 	import { semanticStore } from '$lib/stores/semanticStore.svelte';
 	import { graphStore } from '$lib/stores/graphStore.svelte';
 	import type { FileNode } from '$lib/types/fileTree';
+	import type { GraphNode } from '$lib/types/graph';
 
 	let { collapsed = false, ontoggle }: {
 		collapsed?: boolean;
@@ -41,17 +42,27 @@
 	}
 
 	function handleFileClick(node: FileNode) {
-		// Select the file in the graph
-		const graphNode = graphStore.nodes.find(n => n.filePath === node.path && n.kind === 'file');
-		if (graphNode) {
-			selectionStore.select(graphNode);
+		// If in code mode, create a synthetic GraphNode directly (graphStore.nodes may be empty)
+		if (semanticStore.viewMode === 'code') {
+			const lang = inferLang(node.path);
+			const syntheticNode: GraphNode = {
+				id: `file:${node.path}`,
+				kind: 'file',
+				label: node.name,
+				filePath: node.path,
+				parentId: null,
+				childCount: 0,
+				language: lang ?? undefined,
+				isExpanded: false,
+			};
+			selectionStore.selectedNode = syntheticNode;
+			selectionStore.breadcrumb = [syntheticNode];
+			return;
 		}
 
-		// If in semantic mode, find and highlight the semantic node containing this file
-		if (semanticStore.viewMode === 'semantic') {
-			const semNode = semanticStore.findSemanticNodeForFile(node.path);
-			semanticStore.selectedSemanticNode = semNode;
-		}
+		// Semantic mode: find and highlight the semantic node containing this file
+		const semNode = semanticStore.findSemanticNodeForFile(node.path);
+		semanticStore.selectedSemanticNode = semNode;
 	}
 
 	function matchesSearch(node: FileNode, query: string): boolean {

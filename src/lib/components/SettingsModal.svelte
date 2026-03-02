@@ -2,6 +2,7 @@
   import { settingsStore } from '$lib/stores/settingsStore.svelte';
   import { locale, t } from '$lib/stores/i18nStore';
   import { clearCache, getCacheSize } from '$lib/services/cacheService';
+  import { SYNTAX_THEMES } from '$lib/services/syntaxThemeService';
 
   let { open, onclose, onconnect }: { open: boolean; onclose: () => void; onconnect?: () => void } = $props();
 
@@ -13,12 +14,14 @@
 
   let cacheEnabled = $state(settingsStore.cacheEnabled);
   let lang = $state<'ko' | 'en'>(settingsStore.language);
+  let syntaxTheme = $state(settingsStore.syntaxTheme);
   let cacheSize = $state(0);
 
   $effect(() => {
     if (open) {
       cacheEnabled = settingsStore.cacheEnabled;
       lang = settingsStore.language;
+      syntaxTheme = settingsStore.syntaxTheme;
       getCacheSize().then(n => { cacheSize = n; });
     }
   });
@@ -34,11 +37,17 @@
     locale.set(lang);
   }
 
+  function handleThemeChange(e: Event) {
+    syntaxTheme = (e.target as HTMLSelectElement).value;
+    settingsStore.syntaxTheme = syntaxTheme;
+  }
+
   async function handleClearAll() {
     await clearCache();
     settingsStore.clearAll();
     cacheEnabled = true;
     lang = 'ko';
+    syntaxTheme = 'tomorrow';
     cacheSize = 0;
     locale.set('ko');
   }
@@ -92,6 +101,15 @@
           <select class="settings-select" value={lang} onchange={handleLangChange}>
             <option value="ko">한국어</option>
             <option value="en">English</option>
+          </select>
+        </section>
+
+        <section class="settings-section">
+          <label class="settings-label">{tFunc('codeTheme')}</label>
+          <select class="settings-select" value={syntaxTheme} onchange={handleThemeChange}>
+            {#each SYNTAX_THEMES as theme}
+              <option value={theme.id}>{theme.label} ({theme.mode === 'dark' ? 'Dark' : 'Light'})</option>
+            {/each}
           </select>
         </section>
 

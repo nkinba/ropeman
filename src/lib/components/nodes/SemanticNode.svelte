@@ -14,6 +14,7 @@
 <div
 	class="semantic-node"
 	class:highlighted={data.highlighted}
+	class:dimmed={data.dimmed}
 	style="
 		background: {data.color}15;
 		border-color: {data.color}60;
@@ -71,7 +72,21 @@
 	}
 
 	.semantic-node.highlighted {
-		box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5), 0 4px 20px rgba(0, 0, 0, 0.3);
+		box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5), 0 0 16px rgba(59, 130, 246, 0.3), 0 4px 20px rgba(0, 0, 0, 0.3);
+		opacity: 0.95;
+		transform: scale(1.03);
+		animation: pulse 2s ease-in-out infinite;
+	}
+
+	.semantic-node.dimmed {
+		opacity: 0.4;
+		filter: grayscale(0.3);
+		transition: opacity 0.3s ease, filter 0.3s ease;
+	}
+
+	@keyframes pulse {
+		0%, 100% { box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5), 0 0 16px rgba(59, 130, 246, 0.3), 0 4px 20px rgba(0, 0, 0, 0.3); }
+		50% { box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.6), 0 0 24px rgba(59, 130, 246, 0.4), 0 4px 20px rgba(0, 0, 0, 0.3); }
 	}
 
 	.node-header {
