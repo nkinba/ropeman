@@ -2,17 +2,82 @@ import { authStore } from '$lib/stores/authStore.svelte';
 
 let ws: WebSocket | null = null;
 let messageId = 0;
-const pendingRequests = new Map<number, { resolve: (v: string) => void; reject: (e: Error) => void }>();
+const pendingRequests = new Map<
+	number,
+	{ resolve: (v: string) => void; reject: (e: Error) => void }
+>();
 
-export function connectBridge(port: number = 9876): Promise<void> {
+// Auto-reconnect state
+let reconnectAttempts = 0;
+let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+let lastPort: number = 9800;
+let intentionalClose = false;
+
+const MAX_RECONNECT_ATTEMPTS = 5;
+const BASE_DELAY_MS = 1000;
+
+function getBackoffDelay(attempt: number): number {
+	return Math.min(BASE_DELAY_MS * Math.pow(2, attempt), 16000);
+}
+
+function clearReconnectTimer(): void {
+	if (reconnectTimer !== null) {
+		clearTimeout(reconnectTimer);
+		reconnectTimer = null;
+	}
+}
+
+function scheduleReconnect(): void {
+	if (intentionalClose || reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
+		authStore.bridgeStatus = 'disconnected';
+		if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
+			authStore.bridgeError = 'Max reconnect attempts reached';
+		}
+		reconnectAttempts = 0;
+		return;
+	}
+
+	authStore.bridgeStatus = 'reconnecting';
+	const delay = getBackoffDelay(reconnectAttempts);
+	reconnectAttempts++;
+
+	reconnectTimer = setTimeout(() => {
+		reconnectTimer = null;
+		connectBridge(lastPort).catch(() => {
+			// connectBridge failure triggers onclose → scheduleReconnect again
+		});
+	}, delay);
+}
+
+function rejectAllPending(): void {
+	for (const [id, pending] of pendingRequests) {
+		pending.reject(new Error('Connection closed'));
+		pendingRequests.delete(id);
+	}
+}
+
+export function connectBridge(port: number = 9800): Promise<void> {
 	return new Promise((resolve, reject) => {
 		if (ws && ws.readyState === WebSocket.OPEN) {
 			resolve();
 			return;
 		}
 
-		authStore.bridgeStatus = 'connecting';
+		// Clean up any existing connection
+		if (ws) {
+			intentionalClose = true;
+			ws.close();
+			ws = null;
+			intentionalClose = false;
+		}
+
+		lastPort = port;
+		const isReconnecting = authStore.bridgeStatus === 'reconnecting';
+		if (!isReconnecting) {
+			authStore.bridgeStatus = 'connecting';
+		}
 		authStore.bridgeError = '';
+		intentionalClose = false;
 
 		try {
 			ws = new WebSocket(`ws://localhost:${port}`);
@@ -34,6 +99,7 @@ export function connectBridge(port: number = 9876): Promise<void> {
 
 		ws.onopen = () => {
 			clearTimeout(timeout);
+			reconnectAttempts = 0;
 			authStore.bridgeStatus = 'connected';
 			authStore.bridgePort = port;
 			resolve();
@@ -58,18 +124,22 @@ export function connectBridge(port: number = 9876): Promise<void> {
 
 		ws.onerror = () => {
 			clearTimeout(timeout);
-			authStore.bridgeStatus = 'error';
-			authStore.bridgeError = 'WebSocket connection failed';
+			if (authStore.bridgeStatus !== 'reconnecting') {
+				authStore.bridgeStatus = 'error';
+				authStore.bridgeError = 'WebSocket connection failed';
+			}
 			reject(new Error('WebSocket connection failed'));
 		};
 
 		ws.onclose = () => {
-			authStore.bridgeStatus = 'disconnected';
+			clearTimeout(timeout);
 			ws = null;
-			// Reject all pending requests
-			for (const [id, pending] of pendingRequests) {
-				pending.reject(new Error('Connection closed'));
-				pendingRequests.delete(id);
+			rejectAllPending();
+
+			if (!intentionalClose) {
+				scheduleReconnect();
+			} else {
+				authStore.bridgeStatus = 'disconnected';
 			}
 		};
 	});
@@ -98,9 +168,17 @@ export function sendViaBridge(message: string): Promise<string> {
 }
 
 export function disconnectBridge(): void {
+	intentionalClose = true;
+	clearReconnectTimer();
+	reconnectAttempts = 0;
 	if (ws) {
 		ws.close();
 		ws = null;
 	}
+	rejectAllPending();
 	authStore.bridgeStatus = 'disconnected';
+}
+
+export function getBridgeReconnectInfo(): { attempts: number; maxAttempts: number } {
+	return { attempts: reconnectAttempts, maxAttempts: MAX_RECONNECT_ATTEMPTS };
 }

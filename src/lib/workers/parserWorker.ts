@@ -31,7 +31,7 @@ self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
 			Parser = TreeSitter.Parser ?? TreeSitter.default;
 			Language = TreeSitter.Language ?? Parser.Language;
 			await Parser.init({
-				locateFile: () => '/tree-sitter.wasm',
+				locateFile: () => '/tree-sitter.wasm'
 			});
 			parserInstance = new Parser();
 			self.postMessage({ type: 'init-done' });
@@ -47,7 +47,7 @@ self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
 				self.postMessage({
 					type: 'error',
 					filePath: msg.filePath,
-					error: 'Parser not initialized',
+					error: 'Parser not initialized'
 				});
 				return;
 			}
@@ -61,13 +61,13 @@ self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
 			self.postMessage({
 				type: 'parse-result',
 				filePath: msg.filePath,
-				symbols,
+				symbols
 			});
 		} catch (err) {
 			self.postMessage({
 				type: 'error',
 				filePath: msg.filePath,
-				error: `Parse failed: ${err}`,
+				error: `Parse failed: ${err}`
 			});
 		}
 	}
@@ -86,7 +86,7 @@ async function getGrammar(language: string) {
 		rust: '/tree-sitter-rust.wasm',
 		java: '/tree-sitter-java.wasm',
 		c: '/tree-sitter-c.wasm',
-		cpp: '/tree-sitter-cpp.wasm',
+		cpp: '/tree-sitter-cpp.wasm'
 	};
 
 	const wasmPath = grammarMap[language];
@@ -202,7 +202,7 @@ function extractGoSymbols(rootNode: any): ASTSymbol[] {
 				name: child.childForFieldName('name')?.text ?? child.text,
 				kind: 'import',
 				lineStart: child.startPosition.row + 1,
-				lineEnd: child.endPosition.row + 1,
+				lineEnd: child.endPosition.row + 1
 			});
 		} else if (child.type === 'import_declaration') {
 			symbols.push(buildImportSymbol(child));
@@ -224,7 +224,7 @@ function extractGoSymbols(rootNode: any): ASTSymbol[] {
 				kind: 'method',
 				lineStart: child.startPosition.row + 1,
 				lineEnd: child.endPosition.row + 1,
-				parentName: receiverType,
+				parentName: receiverType
 			});
 		} else if (child.type === 'type_declaration') {
 			// type_declaration contains type_spec children
@@ -247,7 +247,7 @@ function extractGoSymbols(rootNode: any): ASTSymbol[] {
 											kind: 'variable',
 											lineStart: field.startPosition.row + 1,
 											lineEnd: field.endPosition.row + 1,
-											parentName: nameNode?.text,
+											parentName: nameNode?.text
 										});
 									}
 								}
@@ -258,7 +258,7 @@ function extractGoSymbols(rootNode: any): ASTSymbol[] {
 							kind: 'class',
 							lineStart: child.startPosition.row + 1,
 							lineEnd: child.endPosition.row + 1,
-							children: methods.length > 0 ? methods : undefined,
+							children: methods.length > 0 ? methods : undefined
 						});
 					} else if (typeName === 'interface_type') {
 						const methods: ASTSymbol[] = [];
@@ -270,7 +270,7 @@ function extractGoSymbols(rootNode: any): ASTSymbol[] {
 									kind: 'method',
 									lineStart: member.startPosition.row + 1,
 									lineEnd: member.endPosition.row + 1,
-									parentName: nameNode?.text,
+									parentName: nameNode?.text
 								});
 							}
 						}
@@ -279,7 +279,7 @@ function extractGoSymbols(rootNode: any): ASTSymbol[] {
 							kind: 'interface',
 							lineStart: child.startPosition.row + 1,
 							lineEnd: child.endPosition.row + 1,
-							children: methods.length > 0 ? methods : undefined,
+							children: methods.length > 0 ? methods : undefined
 						});
 					} else {
 						// type alias
@@ -287,7 +287,7 @@ function extractGoSymbols(rootNode: any): ASTSymbol[] {
 							name: nameNode?.text ?? '<anonymous>',
 							kind: 'type',
 							lineStart: child.startPosition.row + 1,
-							lineEnd: child.endPosition.row + 1,
+							lineEnd: child.endPosition.row + 1
 						});
 					}
 				}
@@ -319,7 +319,7 @@ function extractGenericSymbols(rootNode: any, language: string): ASTSymbol[] {
 					name: nameNode?.text ?? '<anonymous>',
 					kind: 'method',
 					lineStart: node.startPosition.row + 1,
-					lineEnd: node.endPosition.row + 1,
+					lineEnd: node.endPosition.row + 1
 				});
 				return;
 			}
@@ -337,7 +337,7 @@ function extractGenericSymbols(rootNode: any, language: string): ASTSymbol[] {
 					name: nameNode?.text ?? '<anonymous>',
 					kind: 'class',
 					lineStart: node.startPosition.row + 1,
-					lineEnd: node.endPosition.row + 1,
+					lineEnd: node.endPosition.row + 1
 				});
 				return;
 			}
@@ -349,7 +349,7 @@ function extractGenericSymbols(rootNode: any, language: string): ASTSymbol[] {
 					name: nameNode?.text ?? '<anonymous>',
 					kind: 'class',
 					lineStart: node.startPosition.row + 1,
-					lineEnd: node.endPosition.row + 1,
+					lineEnd: node.endPosition.row + 1
 				});
 				return;
 			}
@@ -360,7 +360,7 @@ function extractGenericSymbols(rootNode: any, language: string): ASTSymbol[] {
 				const traitNode = node.childForFieldName('trait');
 				const implName = traitNode
 					? `${traitNode.text} for ${typeNode?.text ?? '?'}`
-					: typeNode?.text ?? '<anonymous>';
+					: (typeNode?.text ?? '<anonymous>');
 				const methods: ASTSymbol[] = [];
 				const body = node.childForFieldName('body');
 				if (body) {
@@ -372,7 +372,7 @@ function extractGenericSymbols(rootNode: any, language: string): ASTSymbol[] {
 								kind: 'method',
 								lineStart: member.startPosition.row + 1,
 								lineEnd: member.endPosition.row + 1,
-								parentName: typeNode?.text,
+								parentName: typeNode?.text
 							});
 						}
 					}
@@ -382,7 +382,7 @@ function extractGenericSymbols(rootNode: any, language: string): ASTSymbol[] {
 					kind: 'class',
 					lineStart: node.startPosition.row + 1,
 					lineEnd: node.endPosition.row + 1,
-					children: methods.length > 0 ? methods : undefined,
+					children: methods.length > 0 ? methods : undefined
 				});
 				return;
 			}
@@ -394,7 +394,7 @@ function extractGenericSymbols(rootNode: any, language: string): ASTSymbol[] {
 					name: nameNode?.text ?? '<anonymous>',
 					kind: 'interface',
 					lineStart: node.startPosition.row + 1,
-					lineEnd: node.endPosition.row + 1,
+					lineEnd: node.endPosition.row + 1
 				});
 				return;
 			}
@@ -404,6 +404,234 @@ function extractGenericSymbols(rootNode: any, language: string): ASTSymbol[] {
 			case 'use_declaration':
 			case 'preproc_include': {
 				symbols.push(buildImportSymbol(node));
+				return;
+			}
+
+			// Rust trait → interface with method signatures
+			case 'trait_item': {
+				const nameNode = node.childForFieldName('name');
+				const methods: ASTSymbol[] = [];
+				const body = node.childForFieldName('body');
+				if (body) {
+					for (const member of body.children) {
+						if (member.type === 'function_item' || member.type === 'function_signature_item') {
+							const methodName = member.childForFieldName('name');
+							methods.push({
+								name: methodName?.text ?? '<anonymous>',
+								kind: 'method',
+								lineStart: member.startPosition.row + 1,
+								lineEnd: member.endPosition.row + 1,
+								parentName: nameNode?.text
+							});
+						}
+					}
+				}
+				symbols.push({
+					name: nameNode?.text ?? '<anonymous>',
+					kind: 'interface',
+					lineStart: node.startPosition.row + 1,
+					lineEnd: node.endPosition.row + 1,
+					children: methods.length > 0 ? methods : undefined
+				});
+				return;
+			}
+
+			// C/C++ struct
+			case 'struct_specifier': {
+				const nameNode = node.childForFieldName('name');
+				if (!nameNode) break; // skip anonymous structs, walk children
+				const members: ASTSymbol[] = [];
+				const body = node.childForFieldName('body');
+				if (body) {
+					for (const member of body.children) {
+						if (member.type === 'field_declaration') {
+							const declarator = member.childForFieldName('declarator');
+							if (declarator) {
+								members.push({
+									name: declarator.text,
+									kind: 'variable',
+									lineStart: member.startPosition.row + 1,
+									lineEnd: member.endPosition.row + 1,
+									parentName: nameNode.text
+								});
+							}
+						} else if (member.type === 'function_definition') {
+							const declarator = member.childForFieldName('declarator');
+							members.push({
+								name: declarator?.text ?? '<anonymous>',
+								kind: 'method',
+								lineStart: member.startPosition.row + 1,
+								lineEnd: member.endPosition.row + 1,
+								parentName: nameNode.text
+							});
+						}
+					}
+				}
+				symbols.push({
+					name: nameNode.text,
+					kind: 'class',
+					lineStart: node.startPosition.row + 1,
+					lineEnd: node.endPosition.row + 1,
+					children: members.length > 0 ? members : undefined
+				});
+				return;
+			}
+
+			// C/C++ enum
+			case 'enum_specifier': {
+				const nameNode = node.childForFieldName('name');
+				if (!nameNode) break; // skip anonymous enums
+				symbols.push({
+					name: nameNode.text,
+					kind: 'class',
+					lineStart: node.startPosition.row + 1,
+					lineEnd: node.endPosition.row + 1
+				});
+				return;
+			}
+
+			// C++ class
+			case 'class_specifier': {
+				const nameNode = node.childForFieldName('name');
+				if (!nameNode) break; // skip anonymous classes
+				const methods: ASTSymbol[] = [];
+				const body = node.childForFieldName('body');
+				if (body) {
+					for (const member of body.children) {
+						if (member.type === 'function_definition') {
+							const declarator = member.childForFieldName('declarator');
+							methods.push({
+								name: declarator?.text ?? '<anonymous>',
+								kind: 'method',
+								lineStart: member.startPosition.row + 1,
+								lineEnd: member.endPosition.row + 1,
+								parentName: nameNode.text
+							});
+						} else if (member.type === 'declaration') {
+							const declarator = member.childForFieldName('declarator');
+							if (declarator?.type === 'function_declarator') {
+								const funcName = declarator.childForFieldName('declarator');
+								methods.push({
+									name: funcName?.text ?? declarator.text,
+									kind: 'method',
+									lineStart: member.startPosition.row + 1,
+									lineEnd: member.endPosition.row + 1,
+									parentName: nameNode.text
+								});
+							}
+						}
+					}
+				}
+				symbols.push({
+					name: nameNode.text,
+					kind: 'class',
+					lineStart: node.startPosition.row + 1,
+					lineEnd: node.endPosition.row + 1,
+					children: methods.length > 0 ? methods : undefined
+				});
+				return;
+			}
+
+			// C++ namespace — walk into body, don't add as symbol
+			case 'namespace_definition': {
+				const body = node.childForFieldName('body');
+				if (body) {
+					for (const member of body.children) {
+						walk(member);
+					}
+				}
+				return;
+			}
+
+			// Java enum
+			case 'enum_declaration': {
+				const nameNode = node.childForFieldName('name');
+				symbols.push({
+					name: nameNode?.text ?? '<anonymous>',
+					kind: 'class',
+					lineStart: node.startPosition.row + 1,
+					lineEnd: node.endPosition.row + 1
+				});
+				return;
+			}
+
+			// Java constructor
+			case 'constructor_declaration': {
+				const nameNode = node.childForFieldName('name');
+				symbols.push({
+					name: nameNode?.text ?? '<constructor>',
+					kind: 'method',
+					lineStart: node.startPosition.row + 1,
+					lineEnd: node.endPosition.row + 1
+				});
+				return;
+			}
+
+			// Java package
+			case 'package_declaration': {
+				symbols.push(buildImportSymbol(node));
+				return;
+			}
+
+			// C typedef (e.g., typedef struct { ... } TypeName;)
+			case 'type_definition': {
+				const declarator = node.childForFieldName('declarator');
+				const typeChild = node.childForFieldName('type');
+				if (
+					declarator &&
+					(typeChild?.type === 'struct_specifier' || typeChild?.type === 'enum_specifier')
+				) {
+					symbols.push({
+						name: declarator.text,
+						kind: 'class',
+						lineStart: node.startPosition.row + 1,
+						lineEnd: node.endPosition.row + 1
+					});
+					return;
+				}
+				break;
+			}
+		}
+
+		// Generic heuristic fallback: catch unhandled *_definition/*_declaration nodes
+		// This enables basic symbol extraction for any tree-sitter grammar
+		const nodeType = node.type;
+		if (
+			!nodeType.startsWith('field_') &&
+			!nodeType.startsWith('variable_') &&
+			!nodeType.startsWith('lexical_') &&
+			(nodeType.endsWith('_definition') ||
+				nodeType.endsWith('_declaration') ||
+				nodeType.endsWith('_item'))
+		) {
+			const nameNode = node.childForFieldName('name');
+			if (nameNode) {
+				let kind: SymbolKind = 'function';
+				if (
+					nodeType.includes('class') ||
+					nodeType.includes('struct') ||
+					nodeType.includes('enum')
+				) {
+					kind = 'class';
+				} else if (
+					nodeType.includes('interface') ||
+					nodeType.includes('trait') ||
+					nodeType.includes('protocol')
+				) {
+					kind = 'interface';
+				} else if (
+					nodeType.includes('import') ||
+					nodeType.includes('use') ||
+					nodeType.includes('include')
+				) {
+					kind = 'import';
+				}
+				symbols.push({
+					name: nameNode.text,
+					kind,
+					lineStart: node.startPosition.row + 1,
+					lineEnd: node.endPosition.row + 1
+				});
 				return;
 			}
 		}
@@ -434,7 +662,7 @@ function extractArrowFunctions(node: any): ASTSymbol[] {
 				name: nameNode.text,
 				kind: 'function',
 				lineStart: node.startPosition.row + 1,
-				lineEnd: node.endPosition.row + 1,
+				lineEnd: node.endPosition.row + 1
 			});
 		}
 	}
@@ -495,7 +723,7 @@ function buildFunctionSymbol(node: any, kind: SymbolKind, language: string = 'py
 		kind,
 		lineStart: node.startPosition.row + 1,
 		lineEnd: node.endPosition.row + 1,
-		badges: badges.length > 0 ? badges : undefined,
+		badges: badges.length > 0 ? badges : undefined
 	};
 }
 
@@ -518,7 +746,7 @@ function buildClassSymbol(node: any, language: string = 'python'): ASTSymbol {
 					kind: 'method',
 					lineStart: member.startPosition.row + 1,
 					lineEnd: member.endPosition.row + 1,
-					parentName: nameNode?.text,
+					parentName: nameNode?.text
 				});
 			}
 		}
@@ -530,7 +758,7 @@ function buildClassSymbol(node: any, language: string = 'python'): ASTSymbol {
 		lineStart: node.startPosition.row + 1,
 		lineEnd: node.endPosition.row + 1,
 		children: methods.length > 0 ? methods : undefined,
-		badges: badges.length > 0 ? badges : undefined,
+		badges: badges.length > 0 ? badges : undefined
 	};
 }
 
@@ -539,6 +767,6 @@ function buildImportSymbol(node: any): ASTSymbol {
 		name: node.text,
 		kind: 'import',
 		lineStart: node.startPosition.row + 1,
-		lineEnd: node.endPosition.row + 1,
+		lineEnd: node.endPosition.row + 1
 	};
 }

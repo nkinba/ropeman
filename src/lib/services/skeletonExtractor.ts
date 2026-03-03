@@ -1,6 +1,11 @@
 import type { FileNode } from '$lib/types/fileTree';
 import type { ASTSymbol } from '$lib/types/ast';
-import type { SkeletonFile, SkeletonImport, SkeletonPayload, SkeletonSymbol } from '$lib/types/skeleton';
+import type {
+	SkeletonFile,
+	SkeletonImport,
+	SkeletonPayload,
+	SkeletonSymbol
+} from '$lib/types/skeleton';
 
 const SKIP_KINDS = new Set(['variable', 'interface', 'type']);
 
@@ -87,7 +92,10 @@ export function extractSubSkeleton(
 	};
 }
 
-export function estimatePayloadSize(payload: SkeletonPayload): { bytes: number; formatted: string } {
+export function estimatePayloadSize(payload: SkeletonPayload): {
+	bytes: number;
+	formatted: string;
+} {
 	const json = JSON.stringify(payload);
 	const bytes = new TextEncoder().encode(json).byteLength;
 	return { bytes, formatted: formatBytes(bytes) };
@@ -119,9 +127,7 @@ function toSkeletonSymbol(sym: ASTSymbol): SkeletonSymbol {
 		result.badges = [...sym.badges];
 	}
 	if (sym.children && sym.children.length > 0) {
-		result.children = sym.children
-			.filter(c => !SKIP_KINDS.has(c.kind))
-			.map(toSkeletonSymbol);
+		result.children = sym.children.filter((c) => !SKIP_KINDS.has(c.kind)).map(toSkeletonSymbol);
 		if (result.children.length === 0) delete result.children;
 	}
 	return result;
@@ -137,7 +143,10 @@ function parseImport(sym: ASTSymbol): SkeletonImport {
 	if (fromMatch) {
 		return {
 			source: fromMatch[2].trim(),
-			specifiers: fromMatch[1].split(',').map(s => s.trim()).filter(Boolean)
+			specifiers: fromMatch[1]
+				.split(',')
+				.map((s) => s.trim())
+				.filter(Boolean)
 		};
 	}
 
@@ -158,13 +167,46 @@ function countSymbols(symbols: SkeletonSymbol[]): number {
 function inferLanguage(filePath: string): string | null {
 	const ext = filePath.split('.').pop()?.toLowerCase();
 	switch (ext) {
-		case 'py': return 'python';
-		case 'js': return 'javascript';
-		case 'ts': return 'typescript';
-		case 'jsx': return 'jsx';
-		case 'tsx': return 'tsx';
-		case 'svelte': return 'svelte';
-		default: return null;
+		case 'py':
+			return 'python';
+		case 'js':
+			return 'javascript';
+		case 'ts':
+			return 'typescript';
+		case 'jsx':
+			return 'jsx';
+		case 'tsx':
+			return 'tsx';
+		case 'svelte':
+			return 'svelte';
+		case 'go':
+			return 'go';
+		case 'rs':
+			return 'rust';
+		case 'java':
+			return 'java';
+		case 'c':
+		case 'h':
+			return 'c';
+		case 'cpp':
+		case 'hpp':
+		case 'cc':
+		case 'cxx':
+			return 'cpp';
+		case 'rb':
+			return 'ruby';
+		case 'php':
+			return 'php';
+		case 'swift':
+			return 'swift';
+		case 'kt':
+			return 'kotlin';
+		case 'scala':
+			return 'scala';
+		case 'cs':
+			return 'csharp';
+		default:
+			return null;
 	}
 }
 

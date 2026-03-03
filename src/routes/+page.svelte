@@ -37,7 +37,42 @@
 
 	const hasProject = $derived(projectStore.fileTree !== null);
 	const hasSelection = $derived(selectionStore.selectedNode !== null);
-	const hasSemanticSelection = $derived(semanticStore.viewMode === 'semantic' && semanticStore.selectedSemanticNode !== null);
+	const hasSemanticSelection = $derived(
+		semanticStore.viewMode === 'semantic' && semanticStore.selectedSemanticNode !== null
+	);
+	const isSnippetMode = $derived(projectStore.isSnippetMode);
+
+	// Auto-trigger semantic analysis when snippet mode is active and AI becomes ready
+	$effect(() => {
+		if (
+			isSnippetMode &&
+			hasProject &&
+			!projectStore.isLoading &&
+			authStore.isReady &&
+			!semanticStore.isAnalyzing &&
+			semanticStore.currentLevel === null
+		) {
+			analyzeTopLevel();
+		}
+	});
+
+	// Auto-show onboarding when snippet parsing completes but AI is not connected
+	let snippetOnboardingShown = $state(false);
+	$effect(() => {
+		if (
+			isSnippetMode &&
+			hasProject &&
+			!projectStore.isLoading &&
+			!authStore.isReady &&
+			!snippetOnboardingShown
+		) {
+			snippetOnboardingShown = true;
+			showOnboarding = true;
+		}
+		if (!isSnippetMode) {
+			snippetOnboardingShown = false;
+		}
+	});
 
 	// Dev-only: auto-load test project from ?testDir= URL parameter
 	onMount(() => {
@@ -71,10 +106,10 @@
 
 <div id="app">
 	<Header
-		onsettings={() => showSettings = !showSettings}
-		onnewproject={() => showNewProject = true}
-		onconnect={() => showConnect = true}
-		onanalyze={() => showOnboarding = true}
+		onsettings={() => (showSettings = !showSettings)}
+		onnewproject={() => (showNewProject = true)}
+		onconnect={() => (showConnect = true)}
+		onanalyze={() => (showOnboarding = true)}
 	/>
 
 	{#if projectStore.isLoading}
@@ -84,16 +119,18 @@
 	{#if showNewProject && hasProject}
 		<!-- Overlay Dropzone on top of existing canvas -->
 		<div class="dropzone-overlay">
-			<Dropzone oncancel={() => showNewProject = false} onload={() => showNewProject = false} />
+			<Dropzone oncancel={() => (showNewProject = false)} onload={() => (showNewProject = false)} />
 		</div>
 	{:else if !hasProject && !projectStore.isLoading}
-		<Dropzone onload={() => showNewProject = false} />
+		<Dropzone onload={() => (showNewProject = false)} />
 	{:else if hasProject}
 		<div class="main-layout">
-			<FileExplorer
-				collapsed={explorerCollapsed}
-				ontoggle={() => explorerCollapsed = !explorerCollapsed}
-			/>
+			{#if !isSnippetMode}
+				<FileExplorer
+					collapsed={explorerCollapsed}
+					ontoggle={() => (explorerCollapsed = !explorerCollapsed)}
+				/>
+			{/if}
 			<div class="canvas-area">
 				{#if semanticStore.viewMode === 'semantic'}
 					<ZUICanvas />
@@ -111,19 +148,30 @@
 				</div>
 			{/if}
 		</div>
-		<ChatPopup onconnect={() => showConnect = true} />
+		<ChatPopup onconnect={() => (showConnect = true)} />
 	{/if}
 
 	{#if showSettings}
-		<SettingsModal open={showSettings} onclose={() => showSettings = false} onconnect={() => { showSettings = false; showConnect = true; }} />
+		<SettingsModal
+			open={showSettings}
+			onclose={() => (showSettings = false)}
+			onconnect={() => {
+				showSettings = false;
+				showConnect = true;
+			}}
+		/>
 	{/if}
 
 	{#if showConnect}
-		<ConnectModal open={showConnect} onclose={() => showConnect = false} />
+		<ConnectModal open={showConnect} onclose={() => (showConnect = false)} />
 	{/if}
 
 	{#if showOnboarding}
-		<OnboardingModal open={showOnboarding} onclose={() => showOnboarding = false} onselect={handleTrackSelect} />
+		<OnboardingModal
+			open={showOnboarding}
+			onclose={() => (showOnboarding = false)}
+			onselect={handleTrackSelect}
+		/>
 	{/if}
 </div>
 
@@ -165,8 +213,14 @@
 	}
 
 	@keyframes panelSlide {
-		from { width: 0; opacity: 0; }
-		to { width: 400px; opacity: 1; }
+		from {
+			width: 0;
+			opacity: 0;
+		}
+		to {
+			width: 400px;
+			opacity: 1;
+		}
 	}
 
 	@media (max-width: 768px) {
@@ -182,8 +236,12 @@
 		}
 
 		@keyframes mobileSlide {
-			from { transform: translateX(100%); }
-			to { transform: translateX(0); }
+			from {
+				transform: translateX(100%);
+			}
+			to {
+				transform: translateX(0);
+			}
 		}
 	}
 </style>

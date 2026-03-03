@@ -6,7 +6,10 @@
 	import type { FileNode } from '$lib/types/fileTree';
 	import type { GraphNode } from '$lib/types/graph';
 
-	let { collapsed = false, ontoggle }: {
+	let {
+		collapsed = false,
+		ontoggle
+	}: {
 		collapsed?: boolean;
 		ontoggle?: () => void;
 	} = $props();
@@ -53,7 +56,7 @@
 				parentId: null,
 				childCount: 0,
 				language: lang ?? undefined,
-				isExpanded: false,
+				isExpanded: false
 			};
 			selectionStore.selectedNode = syntheticNode;
 			selectionStore.breadcrumb = [syntheticNode];
@@ -70,7 +73,7 @@
 		const lowerQuery = query.toLowerCase();
 		if (node.name.toLowerCase().includes(lowerQuery)) return true;
 		if (node.kind === 'directory' && node.children) {
-			return node.children.some(c => matchesSearch(c, query));
+			return node.children.some((c) => matchesSearch(c, query));
 		}
 		return false;
 	}
@@ -82,19 +85,55 @@
 	function inferLang(path: string): string | null {
 		const ext = path.split('.').pop()?.toLowerCase();
 		switch (ext) {
-			case 'py': return 'python';
-			case 'js': return 'javascript';
-			case 'ts': return 'typescript';
-			case 'jsx': return 'jsx';
-			case 'tsx': return 'tsx';
-			case 'svelte': return 'svelte';
-			case 'css': return 'css';
-			case 'html': return 'html';
-			case 'json': return 'json';
-			case 'md': return 'markdown';
-			default: return null;
+			case 'py':
+				return 'python';
+			case 'js':
+				return 'javascript';
+			case 'ts':
+				return 'typescript';
+			case 'jsx':
+				return 'jsx';
+			case 'tsx':
+				return 'tsx';
+			case 'svelte':
+				return 'svelte';
+			case 'css':
+				return 'css';
+			case 'html':
+				return 'html';
+			case 'json':
+				return 'json';
+			case 'md':
+				return 'markdown';
+			default:
+				return null;
 		}
 	}
+
+	// Collect all directory paths containing matching files
+	function collectMatchingDirs(node: FileNode, query: string): string[] {
+		if (!query || node.kind !== 'directory') return [];
+		const dirs: string[] = [];
+		if (node.children) {
+			for (const child of node.children) {
+				if (matchesSearch(child, query)) {
+					dirs.push(node.path);
+					dirs.push(...collectMatchingDirs(child, query));
+				}
+			}
+		}
+		return dirs;
+	}
+
+	// Auto-expand directories containing search matches
+	$effect(() => {
+		if (searchQuery && projectStore.fileTree) {
+			const matchDirs = collectMatchingDirs(projectStore.fileTree, searchQuery);
+			if (matchDirs.length > 0) {
+				expandedDirs = new Set(matchDirs);
+			}
+		}
+	});
 
 	// Auto-expand root directory
 	$effect(() => {
@@ -133,37 +172,88 @@
 </script>
 
 {#if !collapsed}
-<aside class="file-explorer">
-	<div class="explorer-header">
-		<span class="explorer-title">Explorer</span>
-		<button class="explorer-toggle" onclick={ontoggle} title="Hide Explorer">
-			<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-				<polyline points="11 17 6 12 11 7"/>
-			</svg>
-		</button>
-	</div>
+	<aside class="file-explorer">
+		<div class="explorer-header">
+			<span class="explorer-title">Explorer</span>
+			<button class="explorer-toggle" onclick={ontoggle} title="Hide Explorer">
+				<svg
+					width="14"
+					height="14"
+					viewBox="0 0 24 24"
+					fill="none"
+					stroke="currentColor"
+					stroke-width="2"
+					stroke-linecap="round"
+					stroke-linejoin="round"
+				>
+					<polyline points="11 17 6 12 11 7" />
+				</svg>
+			</button>
+		</div>
 
-	<div class="explorer-search">
-		<input
-			type="text"
-			placeholder="Search files..."
-			bind:value={searchQuery}
-			class="search-input"
-		/>
-	</div>
+		<div class="explorer-search">
+			<div class="search-wrapper">
+				<svg
+					class="search-icon"
+					width="12"
+					height="12"
+					viewBox="0 0 24 24"
+					fill="none"
+					stroke="currentColor"
+					stroke-width="2"
+					stroke-linecap="round"
+					stroke-linejoin="round"
+				>
+					<circle cx="11" cy="11" r="8" />
+					<line x1="21" y1="21" x2="16.65" y2="16.65" />
+				</svg>
+				<input
+					type="text"
+					placeholder="Filter files..."
+					bind:value={searchQuery}
+					class="search-input"
+				/>
+				{#if searchQuery}
+					<button class="search-clear" onclick={() => (searchQuery = '')} title="Clear filter">
+						<svg
+							width="12"
+							height="12"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							stroke-width="2"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+						>
+							<line x1="18" y1="6" x2="6" y2="18" />
+							<line x1="6" y1="6" x2="18" y2="18" />
+						</svg>
+					</button>
+				{/if}
+			</div>
+		</div>
 
-	<div class="explorer-tree" bind:this={treeContainer}>
-		{#if projectStore.fileTree}
-			{@render treeNode(projectStore.fileTree, 0)}
-		{/if}
-	</div>
-</aside>
+		<div class="explorer-tree" bind:this={treeContainer}>
+			{#if projectStore.fileTree}
+				{@render treeNode(projectStore.fileTree, 0)}
+			{/if}
+		</div>
+	</aside>
 {:else}
-<button class="explorer-collapsed-toggle" onclick={ontoggle} title="Show Explorer">
-	<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-		<polyline points="13 17 18 12 13 7"/>
-	</svg>
-</button>
+	<button class="explorer-collapsed-toggle" onclick={ontoggle} title="Show Explorer">
+		<svg
+			width="14"
+			height="14"
+			viewBox="0 0 24 24"
+			fill="none"
+			stroke="currentColor"
+			stroke-width="2"
+			stroke-linecap="round"
+			stroke-linejoin="round"
+		>
+			<polyline points="13 17 18 12 13 7" />
+		</svg>
+	</button>
 {/if}
 
 {#snippet treeNode(node: FileNode, depth: number)}
@@ -175,9 +265,7 @@
 				style="padding-left: {12 + depth * 16}px;"
 				onclick={() => toggleDir(node.path)}
 			>
-				<span class="tree-chevron" class:expanded={expandedDirs.has(node.path)}>
-					&#9656;
-				</span>
+				<span class="tree-chevron" class:expanded={expandedDirs.has(node.path)}> &#9656; </span>
 				<span class="tree-icon">&#128193;</span>
 				<span class="tree-label">{node.name}</span>
 				{#if node.children}
@@ -283,24 +371,56 @@
 		border-bottom: 1px solid var(--border);
 	}
 
-	.search-input {
-		width: 100%;
-		padding: 6px 10px;
-		font-size: 12px;
+	.search-wrapper {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		padding: 4px 8px;
 		border: 1px solid var(--border);
 		border-radius: 4px;
 		background: var(--bg-secondary);
-		color: var(--text-primary);
-		outline: none;
 		transition: border-color 0.15s ease;
 	}
 
-	.search-input:focus {
+	.search-wrapper:focus-within {
 		border-color: var(--accent, #3b82f6);
+	}
+
+	.search-icon {
+		color: var(--text-muted);
+		flex-shrink: 0;
+	}
+
+	.search-input {
+		flex: 1;
+		min-width: 0;
+		padding: 2px 0;
+		font-size: 12px;
+		border: none;
+		background: transparent;
+		color: var(--text-primary);
+		outline: none;
 	}
 
 	.search-input::placeholder {
 		color: var(--text-muted);
+	}
+
+	.search-clear {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 16px;
+		height: 16px;
+		border-radius: 3px;
+		color: var(--text-muted);
+		cursor: pointer;
+		flex-shrink: 0;
+		transition: color 0.1s ease;
+	}
+
+	.search-clear:hover {
+		color: var(--text-primary);
 	}
 
 	.explorer-tree {
