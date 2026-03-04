@@ -2,32 +2,71 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const SKIP_PATTERNS = new Set([
-	'node_modules', '.git', 'dist', 'build', '__pycache__',
-	'.svelte-kit', '.next', '.nuxt', '.venv', 'venv',
-	'.tox', '.mypy_cache', '.pytest_cache', '.ruff_cache', '.eggs',
-	'tests', 'test', 'docs', 'doc', 'examples',
-	'benchmarks', 'benchmark', 'benchmark_v2', 'notebooks',
-	'fixtures', 'coverage', '.coverage', 'htmlcov',
-	'.idea', '.vscode', 'vendor',
+	'node_modules',
+	'.git',
+	'dist',
+	'build',
+	'__pycache__',
+	'.svelte-kit',
+	'.next',
+	'.nuxt',
+	'.venv',
+	'venv',
+	'.tox',
+	'.mypy_cache',
+	'.pytest_cache',
+	'.ruff_cache',
+	'.eggs',
+	'tests',
+	'test',
+	'docs',
+	'doc',
+	'examples',
+	'benchmarks',
+	'benchmark',
+	'benchmark_v2',
+	'notebooks',
+	'fixtures',
+	'coverage',
+	'.coverage',
+	'htmlcov',
+	'.idea',
+	'.vscode',
+	'vendor'
 ]);
 
 const EXTENSION_MAP = {
-	'.py': 'python', '.js': 'javascript', '.jsx': 'javascript',
-	'.ts': 'typescript', '.tsx': 'typescript', '.go': 'go',
-	'.rs': 'rust', '.java': 'java', '.c': 'c', '.cpp': 'cpp',
-	'.h': 'c', '.hpp': 'cpp', '.rb': 'ruby', '.php': 'php',
-	'.swift': 'swift', '.kt': 'kotlin', '.scala': 'scala', '.cs': 'csharp',
+	'.py': 'python',
+	'.js': 'javascript',
+	'.jsx': 'javascript',
+	'.ts': 'typescript',
+	'.tsx': 'typescript',
+	'.go': 'go',
+	'.rs': 'rust',
+	'.java': 'java',
+	'.c': 'c',
+	'.cpp': 'cpp',
+	'.h': 'c',
+	'.hpp': 'cpp',
+	'.rb': 'ruby',
+	'.php': 'php',
+	'.swift': 'swift',
+	'.kt': 'kotlin',
+	'.scala': 'scala',
+	'.cs': 'csharp'
 };
 
 const MAX_FILES = 2000;
 const MAX_DEPTH = 30;
 const MAX_FILE_SIZE = 500_000;
 
+/** @param {string} filename */
 function detectLanguage(filename) {
 	const ext = filename.substring(filename.lastIndexOf('.'));
-	return EXTENSION_MAP[ext] ?? null;
+	return EXTENSION_MAP[/** @type {keyof typeof EXTENSION_MAP} */ (ext)] ?? null;
 }
 
+/** @param {string} dirPath @param {string} [basePath] @param {number} [depth] @param {{ fileCount: number }} [ctx] @returns {{ name: string, path: string, kind: string, children: any[] }} */
 function scanDirectory(dirPath, basePath = '', depth = 0, ctx = { fileCount: 0 }) {
 	const currentPath = basePath || path.basename(dirPath);
 
@@ -64,7 +103,7 @@ function scanDirectory(dirPath, basePath = '', depth = 0, ctx = { fileCount: 0 }
 				path: entryPath,
 				kind: 'file',
 				language: language ?? undefined,
-				_absolutePath: absolutePath,
+				_absolutePath: absolutePath
 			});
 		}
 	}
@@ -78,64 +117,71 @@ function scanDirectory(dirPath, basePath = '', depth = 0, ctx = { fileCount: 0 }
 		name: path.basename(dirPath),
 		path: currentPath,
 		kind: 'directory',
-		children,
+		children
 	};
 }
 
 export function devFsPlugin() {
 	return {
 		name: 'dev-fs-plugin',
+		/** @param {import('vite').ViteDevServer} server */
 		configureServer(server) {
-			server.middlewares.use((req, res, next) => {
-				const url = new URL(req.url, 'http://localhost');
+			server.middlewares.use(
+				(
+					/** @type {import('http').IncomingMessage} */ req,
+					/** @type {import('http').ServerResponse} */ res,
+					/** @type {() => void} */ next
+				) => {
+					const url = new URL(/** @type {string} */ (req.url), 'http://localhost');
 
-				if (url.pathname === '/__dev/scan') {
-					const dir = url.searchParams.get('dir');
-					if (!dir) {
-						res.statusCode = 400;
-						res.end(JSON.stringify({ error: 'Missing dir parameter' }));
-						return;
-					}
-					if (!fs.existsSync(dir) || !fs.statSync(dir).isDirectory()) {
-						res.statusCode = 404;
-						res.end(JSON.stringify({ error: 'Directory not found' }));
-						return;
-					}
+					if (url.pathname === '/__dev/scan') {
+						const dir = url.searchParams.get('dir');
+						if (!dir) {
+							res.statusCode = 400;
+							res.end(JSON.stringify({ error: 'Missing dir parameter' }));
+							return;
+						}
+						if (!fs.existsSync(dir) || !fs.statSync(dir).isDirectory()) {
+							res.statusCode = 404;
+							res.end(JSON.stringify({ error: 'Directory not found' }));
+							return;
+						}
 
-					const tree = scanDirectory(dir);
-					res.setHeader('Content-Type', 'application/json');
-					res.end(JSON.stringify(tree));
-					return;
-				}
-
-				if (url.pathname === '/__dev/read') {
-					const file = url.searchParams.get('file');
-					if (!file) {
-						res.statusCode = 400;
-						res.end(JSON.stringify({ error: 'Missing file parameter' }));
-						return;
-					}
-					if (!fs.existsSync(file) || !fs.statSync(file).isFile()) {
-						res.statusCode = 404;
-						res.end(JSON.stringify({ error: 'File not found' }));
+						const tree = scanDirectory(dir);
+						res.setHeader('Content-Type', 'application/json');
+						res.end(JSON.stringify(tree));
 						return;
 					}
 
-					const stat = fs.statSync(file);
-					if (stat.size > MAX_FILE_SIZE) {
+					if (url.pathname === '/__dev/read') {
+						const file = url.searchParams.get('file');
+						if (!file) {
+							res.statusCode = 400;
+							res.end(JSON.stringify({ error: 'Missing file parameter' }));
+							return;
+						}
+						if (!fs.existsSync(file) || !fs.statSync(file).isFile()) {
+							res.statusCode = 404;
+							res.end(JSON.stringify({ error: 'File not found' }));
+							return;
+						}
+
+						const stat = fs.statSync(file);
+						if (stat.size > MAX_FILE_SIZE) {
+							res.setHeader('Content-Type', 'text/plain');
+							res.end('');
+							return;
+						}
+
+						const content = fs.readFileSync(file, 'utf-8');
 						res.setHeader('Content-Type', 'text/plain');
-						res.end('');
+						res.end(content);
 						return;
 					}
 
-					const content = fs.readFileSync(file, 'utf-8');
-					res.setHeader('Content-Type', 'text/plain');
-					res.end(content);
-					return;
+					next();
 				}
-
-				next();
-			});
-		},
+			);
+		}
 	};
 }
