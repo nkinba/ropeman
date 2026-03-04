@@ -1,7 +1,7 @@
 import { settingsStore } from './settingsStore.svelte';
 
 export type AuthTrack = 'none' | 'byok' | 'bridge';
-export type BridgeStatus = 'disconnected' | 'connecting' | 'connected' | 'error';
+export type BridgeStatus = 'disconnected' | 'connecting' | 'connected' | 'reconnecting' | 'error';
 
 function createAuthStore() {
 	let bridgeStatus = $state<BridgeStatus>('disconnected');
@@ -9,14 +9,26 @@ function createAuthStore() {
 	let bridgeError = $state('');
 
 	return {
-		get bridgeStatus() { return bridgeStatus; },
-		set bridgeStatus(v: BridgeStatus) { bridgeStatus = v; },
+		get bridgeStatus() {
+			return bridgeStatus;
+		},
+		set bridgeStatus(v: BridgeStatus) {
+			bridgeStatus = v;
+		},
 
-		get bridgePort() { return bridgePort; },
-		set bridgePort(v: number) { bridgePort = v; },
+		get bridgePort() {
+			return bridgePort;
+		},
+		set bridgePort(v: number) {
+			bridgePort = v;
+		},
 
-		get bridgeError() { return bridgeError; },
-		set bridgeError(v: string) { bridgeError = v; },
+		get bridgeError() {
+			return bridgeError;
+		},
+		set bridgeError(v: string) {
+			bridgeError = v;
+		},
 
 		get isReady(): boolean {
 			return settingsStore.hasApiKey || bridgeStatus === 'connected';

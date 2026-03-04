@@ -57,7 +57,7 @@ export async function loadTestProject(dirPath: string): Promise<void> {
 
 		// 3. Parse each file
 		let done = 0;
-		let batchMap = new Map(projectStore.astMap);
+		const batchMap = new Map(projectStore.astMap);
 		let batchCount = 0;
 
 		for (const file of files) {

@@ -17,7 +17,6 @@ tests/screenshots/
 
 # Claude Code (session-local)
 .claude/
-CLAUDE.md
 
 # IDE
 .vscode/
@@ -36,4 +35,5 @@ Thumbs.db
 bun.lock
 
 docs/history
-docs/PRDs/archive
+docs/private
+playwright-report

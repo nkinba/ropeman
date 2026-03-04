@@ -20,10 +20,9 @@ const pendingRequests = new Map<string, ParseRequest>();
 
 function getWorker(): Worker {
 	if (!worker) {
-		worker = new Worker(
-			new URL('$lib/workers/parserWorker.ts', import.meta.url),
-			{ type: 'module' }
-		);
+		worker = new Worker(new URL('$lib/workers/parserWorker.ts', import.meta.url), {
+			type: 'module'
+		});
 		worker.onmessage = handleWorkerMessage;
 	}
 	return worker;
@@ -95,14 +94,14 @@ export async function parseFile(
 			language,
 			priority,
 			resolve,
-			reject,
+			reject
 		});
 
 		getWorker().postMessage({
 			type: 'parse',
 			filePath,
 			content,
-			language,
+			language
 		});
 	});
 }
@@ -117,7 +116,7 @@ export async function parseAllFiles(fileTree: FileNode): Promise<void> {
 	projectStore.parsingProgress = { done: 0, total };
 
 	let done = 0;
-	let batchMap = new Map(projectStore.astMap);
+	const batchMap = new Map(projectStore.astMap);
 	let batchCount = 0;
 
 	try {

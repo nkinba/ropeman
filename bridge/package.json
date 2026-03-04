@@ -1,0 +1,28 @@
+{
+	"name": "@codeviz/bridge",
+	"version": "0.1.0",
+	"description": "WebSocket relay server for CodeViz AI bridge",
+	"type": "module",
+	"bin": {
+		"codeviz-bridge": "./dist/server.js"
+	},
+	"scripts": {
+		"build": "tsc",
+		"start": "node dist/server.js",
+		"dev": "tsc --watch"
+	},
+	"dependencies": {
+		"ws": "^8.18.0"
+	},
+	"devDependencies": {
+		"@types/ws": "^8.5.13",
+		"@types/node": "^22.0.0",
+		"typescript": "^5.9.3"
+	},
+	"engines": {
+		"node": ">=18"
+	},
+	"files": [
+		"dist"
+	]
+}

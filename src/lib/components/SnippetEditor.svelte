@@ -2,14 +2,16 @@
 	import { projectStore } from '$lib/stores/projectStore.svelte';
 	import { graphStore } from '$lib/stores/graphStore.svelte';
 	import { selectionStore } from '$lib/stores/selectionStore.svelte';
+	import { authStore } from '$lib/stores/authStore.svelte';
 	import { parseAllFiles } from '$lib/services/parserService';
+	import { analyzeTopLevel } from '$lib/services/semanticAnalysisService';
 	import { detectLanguage } from '$lib/utils/languageDetector';
 	import { t } from '$lib/stores/i18nStore';
 	import {
 		SNIPPET_PRESETS,
 		LANGUAGE_COLORS,
 		LANGUAGE_EXTENSIONS,
-		type SnippetPreset,
+		type SnippetPreset
 	} from '$lib/data/snippetPresets';
 	import type { FileNode } from '$lib/types/fileTree';
 
@@ -22,7 +24,7 @@
 	const supportedLanguages = [
 		{ id: 'python', label: 'Python' },
 		{ id: 'javascript', label: 'JavaScript' },
-		{ id: 'typescript', label: 'TypeScript' },
+		{ id: 'typescript', label: 'TypeScript' }
 	];
 
 	function loadPreset(preset: SnippetPreset) {
@@ -55,15 +57,15 @@
 			handle: {
 				kind: 'file' as const,
 				name: filename,
-				getFile: () => Promise.resolve(new File([code], filename)),
-			} as unknown as FileSystemFileHandle,
+				getFile: () => Promise.resolve(new File([code], filename))
+			} as unknown as FileSystemFileHandle
 		};
 
 		const tree: FileNode = {
 			name: 'snippet',
 			path: '',
 			kind: 'directory',
-			children: [fileNode],
+			children: [fileNode]
 		};
 
 		try {
@@ -72,7 +74,12 @@
 			projectStore.projectName = 'snippet';
 			projectStore.fileTree = tree;
 			projectStore.isLoading = true;
+			projectStore.isSnippetMode = true;
 			await parseAllFiles(tree);
+			// Auto-trigger semantic analysis if AI is connected
+			if (authStore.isReady) {
+				analyzeTopLevel();
+			}
 		} catch (err) {
 			error = `Failed to analyze snippet: ${err}`;
 			projectStore.isLoading = false;
@@ -96,7 +103,8 @@
 				class:active={code === preset.code && language === preset.language}
 				onclick={() => loadPreset(preset)}
 			>
-				<span class="preset-dot" style="background:{LANGUAGE_COLORS[preset.language] ?? '#888'}"></span>
+				<span class="preset-dot" style="background:{LANGUAGE_COLORS[preset.language] ?? '#888'}"
+				></span>
 				<span class="preset-info">
 					<span class="preset-name">{preset.name}</span>
 					<span class="preset-desc">{preset.description}</span>
@@ -136,8 +144,17 @@
 	{/if}
 
 	<button class="analyze-btn" onclick={handleAnalyze} disabled={!code.trim()}>
-		<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-			<polygon points="5 3 19 12 5 21 5 3"/>
+		<svg
+			width="16"
+			height="16"
+			viewBox="0 0 24 24"
+			fill="none"
+			stroke="currentColor"
+			stroke-width="2"
+			stroke-linecap="round"
+			stroke-linejoin="round"
+		>
+			<polygon points="5 3 19 12 5 21 5 3" />
 		</svg>
 		{$t('snippet.analyze')}
 	</button>
@@ -183,7 +200,9 @@
 		border: 1px solid var(--landing-card-border);
 		border-radius: 10px;
 		cursor: pointer;
-		transition: border-color 0.15s ease, background 0.15s ease;
+		transition:
+			border-color 0.15s ease,
+			background 0.15s ease;
 		text-align: left;
 	}
 
@@ -317,7 +336,10 @@
 		font-size: 14px;
 		font-weight: 600;
 		cursor: pointer;
-		transition: background 0.2s ease, transform 0.15s ease, opacity 0.2s ease;
+		transition:
+			background 0.2s ease,
+			transform 0.15s ease,
+			opacity 0.2s ease;
 	}
 
 	.analyze-btn:hover:not(:disabled) {
