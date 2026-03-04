@@ -27,6 +27,9 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      - name: Sync SvelteKit
+        run: npx svelte-kit sync
+
       - name: Type check
         run: npx svelte-check --tsconfig ./tsconfig.json
 
