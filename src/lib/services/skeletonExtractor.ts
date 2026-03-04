@@ -200,8 +200,10 @@ function inferLanguage(filePath: string): string | null {
 		case 'swift':
 			return 'swift';
 		case 'kt':
+		case 'kts':
 			return 'kotlin';
 		case 'scala':
+		case 'sc':
 			return 'scala';
 		case 'cs':
 			return 'csharp';

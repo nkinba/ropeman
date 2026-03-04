@@ -15,11 +15,28 @@ const EXTENSION_MAP: Record<string, string> = {
 	'.php': 'php',
 	'.swift': 'swift',
 	'.kt': 'kotlin',
+	'.kts': 'kotlin',
 	'.scala': 'scala',
-	'.cs': 'csharp',
+	'.sc': 'scala',
+	'.cs': 'csharp'
 };
 
-const SUPPORTED_LANGUAGES = new Set(['python', 'javascript', 'typescript', 'go', 'rust', 'java', 'c', 'cpp']);
+const SUPPORTED_LANGUAGES = new Set([
+	'python',
+	'javascript',
+	'typescript',
+	'go',
+	'rust',
+	'java',
+	'c',
+	'cpp',
+	'ruby',
+	'php',
+	'swift',
+	'kotlin',
+	'csharp',
+	'scala'
+]);
 
 export function detectLanguage(filename: string): string | null {
 	const ext = filename.substring(filename.lastIndexOf('.'));
@@ -40,6 +57,12 @@ export function getGrammarFile(language: string): string | null {
 		java: 'tree-sitter-java.wasm',
 		c: 'tree-sitter-c.wasm',
 		cpp: 'tree-sitter-cpp.wasm',
+		ruby: 'tree-sitter-ruby.wasm',
+		php: 'tree-sitter-php.wasm',
+		swift: 'tree-sitter-swift.wasm',
+		kotlin: 'tree-sitter-kotlin.wasm',
+		csharp: 'tree-sitter-c_sharp.wasm',
+		scala: 'tree-sitter-scala.wasm'
 	};
 	return grammarMap[language] ?? null;
 }

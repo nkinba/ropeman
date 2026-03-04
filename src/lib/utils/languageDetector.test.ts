@@ -66,8 +66,16 @@ describe('detectLanguage', () => {
 		expect(detectLanguage('Main.kt')).toBe('kotlin');
 	});
 
+	it('detects Kotlin from .kts extension', () => {
+		expect(detectLanguage('build.gradle.kts')).toBe('kotlin');
+	});
+
 	it('detects Scala from .scala extension', () => {
 		expect(detectLanguage('App.scala')).toBe('scala');
+	});
+
+	it('detects Scala from .sc extension', () => {
+		expect(detectLanguage('script.sc')).toBe('scala');
 	});
 
 	it('detects C# from .cs extension', () => {
@@ -88,16 +96,24 @@ describe('detectLanguage', () => {
 
 describe('isSupported', () => {
 	it('returns true for WASM-supported languages', () => {
-		const supported = ['python', 'javascript', 'typescript', 'go', 'rust', 'java', 'c', 'cpp'];
+		const supported = [
+			'python',
+			'javascript',
+			'typescript',
+			'go',
+			'rust',
+			'java',
+			'c',
+			'cpp',
+			'ruby',
+			'php',
+			'swift',
+			'kotlin',
+			'csharp',
+			'scala'
+		];
 		for (const lang of supported) {
 			expect(isSupported(lang)).toBe(true);
-		}
-	});
-
-	it('returns false for non-WASM languages', () => {
-		const unsupported = ['ruby', 'php', 'swift', 'kotlin', 'scala', 'csharp'];
-		for (const lang of unsupported) {
-			expect(isSupported(lang)).toBe(false);
 		}
 	});
 
@@ -119,9 +135,17 @@ describe('getGrammarFile', () => {
 		expect(getGrammarFile('cpp')).toBe('tree-sitter-cpp.wasm');
 	});
 
+	it('returns WASM file path for Tier 2 languages', () => {
+		expect(getGrammarFile('ruby')).toBe('tree-sitter-ruby.wasm');
+		expect(getGrammarFile('php')).toBe('tree-sitter-php.wasm');
+		expect(getGrammarFile('swift')).toBe('tree-sitter-swift.wasm');
+		expect(getGrammarFile('kotlin')).toBe('tree-sitter-kotlin.wasm');
+		expect(getGrammarFile('csharp')).toBe('tree-sitter-c_sharp.wasm');
+		expect(getGrammarFile('scala')).toBe('tree-sitter-scala.wasm');
+	});
+
 	it('returns null for unsupported languages', () => {
-		expect(getGrammarFile('ruby')).toBeNull();
-		expect(getGrammarFile('php')).toBeNull();
 		expect(getGrammarFile('')).toBeNull();
+		expect(getGrammarFile('brainfuck')).toBeNull();
 	});
 });

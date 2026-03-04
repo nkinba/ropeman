@@ -31,8 +31,14 @@ test.describe('Theme Toggle', () => {
 			return document.documentElement.getAttribute('data-theme');
 		});
 
-		// Reload
+		// Reload and wait for app to fully initialize
 		await page.reload();
+		await page.locator('header.header').waitFor({ state: 'visible' });
+
+		// Wait for theme attribute to be set (module initialization may be async in dev mode)
+		await page.waitForFunction(() => document.documentElement.getAttribute('data-theme') !== null, {
+			timeout: 5_000
+		});
 
 		const themeAfterReload = await page.evaluate(() => {
 			return document.documentElement.getAttribute('data-theme');

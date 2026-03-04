@@ -86,7 +86,13 @@ async function getGrammar(language: string) {
 		rust: '/tree-sitter-rust.wasm',
 		java: '/tree-sitter-java.wasm',
 		c: '/tree-sitter-c.wasm',
-		cpp: '/tree-sitter-cpp.wasm'
+		cpp: '/tree-sitter-cpp.wasm',
+		ruby: '/tree-sitter-ruby.wasm',
+		php: '/tree-sitter-php.wasm',
+		swift: '/tree-sitter-swift.wasm',
+		kotlin: '/tree-sitter-kotlin.wasm',
+		csharp: '/tree-sitter-c_sharp.wasm',
+		scala: '/tree-sitter-scala.wasm'
 	};
 
 	const wasmPath = grammarMap[language];
@@ -110,6 +116,12 @@ function extractSymbols(rootNode: any, language: string): ASTSymbol[] {
 		case 'java':
 		case 'c':
 		case 'cpp':
+		case 'ruby':
+		case 'php':
+		case 'swift':
+		case 'kotlin':
+		case 'csharp':
+		case 'scala':
 			return extractGenericSymbols(rootNode, language);
 		default:
 			return extractGenericSymbols(rootNode, language);
@@ -590,6 +602,185 @@ function extractGenericSymbols(rootNode: any, language: string): ASTSymbol[] {
 					return;
 				}
 				break;
+			}
+
+			// --- Tier 2 language support ---
+
+			// Ruby: bare 'method' and 'singleton_method' nodes
+			case 'method':
+			case 'singleton_method': {
+				const nameNode = node.childForFieldName('name');
+				symbols.push({
+					name: nameNode?.text ?? '<anonymous>',
+					kind: 'method',
+					lineStart: node.startPosition.row + 1,
+					lineEnd: node.endPosition.row + 1
+				});
+				return;
+			}
+
+			// Ruby: bare 'class' node type
+			case 'class': {
+				const nameNode = node.childForFieldName('name');
+				if (nameNode) {
+					const methods: ASTSymbol[] = [];
+					const body = node.childForFieldName('body');
+					if (body) {
+						for (const member of body.children) {
+							if (member.type === 'method' || member.type === 'singleton_method') {
+								const methodName = member.childForFieldName('name');
+								methods.push({
+									name: methodName?.text ?? '<anonymous>',
+									kind: 'method',
+									lineStart: member.startPosition.row + 1,
+									lineEnd: member.endPosition.row + 1,
+									parentName: nameNode.text
+								});
+							}
+						}
+					}
+					symbols.push({
+						name: nameNode.text,
+						kind: 'class',
+						lineStart: node.startPosition.row + 1,
+						lineEnd: node.endPosition.row + 1,
+						children: methods.length > 0 ? methods : undefined
+					});
+					return;
+				}
+				break;
+			}
+
+			// Ruby: module — treated as class-like container
+			case 'module': {
+				const nameNode = node.childForFieldName('name');
+				if (nameNode) {
+					const methods: ASTSymbol[] = [];
+					const body = node.childForFieldName('body');
+					if (body) {
+						for (const member of body.children) {
+							if (member.type === 'method' || member.type === 'singleton_method') {
+								const methodName = member.childForFieldName('name');
+								methods.push({
+									name: methodName?.text ?? '<anonymous>',
+									kind: 'method',
+									lineStart: member.startPosition.row + 1,
+									lineEnd: member.endPosition.row + 1,
+									parentName: nameNode.text
+								});
+							}
+						}
+					}
+					symbols.push({
+						name: nameNode.text,
+						kind: 'class',
+						lineStart: node.startPosition.row + 1,
+						lineEnd: node.endPosition.row + 1,
+						children: methods.length > 0 ? methods : undefined
+					});
+					return;
+				}
+				break;
+			}
+
+			// PHP namespace_use_declaration → import
+			case 'namespace_use_declaration': {
+				symbols.push(buildImportSymbol(node));
+				return;
+			}
+
+			// PHP trait → interface-like
+			case 'trait_declaration': {
+				const nameNode = node.childForFieldName('name');
+				symbols.push({
+					name: nameNode?.text ?? '<anonymous>',
+					kind: 'interface',
+					lineStart: node.startPosition.row + 1,
+					lineEnd: node.endPosition.row + 1
+				});
+				return;
+			}
+
+			// Kotlin object_declaration
+			case 'object_declaration': {
+				const nameNode = node.childForFieldName('name');
+				if (nameNode) {
+					symbols.push({
+						name: nameNode.text,
+						kind: 'class',
+						lineStart: node.startPosition.row + 1,
+						lineEnd: node.endPosition.row + 1
+					});
+					return;
+				}
+				break;
+			}
+
+			// Scala object_definition, trait_definition
+			case 'object_definition':
+			case 'trait_definition': {
+				const nameNode = node.childForFieldName('name');
+				if (nameNode) {
+					const kind = node.type === 'trait_definition' ? 'interface' : 'class';
+					symbols.push({
+						name: nameNode.text,
+						kind: kind as SymbolKind,
+						lineStart: node.startPosition.row + 1,
+						lineEnd: node.endPosition.row + 1
+					});
+					return;
+				}
+				break;
+			}
+
+			// Swift protocol → interface
+			case 'protocol_declaration': {
+				const nameNode = node.childForFieldName('name');
+				symbols.push({
+					name: nameNode?.text ?? '<anonymous>',
+					kind: 'interface',
+					lineStart: node.startPosition.row + 1,
+					lineEnd: node.endPosition.row + 1
+				});
+				return;
+			}
+
+			// C# struct_declaration
+			case 'struct_declaration': {
+				const nameNode = node.childForFieldName('name');
+				if (nameNode) {
+					symbols.push({
+						name: nameNode.text,
+						kind: 'class',
+						lineStart: node.startPosition.row + 1,
+						lineEnd: node.endPosition.row + 1
+					});
+					return;
+				}
+				break;
+			}
+
+			// C# namespace_declaration — walk into body
+			case 'namespace_declaration': {
+				const body = node.childForFieldName('body');
+				if (body) {
+					for (const member of body.children) {
+						walk(member);
+					}
+				}
+				return;
+			}
+
+			// C# using_directive → import
+			case 'using_directive': {
+				symbols.push(buildImportSymbol(node));
+				return;
+			}
+
+			// Kotlin/Swift/Ruby import_statement
+			case 'import_statement': {
+				symbols.push(buildImportSymbol(node));
+				return;
 			}
 		}
 
