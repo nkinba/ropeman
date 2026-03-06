@@ -1,98 +1,100 @@
 <script lang="ts">
-  import { t } from '$lib/stores/i18nStore';
-  import { selectionStore } from '$lib/stores/selectionStore.svelte';
-  import { projectStore } from '$lib/stores/projectStore.svelte';
-  import type { ChatMessage } from '$lib/stores/chatStore';
-  import { marked } from 'marked';
+	import { t } from '$lib/stores/i18nStore';
+	import { selectionStore } from '$lib/stores/selectionStore.svelte';
+	import { projectStore } from '$lib/stores/projectStore.svelte';
+	import type { ChatMessage } from '$lib/stores/chatStore';
+	import { marked } from 'marked';
 
-  let { message }: { message: ChatMessage } = $props();
+	let { message }: { message: ChatMessage } = $props();
 
-  let tFunc = $state<(key: string) => string>((key: string) => key);
+	let tFunc = $state<(key: string) => string>((key: string) => key);
 
-  $effect(() => {
-    const unsub = t.subscribe(fn => { tFunc = fn; });
-    return () => { unsub(); };
-  });
+	$effect(() => {
+		const unsub = t.subscribe((fn) => {
+			tFunc = fn;
+		});
+		return () => {
+			unsub();
+		};
+	});
 
-  // Configure marked for safe rendering
-  marked.setOptions({
-    breaks: true,
-    gfm: true,
-  });
+	// Configure marked for safe rendering
+	marked.setOptions({
+		breaks: true,
+		gfm: true
+	});
 
-  function renderContent(text: string): string {
-    if (!text) return '';
-    try {
-      return marked.parse(text) as string;
-    } catch {
-      // Fallback to basic escaping
-      return text
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/\n/g, '<br>');
-    }
-  }
+	function renderContent(text: string): string {
+		if (!text) return '';
+		try {
+			return marked.parse(text) as string;
+		} catch {
+			// Fallback to basic escaping
+			return text
+				.replace(/&/g, '&amp;')
+				.replace(/</g, '&lt;')
+				.replace(/>/g, '&gt;')
+				.replace(/\n/g, '<br>');
+		}
+	}
 
-  function handleNodeClick(nodeId: string) {
-    // Find the node in the AST map or set selection by ID
-    // The selectionStore expects a GraphNode, so we create a minimal lookup
-    // Other components (graph-zui) will handle the actual navigation
-    // For now, dispatch a custom event on the window
-    window.dispatchEvent(new CustomEvent('codeviz:navigate-node', { detail: { nodeId } }));
-  }
+	function handleNodeClick(nodeId: string) {
+		// Find the node in the AST map or set selection by ID
+		// The selectionStore expects a GraphNode, so we create a minimal lookup
+		// Other components (graph-zui) will handle the actual navigation
+		// For now, dispatch a custom event on the window
+		window.dispatchEvent(new CustomEvent('ropeman:navigate-node', { detail: { nodeId } }));
+	}
 
-  let formattedContent = $derived(renderContent(message.content));
-  let hasRelatedNodes = $derived(
-    message.relatedNodes && message.relatedNodes.length > 0
-  );
+	let formattedContent = $derived(renderContent(message.content));
+	let hasRelatedNodes = $derived(message.relatedNodes && message.relatedNodes.length > 0);
 </script>
 
 <div class="chat-message {message.role}">
-  <div class="chat-message-content">
-    {@html formattedContent}
-  </div>
+	<div class="chat-message-content">
+		{@html formattedContent}
+	</div>
 
-  {#if hasRelatedNodes && message.role === 'assistant'}
-    <div class="chat-related-nodes">
-      {#each message.relatedNodes as nodeId}
-        <button class="chat-related-link" onclick={() => handleNodeClick(nodeId)}>
-          {tFunc('relatedNodes')}: {nodeId}
-        </button>
-      {/each}
-    </div>
-  {/if}
+	{#if hasRelatedNodes && message.role === 'assistant'}
+		<div class="chat-related-nodes">
+			{#each message.relatedNodes as nodeId}
+				<button class="chat-related-link" onclick={() => handleNodeClick(nodeId)}>
+					{tFunc('relatedNodes')}: {nodeId}
+				</button>
+			{/each}
+		</div>
+	{/if}
 </div>
 
 <style>
-  .chat-related-link {
-    background: none;
-    border: none;
-    color: var(--accent-color, #89b4fa);
-    cursor: pointer;
-    font-size: 11px;
-    padding: 2px 4px;
-    text-decoration: underline;
-    text-align: left;
-  }
-  .chat-related-link:hover {
-    opacity: 0.8;
-  }
-  .chat-message-content :global(pre) {
-    background: var(--bg-tertiary, #313244);
-    padding: 8px 12px;
-    border-radius: 6px;
-    overflow-x: auto;
-    font-size: 12px;
-  }
-  .chat-message-content :global(code) {
-    background: var(--bg-tertiary, #313244);
-    padding: 1px 4px;
-    border-radius: 3px;
-    font-size: 12px;
-  }
-  .chat-message-content :global(pre code) {
-    background: none;
-    padding: 0;
-  }
+	.chat-related-link {
+		background: none;
+		border: none;
+		color: var(--accent-color, #89b4fa);
+		cursor: pointer;
+		font-size: 11px;
+		padding: 2px 4px;
+		text-decoration: underline;
+		text-align: left;
+	}
+	.chat-related-link:hover {
+		opacity: 0.8;
+	}
+	.chat-message-content :global(pre) {
+		background: var(--bg-tertiary, #313244);
+		padding: 8px 12px;
+		border-radius: 6px;
+		overflow-x: auto;
+		font-size: 12px;
+	}
+	.chat-message-content :global(code) {
+		background: var(--bg-tertiary, #313244);
+		padding: 1px 4px;
+		border-radius: 3px;
+		font-size: 12px;
+	}
+	.chat-message-content :global(pre code) {
+		background: none;
+		padding: 0;
+	}
 </style>

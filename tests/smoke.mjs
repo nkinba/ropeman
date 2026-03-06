@@ -39,7 +39,7 @@ async function run() {
   await context.addInitScript((files) => {
     const contentMap = new Map();
     function buildTree(files) {
-      const root = { name: 'codeviz', kind: 'directory', children: [] };
+      const root = { name: 'ropeman', kind: 'directory', children: [] };
       const dirs = new Map();
       dirs.set('', root);
 
@@ -108,7 +108,7 @@ async function run() {
   console.log('\n=== Test 1: Landing page ===');
   await page.goto(BASE, { waitUntil: 'networkidle' });
   await page.screenshot({ path: join(SCREENSHOTS_DIR, '01-landing.png') });
-  assert('Title is CodeViz', (await page.textContent('h1'))?.trim() === 'CodeViz');
+  assert('Title is Ropeman', (await page.textContent('h1'))?.trim() === 'Ropeman');
 
   // ── Test 2: Load project ──
   console.log('\n=== Test 2: Load project ===');
@@ -220,7 +220,7 @@ async function run() {
     await page.screenshot({ path: join(SCREENSHOTS_DIR, '07-bridge-tab.png') });
 
     const cmdText = await page.locator('.command-block code').textContent();
-    assert('Bridge tab has npx command', cmdText?.includes('npx @codeviz/bridge'));
+    assert('Bridge tab has npx command', cmdText?.includes('npx @ropeman/bridge'));
 
     const statusDot = page.locator('.status-dot');
     assert('Status indicator present', (await statusDot.count()) > 0);

@@ -5,7 +5,7 @@ test.describe('Landing Page', () => {
 		await page.goto('/');
 		const header = page.locator('header.header');
 		await expect(header).toBeVisible();
-		await expect(header.locator('.header-title')).toHaveText('CodeViz');
+		await expect(header.locator('.header-title')).toHaveText('Ropeman');
 	});
 
 	test('should display the dropzone with CTA button', async ({ page }) => {

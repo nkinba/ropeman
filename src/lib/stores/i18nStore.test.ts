@@ -41,7 +41,7 @@ describe('i18nStore', () => {
 	describe('t (translation function)', () => {
 		it('returns Korean translation for top-level key', () => {
 			const translate = get(t);
-			expect(translate('title')).toBe('CodeViz');
+			expect(translate('title')).toBe('Ropeman');
 		});
 
 		it('returns English translation when locale is en', () => {

@@ -36,7 +36,7 @@ function startServer(port: number): void {
 	const wss = new WebSocketServer({ port });
 	const clients = new Set<WebSocket>();
 
-	log(`CodeViz Bridge server starting on ws://localhost:${port}`);
+	log(`Ropeman Bridge server starting on ws://localhost:${port}`);
 
 	wss.on('connection', (ws, req) => {
 		const addr = req.socket.remoteAddress ?? 'unknown';

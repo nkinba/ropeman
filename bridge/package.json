@@ -1,10 +1,10 @@
 {
-	"name": "@codeviz/bridge",
+	"name": "@ropeman/bridge",
 	"version": "0.1.0",
-	"description": "WebSocket relay server for CodeViz AI bridge",
+	"description": "WebSocket relay server for Ropeman AI bridge",
 	"type": "module",
 	"bin": {
-		"codeviz-bridge": "./dist/server.js"
+		"ropeman-bridge": "./dist/server.js"
 	},
 	"scripts": {
 		"build": "tsc",
