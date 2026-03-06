@@ -1,4 +1,4 @@
-# CodeViz — 코드 시각화 도구 (MVP)
+# Ropeman — 코드 시각화 도구 (MVP)
 
 ## Tech Stack
 

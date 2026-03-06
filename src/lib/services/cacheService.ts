@@ -1,6 +1,16 @@
-import { create, insert, search, remove, count, save, load, type Orama, type Results } from '@orama/orama';
+import {
+	create,
+	insert,
+	search,
+	remove,
+	count,
+	save,
+	load,
+	type Orama,
+	type Results
+} from '@orama/orama';
 
-const DB_NAME = 'codeviz-cache';
+const DB_NAME = 'ropeman-cache';
 const IDB_STORE = 'orama-data';
 const MAX_ENTRIES = 500;
 const SIMILARITY_THRESHOLD = 0.9;
@@ -11,7 +21,7 @@ const schema = {
 	response: 'string',
 	code: 'string',
 	embedding: 'vector[768]',
-	timestamp: 'number',
+	timestamp: 'number'
 } as const;
 
 let db: Orama<typeof schema> | null = null;
@@ -45,8 +55,14 @@ async function idbSet(key: string, value: unknown): Promise<void> {
 	return new Promise((resolve, reject) => {
 		const tx = idb.transaction(IDB_STORE, 'readwrite');
 		tx.objectStore(IDB_STORE).put(value, key);
-		tx.oncomplete = () => { idb.close(); resolve(); };
-		tx.onerror = () => { idb.close(); reject(tx.error); };
+		tx.oncomplete = () => {
+			idb.close();
+			resolve();
+		};
+		tx.onerror = () => {
+			idb.close();
+			reject(tx.error);
+		};
 	});
 }
 
@@ -55,8 +71,14 @@ async function idbDelete(key: string): Promise<void> {
 	return new Promise((resolve, reject) => {
 		const tx = idb.transaction(IDB_STORE, 'readwrite');
 		tx.objectStore(IDB_STORE).delete(key);
-		tx.oncomplete = () => { idb.close(); resolve(); };
-		tx.onerror = () => { idb.close(); reject(tx.error); };
+		tx.oncomplete = () => {
+			idb.close();
+			resolve();
+		};
+		tx.onerror = () => {
+			idb.close();
+			reject(tx.error);
+		};
 	});
 }
 
@@ -92,7 +114,7 @@ export async function searchCache(
 			mode: 'vector',
 			vector: { value: embedding, property: 'embedding' },
 			limit: 1,
-			similarity: SIMILARITY_THRESHOLD,
+			similarity: SIMILARITY_THRESHOLD
 		});
 
 		if (results.hits.length > 0) {
@@ -124,7 +146,7 @@ export async function addToCache(
 			const oldest: Results<typeof schema> = await search(db, {
 				term: '',
 				limit: 1,
-				sortBy: { property: 'timestamp', order: 'ASC' },
+				sortBy: { property: 'timestamp', order: 'ASC' }
 			});
 			if (oldest.hits.length > 0) {
 				await remove(db, oldest.hits[0].id);
@@ -137,7 +159,7 @@ export async function addToCache(
 			response,
 			code,
 			embedding,
-			timestamp: Date.now(),
+			timestamp: Date.now()
 		});
 
 		await persistCache();

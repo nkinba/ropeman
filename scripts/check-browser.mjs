@@ -29,8 +29,8 @@ try {
   console.log(`URL: ${page.url()}`);
 
   // Take screenshot of landing page
-  await page.screenshot({ path: '/tmp/codeviz-landing.png', fullPage: true });
-  console.log('Screenshot saved: /tmp/codeviz-landing.png');
+  await page.screenshot({ path: '/tmp/ropeman-landing.png', fullPage: true });
+  console.log('Screenshot saved: /tmp/ropeman-landing.png');
 
   if (errors.length > 0) {
     console.log('\n=== CONSOLE ERRORS ===');

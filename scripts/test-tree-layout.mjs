@@ -54,7 +54,7 @@ try {
   // Add a route that exposes store access for testing
   await page.addInitScript(() => {
     // We'll expose store setters on window during testing
-    window.__codeviz_test = true;
+    window.__ropeman_test = true;
   });
 
   await page.goto(url, { waitUntil: 'networkidle', timeout: 15000 });
@@ -62,7 +62,7 @@ try {
   console.log(`Title: ${await page.title()}`);
 
   // Take landing screenshot
-  await page.screenshot({ path: '/tmp/codeviz-test-1-landing.png' });
+  await page.screenshot({ path: '/tmp/ropeman-test-1-landing.png' });
 
   // 3. Instead of mocking showDirectoryPicker, expose the stores on window
   // by adding a <script> module that imports and exposes them
@@ -164,8 +164,8 @@ try {
   await page.waitForTimeout(5000);
 
   // Take screenshot
-  await page.screenshot({ path: '/tmp/codeviz-test-2-loaded.png' });
-  console.log('Screenshot: /tmp/codeviz-test-2-loaded.png');
+  await page.screenshot({ path: '/tmp/ropeman-test-2-loaded.png' });
+  console.log('Screenshot: /tmp/ropeman-test-2-loaded.png');
 
   // 5. Check for rendered graph
   console.log('\n=== STEP 5: Checking rendered graph ===');
@@ -236,8 +236,8 @@ try {
     console.log(`Node type counts:`, types);
 
     // 7. Take final screenshot with "fit view"
-    await page.screenshot({ path: '/tmp/codeviz-test-3-tree.png', fullPage: false });
-    console.log('Screenshot: /tmp/codeviz-test-3-tree.png');
+    await page.screenshot({ path: '/tmp/ropeman-test-3-tree.png', fullPage: false });
+    console.log('Screenshot: /tmp/ropeman-test-3-tree.png');
 
     // 8. Test node click
     console.log('\n=== STEP 7: Testing node click ===');
@@ -247,8 +247,8 @@ try {
       await page.waitForTimeout(500);
       const detailPanel = await page.$('.detail-panel');
       console.log(`Node click → detail panel visible: ${detailPanel ? 'YES' : 'NO'}`);
-      await page.screenshot({ path: '/tmp/codeviz-test-4-click.png' });
-      console.log('Screenshot: /tmp/codeviz-test-4-click.png');
+      await page.screenshot({ path: '/tmp/ropeman-test-4-click.png' });
+      console.log('Screenshot: /tmp/ropeman-test-4-click.png');
     }
   }
 
@@ -273,8 +273,8 @@ try {
 } catch (err) {
   console.error('TEST FAILED:', err.message);
   console.error(err.stack);
-  await page.screenshot({ path: '/tmp/codeviz-test-error.png' });
-  console.log('Error screenshot: /tmp/codeviz-test-error.png');
+  await page.screenshot({ path: '/tmp/ropeman-test-error.png' });
+  console.log('Error screenshot: /tmp/ropeman-test-error.png');
 
   if (errors.length > 0) {
     console.log('\nConsole errors during test:');

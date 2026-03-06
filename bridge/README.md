@@ -1,12 +1,12 @@
-# @codeviz/bridge
+# @ropeman/bridge
 
-WebSocket relay server for CodeViz AI bridge connections.
+WebSocket relay server for Ropeman AI bridge connections.
 
 ## Usage
 
 ```bash
-npx @codeviz/bridge
-npx @codeviz/bridge --port 9800
+npx @ropeman/bridge
+npx @ropeman/bridge --port 9800
 ```
 
 ## Protocol

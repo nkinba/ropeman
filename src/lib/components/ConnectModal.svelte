@@ -125,7 +125,7 @@
 	}
 
 	function copyCommand() {
-		navigator.clipboard.writeText(`npx @codeviz/bridge --port ${bridgePort}`);
+		navigator.clipboard.writeText(`npx @ropeman/bridge --port ${bridgePort}`);
 	}
 </script>
 
@@ -257,7 +257,7 @@
 						</div>
 
 						<div class="command-block">
-							<code>npx @codeviz/bridge --port {bridgePort}</code>
+							<code>npx @ropeman/bridge --port {bridgePort}</code>
 							<button class="copy-btn" onclick={copyCommand} title="Copy">
 								<svg
 									width="14"

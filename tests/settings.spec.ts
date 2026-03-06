@@ -79,7 +79,7 @@ test.describe('Settings Modal', () => {
 
 		// Check that localStorage persisted the setting
 		const stored = await page.evaluate(() => {
-			const raw = localStorage.getItem('codeviz-settings');
+			const raw = localStorage.getItem('ropeman-settings');
 			return raw ? JSON.parse(raw) : null;
 		});
 		expect(stored).toBeTruthy();
@@ -114,7 +114,7 @@ test.describe('Settings Modal', () => {
 
 		// Verify persistence
 		const stored = await page.evaluate(() => {
-			const raw = localStorage.getItem('codeviz-settings');
+			const raw = localStorage.getItem('ropeman-settings');
 			return raw ? JSON.parse(raw) : null;
 		});
 		expect(stored).toBeTruthy();

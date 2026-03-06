@@ -1,7 +1,7 @@
 export type AIProviderId = 'google' | 'anthropic';
 
 function createSettingsStore() {
-	const stored = typeof window !== 'undefined' ? localStorage.getItem('codeviz-settings') : null;
+	const stored = typeof window !== 'undefined' ? localStorage.getItem('ropeman-settings') : null;
 	const initial = stored ? JSON.parse(stored) : {};
 
 	let geminiApiKey = $state<string>(initial.geminiApiKey ?? '');
@@ -14,39 +14,77 @@ function createSettingsStore() {
 
 	function persist() {
 		if (typeof window !== 'undefined') {
-			localStorage.setItem('codeviz-settings', JSON.stringify({
-				geminiApiKey,
-				anthropicApiKey,
-				aiProvider,
-				aiModel,
-				cacheEnabled,
-				language,
-				syntaxTheme
-			}));
+			localStorage.setItem(
+				'ropeman-settings',
+				JSON.stringify({
+					geminiApiKey,
+					anthropicApiKey,
+					aiProvider,
+					aiModel,
+					cacheEnabled,
+					language,
+					syntaxTheme
+				})
+			);
 		}
 	}
 
 	return {
-		get geminiApiKey() { return geminiApiKey; },
-		set geminiApiKey(v: string) { geminiApiKey = v; persist(); },
+		get geminiApiKey() {
+			return geminiApiKey;
+		},
+		set geminiApiKey(v: string) {
+			geminiApiKey = v;
+			persist();
+		},
 
-		get anthropicApiKey() { return anthropicApiKey; },
-		set anthropicApiKey(v: string) { anthropicApiKey = v; persist(); },
+		get anthropicApiKey() {
+			return anthropicApiKey;
+		},
+		set anthropicApiKey(v: string) {
+			anthropicApiKey = v;
+			persist();
+		},
 
-		get aiProvider() { return aiProvider; },
-		set aiProvider(v: AIProviderId) { aiProvider = v; persist(); },
+		get aiProvider() {
+			return aiProvider;
+		},
+		set aiProvider(v: AIProviderId) {
+			aiProvider = v;
+			persist();
+		},
 
-		get aiModel() { return aiModel; },
-		set aiModel(v: string) { aiModel = v; persist(); },
+		get aiModel() {
+			return aiModel;
+		},
+		set aiModel(v: string) {
+			aiModel = v;
+			persist();
+		},
 
-		get cacheEnabled() { return cacheEnabled; },
-		set cacheEnabled(v: boolean) { cacheEnabled = v; persist(); },
+		get cacheEnabled() {
+			return cacheEnabled;
+		},
+		set cacheEnabled(v: boolean) {
+			cacheEnabled = v;
+			persist();
+		},
 
-		get language() { return language; },
-		set language(v: 'ko' | 'en') { language = v; persist(); },
+		get language() {
+			return language;
+		},
+		set language(v: 'ko' | 'en') {
+			language = v;
+			persist();
+		},
 
-		get syntaxTheme() { return syntaxTheme; },
-		set syntaxTheme(v: string) { syntaxTheme = v; persist(); },
+		get syntaxTheme() {
+			return syntaxTheme;
+		},
+		set syntaxTheme(v: string) {
+			syntaxTheme = v;
+			persist();
+		},
 
 		get hasApiKey() {
 			if (aiProvider === 'google') return geminiApiKey.length > 0;
@@ -69,7 +107,7 @@ function createSettingsStore() {
 			language = 'ko';
 			syntaxTheme = 'tomorrow';
 			if (typeof window !== 'undefined') {
-				localStorage.removeItem('codeviz-settings');
+				localStorage.removeItem('ropeman-settings');
 			}
 		}
 	};

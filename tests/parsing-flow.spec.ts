@@ -3,7 +3,7 @@ import { execSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 
-const TEST_DIR = '/tmp/codeviz-test-fixture';
+const TEST_DIR = '/tmp/ropeman-test-fixture';
 
 // Ensure test fixture exists before tests run
 test.beforeAll(() => {
