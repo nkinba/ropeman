@@ -8,9 +8,11 @@
 
 	let {
 		collapsed = false,
+		mobile = false,
 		ontoggle
 	}: {
 		collapsed?: boolean;
+		mobile?: boolean;
 		ontoggle?: () => void;
 	} = $props();
 
@@ -44,28 +46,39 @@
 		expandedDirs = next;
 	}
 
-	function handleFileClick(node: FileNode) {
-		// If in code mode, create a synthetic GraphNode directly (graphStore.nodes may be empty)
-		if (semanticStore.viewMode === 'code') {
-			const lang = inferLang(node.path);
-			const syntheticNode: GraphNode = {
-				id: `file:${node.path}`,
-				kind: 'file',
-				label: node.name,
-				filePath: node.path,
-				parentId: null,
-				childCount: 0,
-				language: lang ?? undefined,
-				isExpanded: false
-			};
-			selectionStore.selectedNode = syntheticNode;
-			selectionStore.breadcrumb = [syntheticNode];
-			return;
-		}
+	// Double-click detection for file items
+	let lastFileClickPath = '';
+	let lastFileClickTime = 0;
+	const DBLCLICK_MS = 400;
 
-		// Semantic mode: find and highlight the semantic node containing this file
-		const semNode = semanticStore.findSemanticNodeForFile(node.path);
-		semanticStore.selectedSemanticNode = semNode;
+	function handleFileClick(node: FileNode) {
+		const now = Date.now();
+		const isDoubleClick = node.path === lastFileClickPath && now - lastFileClickTime < DBLCLICK_MS;
+		lastFileClickPath = node.path;
+		lastFileClickTime = now;
+
+		const lang = inferLang(node.path);
+		const syntheticNode: GraphNode = {
+			id: `file:${node.path}`,
+			kind: 'file',
+			label: node.name,
+			filePath: node.path,
+			parentId: null,
+			childCount: 0,
+			language: lang ?? undefined,
+			isExpanded: false
+		};
+
+		if (isDoubleClick) {
+			// Double-click: change selectedSemanticNode to the node containing this file (or null)
+			const ownerNode = semanticStore.findSemanticNodeForFile(node.path);
+			semanticStore.selectedSemanticNode = ownerNode;
+		}
+		// Single-click: keep selectedSemanticNode as-is (preserve analysis flow)
+
+		semanticStore.viewMode = 'code';
+		selectionStore.selectedNode = syntheticNode;
+		selectionStore.breadcrumb = [syntheticNode];
 	}
 
 	function matchesSearch(node: FileNode, query: string): boolean {
@@ -172,7 +185,17 @@
 </script>
 
 {#if !collapsed}
-	<aside class="file-explorer">
+	{#if mobile}
+		<!-- svelte-ignore a11y_no_static_element_interactions -->
+		<div
+			class="mobile-overlay"
+			onclick={ontoggle}
+			onkeydown={(e) => {
+				if (e.key === 'Escape') ontoggle?.();
+			}}
+		></div>
+	{/if}
+	<aside class="file-explorer" class:mobile>
 		<div class="explorer-header">
 			<span class="explorer-title">Explorer</span>
 			<button class="explorer-toggle" onclick={ontoggle} title="Hide Explorer">
@@ -510,5 +533,32 @@
 		border-radius: 50%;
 		flex-shrink: 0;
 		margin-left: 14px;
+	}
+
+	/* Mobile overlay mode */
+	.mobile-overlay {
+		position: fixed;
+		inset: 0;
+		background: rgba(0, 0, 0, 0.5);
+		z-index: 29;
+	}
+
+	.file-explorer.mobile {
+		position: fixed;
+		top: 0;
+		left: 0;
+		width: 80vw;
+		height: 100vh;
+		z-index: 30;
+		animation: slideIn 0.2s ease;
+	}
+
+	@keyframes slideIn {
+		from {
+			transform: translateX(-100%);
+		}
+		to {
+			transform: translateX(0);
+		}
 	}
 </style>

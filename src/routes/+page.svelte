@@ -15,15 +15,40 @@
 	import { selectionStore } from '$lib/stores/selectionStore.svelte';
 	import { semanticStore } from '$lib/stores/semanticStore.svelte';
 	import { authStore } from '$lib/stores/authStore.svelte';
+	import { toggleTheme } from '$lib/stores/themeStore';
 	import { analyzeTopLevel } from '$lib/services/semanticAnalysisService';
+	import { t } from '$lib/stores/i18nStore';
 	import { loadTestProject } from '$lib/services/testLoader';
+	import { graphStore } from '$lib/stores/graphStore.svelte';
+	import {
+		openDirectory,
+		readDirectoryRecursive,
+		handleFallbackInput
+	} from '$lib/services/fileSystemService';
+	import { parseAllFiles } from '$lib/services/parserService';
 	import { onMount } from 'svelte';
 
 	let showSettings = $state(false);
 	let showConnect = $state(false);
 	let showOnboarding = $state(false);
-	let showNewProject = $state(false);
 	let explorerCollapsed = $state(false);
+	let isMobile = $state(false);
+	let zuiCanvasRef: ZUICanvas | undefined = $state(undefined);
+
+	// U1-5: Responsive layout — detect mobile viewport
+	$effect(() => {
+		if (typeof window === 'undefined') return;
+		const mql = window.matchMedia('(max-width: 768px)');
+		const handler = (e: MediaQueryListEvent | MediaQueryList) => {
+			isMobile = e.matches;
+			if (e.matches) {
+				explorerCollapsed = true;
+			}
+		};
+		handler(mql);
+		mql.addEventListener('change', handler);
+		return () => mql.removeEventListener('change', handler);
+	});
 
 	function handleTrackSelect(track: 'edge' | 'byok' | 'bridge') {
 		showOnboarding = false;
@@ -33,6 +58,73 @@
 		} else {
 			analyzeTopLevel();
 		}
+	}
+
+	let fallbackInput: HTMLInputElement | undefined = $state(undefined);
+	const supportsDirectoryPicker = typeof window !== 'undefined' && 'showDirectoryPicker' in window;
+
+	function resetAllStores() {
+		projectStore.reset();
+		graphStore.clear();
+		selectionStore.clear();
+		semanticStore.clear();
+	}
+
+	async function handleNewProject() {
+		if (supportsDirectoryPicker) {
+			try {
+				const dirHandle = await openDirectory();
+				resetAllStores();
+				projectStore.isLoading = true;
+				projectStore.projectName = dirHandle.name;
+				const tree = await readDirectoryRecursive(dirHandle);
+				projectStore.fileTree = tree;
+				await parseAllFiles(tree);
+			} catch (err: unknown) {
+				if (err instanceof Error && err.name === 'AbortError') return;
+				console.error('Failed to open project:', err);
+			}
+		} else {
+			fallbackInput?.click();
+		}
+	}
+
+	async function handleFallbackFiles(e: Event) {
+		const input = e.target as HTMLInputElement;
+		if (!input.files || input.files.length === 0) return;
+		try {
+			resetAllStores();
+			const tree = handleFallbackInput(input.files);
+			projectStore.projectName = tree.name;
+			projectStore.fileTree = tree;
+			projectStore.isLoading = true;
+			await parseAllFiles(tree);
+		} catch (err) {
+			console.error('Failed to process files:', err);
+			projectStore.isLoading = false;
+		}
+	}
+
+	// U1-1: Analysis progress/error UI state
+	let errorDismissed = $state(false);
+	let errorDismissTimer: ReturnType<typeof setTimeout> | null = null;
+
+	$effect(() => {
+		if (semanticStore.analysisError) {
+			errorDismissed = false;
+			if (errorDismissTimer) clearTimeout(errorDismissTimer);
+			errorDismissTimer = setTimeout(() => {
+				errorDismissed = true;
+			}, 5000);
+		}
+		return () => {
+			if (errorDismissTimer) clearTimeout(errorDismissTimer);
+		};
+	});
+
+	function dismissError() {
+		errorDismissed = true;
+		semanticStore.analysisError = null;
 	}
 
 	const hasProject = $derived(projectStore.fileTree !== null);
@@ -85,6 +177,13 @@
 		}
 	});
 
+	function isInputFocused(): boolean {
+		const el = document.activeElement;
+		if (!el) return false;
+		const tag = el.tagName.toLowerCase();
+		return tag === 'input' || tag === 'textarea' || (el as HTMLElement).isContentEditable;
+	}
+
 	function handleKeydown(e: KeyboardEvent) {
 		if (e.key === 'Escape') {
 			if (showOnboarding) {
@@ -93,11 +192,48 @@
 				showConnect = false;
 			} else if (showSettings) {
 				showSettings = false;
-			} else if (showNewProject) {
-				showNewProject = false;
 			} else if (hasSelection) {
 				selectionStore.clear();
 			}
+			return;
+		}
+
+		// Skip keyboard shortcuts when input fields are focused
+		if (isInputFocused()) return;
+
+		// Ctrl+Shift+D: Toggle theme
+		if (e.ctrlKey && e.shiftKey && e.key === 'D') {
+			e.preventDefault();
+			toggleTheme();
+			return;
+		}
+
+		// Ctrl+Shift+V: Toggle view mode (semantic <-> code)
+		if (e.ctrlKey && e.shiftKey && e.key === 'V') {
+			e.preventDefault();
+			semanticStore.viewMode = semanticStore.viewMode === 'semantic' ? 'code' : 'semantic';
+			return;
+		}
+
+		// Ctrl+B: Toggle sidebar
+		if (e.ctrlKey && !e.shiftKey && e.key === 'b') {
+			e.preventDefault();
+			explorerCollapsed = !explorerCollapsed;
+			return;
+		}
+
+		// Ctrl+Shift+E: Export diagram
+		if (e.ctrlKey && e.shiftKey && e.key === 'E') {
+			e.preventDefault();
+			zuiCanvasRef?.triggerExport();
+			return;
+		}
+
+		// ? or Ctrl+/: Show keyboard shortcuts help (open settings modal)
+		if (e.key === '?' || (e.ctrlKey && e.key === '/')) {
+			e.preventDefault();
+			showSettings = true;
+			return;
 		}
 	}
 </script>
@@ -107,7 +243,7 @@
 <div id="app">
 	<Header
 		onsettings={() => (showSettings = !showSettings)}
-		onnewproject={() => (showNewProject = true)}
+		onnewproject={handleNewProject}
 		onconnect={() => (showConnect = true)}
 		onanalyze={() => (showOnboarding = true)}
 	/>
@@ -116,24 +252,20 @@
 		<LoadingOverlay />
 	{/if}
 
-	{#if showNewProject && hasProject}
-		<!-- Overlay Dropzone on top of existing canvas -->
-		<div class="dropzone-overlay">
-			<Dropzone oncancel={() => (showNewProject = false)} onload={() => (showNewProject = false)} />
-		</div>
-	{:else if !hasProject && !projectStore.isLoading}
-		<Dropzone onload={() => (showNewProject = false)} />
+	{#if !hasProject && !projectStore.isLoading}
+		<Dropzone />
 	{:else if hasProject}
 		<div class="main-layout">
 			{#if !isSnippetMode}
 				<FileExplorer
 					collapsed={explorerCollapsed}
+					mobile={isMobile}
 					ontoggle={() => (explorerCollapsed = !explorerCollapsed)}
 				/>
 			{/if}
 			<div class="canvas-area">
 				{#if semanticStore.viewMode === 'semantic'}
-					<ZUICanvas />
+					<ZUICanvas bind:this={zuiCanvasRef} />
 				{:else}
 					<CodeViewer />
 				{/if}
@@ -148,6 +280,24 @@
 				</div>
 			{/if}
 		</div>
+		<!-- U1-1: Analysis progress indicator (bottom-right, always visible) -->
+		{#if semanticStore.isAnalyzing}
+			<div class="analysis-progress-pill">
+				<div class="analysis-spinner"></div>
+				<span class="analysis-progress-text">
+					{semanticStore.analysisProgress || $t('analyzing')}
+				</span>
+			</div>
+		{/if}
+
+		<!-- U1-1: Analysis error toast -->
+		{#if semanticStore.analysisError && !errorDismissed}
+			<div class="analysis-error-toast">
+				<span class="analysis-error-text">{semanticStore.analysisError}</span>
+				<button class="analysis-error-dismiss" onclick={dismissError}>&#10005;</button>
+			</div>
+		{/if}
+
 		<ChatPopup onconnect={() => (showConnect = true)} />
 	{/if}
 
@@ -171,6 +321,17 @@
 			open={showOnboarding}
 			onclose={() => (showOnboarding = false)}
 			onselect={handleTrackSelect}
+		/>
+	{/if}
+
+	{#if !supportsDirectoryPicker}
+		<input
+			bind:this={fallbackInput}
+			type="file"
+			webkitdirectory
+			multiple
+			hidden
+			onchange={handleFallbackFiles}
 		/>
 	{/if}
 </div>
@@ -203,15 +364,6 @@
 		animation: panelSlide 0.2s ease;
 	}
 
-	.dropzone-overlay {
-		position: absolute;
-		inset: var(--header-height, 48px) 0 0 0;
-		z-index: 40;
-		background: var(--bg-primary);
-		display: flex;
-		flex-direction: column;
-	}
-
 	@keyframes panelSlide {
 		from {
 			width: 0;
@@ -221,6 +373,117 @@
 			width: 400px;
 			opacity: 1;
 		}
+	}
+
+	/* U1-1: Analysis progress pill (bottom-right, above chat button) */
+	.analysis-progress-pill {
+		position: fixed;
+		bottom: 80px;
+		right: 24px;
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		padding: 8px 16px;
+		background: var(--bg-secondary);
+		border: 1px solid var(--border);
+		border-radius: 20px;
+		z-index: 50;
+		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+		animation: pillFadeIn 0.2s ease;
+	}
+
+	@keyframes pillFadeIn {
+		from {
+			opacity: 0;
+			transform: translateY(4px);
+		}
+		to {
+			opacity: 1;
+			transform: translateY(0);
+		}
+	}
+
+	:global(.analysis-progress-pill.pulse) {
+		animation: pillPulse 0.4s ease;
+	}
+
+	@keyframes pillPulse {
+		0% {
+			transform: scale(1);
+			box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+		}
+		50% {
+			transform: scale(1.05);
+			box-shadow: 0 2px 16px rgba(59, 130, 246, 0.3);
+		}
+		100% {
+			transform: scale(1);
+			box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+		}
+	}
+
+	.analysis-spinner {
+		width: 14px;
+		height: 14px;
+		border: 2px solid var(--text-muted);
+		border-top-color: var(--accent, #3b82f6);
+		border-radius: 50%;
+		animation: spin 0.8s linear infinite;
+		flex-shrink: 0;
+	}
+
+	@keyframes spin {
+		to {
+			transform: rotate(360deg);
+		}
+	}
+
+	.analysis-progress-text {
+		font-size: 12px;
+		color: var(--text-secondary);
+		font-weight: 500;
+		white-space: nowrap;
+	}
+
+	/* U1-1: Analysis error toast */
+	.analysis-error-toast {
+		position: fixed;
+		bottom: 80px;
+		right: 24px;
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		padding: 8px 12px;
+		background: rgba(239, 68, 68, 0.9);
+		border: 1px solid rgba(239, 68, 68, 1);
+		border-radius: 8px;
+		z-index: 51;
+		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+		animation: pillFadeIn 0.2s ease;
+		max-width: 360px;
+	}
+
+	.analysis-error-text {
+		font-size: 12px;
+		color: #fff;
+		font-weight: 500;
+		flex: 1;
+		word-break: break-word;
+	}
+
+	.analysis-error-dismiss {
+		background: none;
+		border: none;
+		color: rgba(255, 255, 255, 0.8);
+		cursor: pointer;
+		font-size: 14px;
+		padding: 0 2px;
+		flex-shrink: 0;
+		line-height: 1;
+	}
+
+	.analysis-error-dismiss:hover {
+		color: #fff;
 	}
 
 	@media (max-width: 768px) {

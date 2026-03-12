@@ -2,10 +2,11 @@
 	import { projectStore } from '$lib/stores/projectStore.svelte';
 	import { graphStore } from '$lib/stores/graphStore.svelte';
 	import { selectionStore } from '$lib/stores/selectionStore.svelte';
+	import { semanticStore } from '$lib/stores/semanticStore.svelte';
 	import {
 		openDirectory,
 		readDirectoryRecursive,
-		handleFallbackInput,
+		handleFallbackInput
 	} from '$lib/services/fileSystemService';
 	import { parseAllFiles } from '$lib/services/parserService';
 	import { t } from '$lib/stores/i18nStore';
@@ -22,7 +23,7 @@
 		{ name: 'Go', color: '#00ADD8' },
 		{ name: 'Rust', color: '#dea584' },
 		{ name: 'C/C++', color: '#555555' },
-		{ name: 'Ruby', color: '#701516' },
+		{ name: 'Ruby', color: '#701516' }
 	];
 
 	let isDragOver = $state(false);
@@ -63,7 +64,8 @@
 			// Fallback: check for files via webkitGetAsEntry
 			const entry = item.webkitGetAsEntry?.();
 			if (entry?.isDirectory) {
-				error = 'Drag & drop directory reading requires a Chromium browser. Please use the "Open Directory" button instead.';
+				error =
+					'Drag & drop directory reading requires a Chromium browser. Please use the "Open Directory" button instead.';
 				return;
 			}
 
@@ -95,6 +97,7 @@
 		projectStore.reset();
 		graphStore.clear();
 		selectionStore.clear();
+		semanticStore.clear();
 	}
 
 	async function handleFallbackFiles(e: Event) {
@@ -116,10 +119,10 @@
 	}
 
 	async function loadFromDirectoryHandle(dirHandle: FileSystemDirectoryHandle) {
-		onload?.();
 		resetStores();
 		projectStore.isLoading = true;
 		projectStore.projectName = dirHandle.name;
+		onload?.();
 
 		const tree = await readDirectoryRecursive(dirHandle);
 		projectStore.fileTree = tree;
@@ -139,8 +142,17 @@
 >
 	{#if oncancel}
 		<button class="dropzone-close" onclick={oncancel} title="Cancel">
-			<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-				<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+			<svg
+				width="20"
+				height="20"
+				viewBox="0 0 24 24"
+				fill="none"
+				stroke="currentColor"
+				stroke-width="2"
+				stroke-linecap="round"
+				stroke-linejoin="round"
+			>
+				<line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
 			</svg>
 		</button>
 	{/if}
@@ -162,8 +174,19 @@
 						<h1>{$t('landing.headline')}</h1>
 						<p class="hero-sub">{$t('landing.subheadline')}</p>
 						<button class="cta-btn" onclick={handleOpenDirectory}>
-							<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-								<path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+							<svg
+								width="18"
+								height="18"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+							>
+								<path
+									d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"
+								/>
 							</svg>
 							{$t('landing.cta')}
 						</button>
@@ -180,8 +203,19 @@
 				<section class="landing-features">
 					<div class="feature-card">
 						<div class="feature-icon">
-							<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-								<path d="M12 2a4 4 0 0 1 4 4c0 1.5-.8 2.8-2 3.4V11h3a3 3 0 0 1 3 3v1.6c1.2.6 2 1.9 2 3.4a4 4 0 0 1-8 0c0-1.5.8-2.8 2-3.4V14a1 1 0 0 0-1-1h-6a1 1 0 0 0-1 1v1.6c1.2.6 2 1.9 2 3.4a4 4 0 0 1-8 0c0-1.5.8-2.8 2-3.4V14a3 3 0 0 1 3-3h3V9.4C7.8 8.8 7 7.5 7 6a4 4 0 0 1 5-3.9"/>
+							<svg
+								width="28"
+								height="28"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="var(--accent)"
+								stroke-width="1.5"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+							>
+								<path
+									d="M12 2a4 4 0 0 1 4 4c0 1.5-.8 2.8-2 3.4V11h3a3 3 0 0 1 3 3v1.6c1.2.6 2 1.9 2 3.4a4 4 0 0 1-8 0c0-1.5.8-2.8 2-3.4V14a1 1 0 0 0-1-1h-6a1 1 0 0 0-1 1v1.6c1.2.6 2 1.9 2 3.4a4 4 0 0 1-8 0c0-1.5.8-2.8 2-3.4V14a3 3 0 0 1 3-3h3V9.4C7.8 8.8 7 7.5 7 6a4 4 0 0 1 5-3.9"
+								/>
 							</svg>
 						</div>
 						<h3>{$t('landing.featureAiTitle')}</h3>
@@ -189,10 +223,19 @@
 					</div>
 					<div class="feature-card">
 						<div class="feature-icon">
-							<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-								<rect x="3" y="3" width="18" height="18" rx="2"/>
-								<rect x="7" y="7" width="10" height="10" rx="1"/>
-								<rect x="10" y="10" width="4" height="4" rx="0.5"/>
+							<svg
+								width="28"
+								height="28"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="var(--accent)"
+								stroke-width="1.5"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+							>
+								<rect x="3" y="3" width="18" height="18" rx="2" />
+								<rect x="7" y="7" width="10" height="10" rx="1" />
+								<rect x="10" y="10" width="4" height="4" rx="0.5" />
 							</svg>
 						</div>
 						<h3>{$t('landing.featureDrillTitle')}</h3>
@@ -200,9 +243,18 @@
 					</div>
 					<div class="feature-card">
 						<div class="feature-icon">
-							<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-								<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-								<polyline points="9 12 11 14 15 10"/>
+							<svg
+								width="28"
+								height="28"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="var(--accent)"
+								stroke-width="1.5"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+							>
+								<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+								<polyline points="9 12 11 14 15 10" />
 							</svg>
 						</div>
 						<h3>{$t('landing.featureBrowserTitle')}</h3>
@@ -324,7 +376,9 @@
 		font-size: 15px;
 		font-weight: 600;
 		cursor: pointer;
-		transition: background 0.2s ease, transform 0.15s ease;
+		transition:
+			background 0.2s ease,
+			transform 0.15s ease;
 	}
 
 	.cta-btn:hover {
@@ -441,7 +495,9 @@
 	}
 
 	@keyframes spin {
-		to { transform: rotate(360deg); }
+		to {
+			transform: rotate(360deg);
+		}
 	}
 
 	/* Responsive */
