@@ -2,7 +2,6 @@
 	import { theme, toggleTheme } from '$lib/stores/themeStore';
 	import { locale, toggleLocale, t } from '$lib/stores/i18nStore';
 	import { projectStore } from '$lib/stores/projectStore.svelte';
-	import { semanticStore } from '$lib/stores/semanticStore.svelte';
 	import { authStore } from '$lib/stores/authStore.svelte';
 	import Breadcrumb from '$lib/components/Breadcrumb.svelte';
 	import SearchBar from '$lib/components/SearchBar.svelte';
@@ -20,8 +19,6 @@
 	} = $props();
 
 	const hasProject = $derived(projectStore.fileTree !== null);
-	const hasSemanticData = $derived(semanticStore.currentLevel !== null);
-
 	const showBridgeStatus = $derived(
 		authStore.bridgeStatus === 'connected' ||
 			authStore.bridgeStatus === 'reconnecting' ||
@@ -40,10 +37,6 @@
 				return 'Bridge disconnected';
 		}
 	});
-
-	function toggleViewMode() {
-		semanticStore.viewMode = semanticStore.viewMode === 'semantic' ? 'code' : 'semantic';
-	}
 </script>
 
 <header class="header">
@@ -96,49 +89,6 @@
 					/>
 				</svg>
 				<span class="btn-label">AI</span>
-			</button>
-		{/if}
-		{#if hasProject && hasSemanticData}
-			<button
-				class="header-btn text-btn view-toggle"
-				class:active={semanticStore.viewMode === 'semantic'}
-				onclick={toggleViewMode}
-				title="Toggle View Mode (Ctrl+Shift+V)"
-			>
-				{#if semanticStore.viewMode === 'semantic'}
-					<svg
-						width="16"
-						height="16"
-						viewBox="0 0 24 24"
-						fill="none"
-						stroke="currentColor"
-						stroke-width="2"
-						stroke-linecap="round"
-						stroke-linejoin="round"
-					>
-						<circle cx="12" cy="12" r="10" />
-						<line x1="2" y1="12" x2="22" y2="12" />
-						<path
-							d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"
-						/>
-					</svg>
-					<span class="btn-label">Semantic</span>
-				{:else}
-					<svg
-						width="16"
-						height="16"
-						viewBox="0 0 24 24"
-						fill="none"
-						stroke="currentColor"
-						stroke-width="2"
-						stroke-linecap="round"
-						stroke-linejoin="round"
-					>
-						<polyline points="16 18 22 12 16 6" />
-						<polyline points="8 6 2 12 8 18" />
-					</svg>
-					<span class="btn-label">Code</span>
-				{/if}
 			</button>
 		{/if}
 		<button class="header-btn" onclick={toggleLocale} title="Toggle Language">
@@ -256,11 +206,6 @@
 
 	.btn-label {
 		font-size: 13px;
-	}
-
-	.view-toggle.active {
-		background: var(--accent-bg, rgba(59, 130, 246, 0.12));
-		color: var(--accent, #3b82f6);
 	}
 
 	.bridge-indicator {

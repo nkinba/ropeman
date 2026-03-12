@@ -2,6 +2,7 @@
 	import { projectStore } from '$lib/stores/projectStore.svelte';
 	import { selectionStore } from '$lib/stores/selectionStore.svelte';
 	import { semanticStore } from '$lib/stores/semanticStore.svelte';
+	import { tabStore } from '$lib/stores/tabStore.svelte';
 	import { graphStore } from '$lib/stores/graphStore.svelte';
 	import type { FileNode } from '$lib/types/fileTree';
 	import type { GraphNode } from '$lib/types/graph';
@@ -73,10 +74,13 @@
 			// Double-click: change selectedSemanticNode to the node containing this file (or null)
 			const ownerNode = semanticStore.findSemanticNodeForFile(node.path);
 			semanticStore.selectedSemanticNode = ownerNode;
+			// Pin the tab
+			tabStore.openCodeTab(node.path, node.name, false);
+		} else {
+			// Single-click: keep selectedSemanticNode as-is (preserve analysis flow), preview tab
+			tabStore.openCodeTab(node.path, node.name, true);
 		}
-		// Single-click: keep selectedSemanticNode as-is (preserve analysis flow)
 
-		semanticStore.viewMode = 'code';
 		selectionStore.selectedNode = syntheticNode;
 		selectionStore.breadcrumb = [syntheticNode];
 	}
