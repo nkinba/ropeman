@@ -73,9 +73,12 @@ describe('semanticStore', () => {
 			expect(semanticStore.viewMode).toBe('semantic');
 		});
 
-		it('sets isAnalyzing', () => {
-			semanticStore.isAnalyzing = true;
+		it('isAnalyzing is derived from analysisRequests', () => {
+			expect(semanticStore.isAnalyzing).toBe(false);
+			const controller = semanticStore.addAnalysisRequest('test-node', 'Test');
 			expect(semanticStore.isAnalyzing).toBe(true);
+			semanticStore.removeAnalysisRequest('test-node');
+			expect(semanticStore.isAnalyzing).toBe(false);
 		});
 
 		it('sets selectedSemanticNode', () => {
