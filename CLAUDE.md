@@ -57,6 +57,13 @@
 - 스프린트 ID 규칙: `YYYY-MM-dd-{n}` (예: `2026-03-03-01`). 날짜 + 당일 순번(01부터). PRD 로드맵, history 파일명, changelog 모두 이 ID를 사용한다.
 - 매 스프린트 완료 시: `/changelog` → `docs/history/{sprint_id}.md`에 변경사항 기록. 당일 기존 파일은 무시하고 순번을 증가시킨다.
 
+- 스프린트 마무리 시 PR 생성 규칙
+  1. 스프린트 브랜치를 `sprint/{sprint_id}` 형식으로 생성한다 (예: `sprint/2026-03-12-01`)
+  2. 변경사항을 커밋하고 remote에 push한다
+  3. `gh pr create`로 main 브랜치를 base로 PR을 생성한다
+  4. PR 제목: `sprint/{sprint_id}` 완료 태스크 요약
+  5. PR 본문에 완료/미완료 태스크, 주요 변경사항을 포함한다
+
 ## File Ownership (멀티 에이전트 충돌 방지)
 
 - `src/lib/stores/` — 스토어 변경은 한 에이전트만

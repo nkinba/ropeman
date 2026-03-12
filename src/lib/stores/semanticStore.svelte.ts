@@ -2,31 +2,121 @@ import type { SemanticLevel, SemanticNode } from '$lib/types/semantic';
 
 export type ViewMode = 'semantic' | 'code';
 
+export interface AnalysisRequest {
+	nodeId: string;
+	nodeLabel: string;
+	progress: string;
+	abortController: AbortController;
+}
+
 function createSemanticStore() {
 	let currentLevel = $state<SemanticLevel | null>(null);
 	let drilldownPath = $state<{ nodeId: string; label: string }[]>([]);
 	let viewMode = $state<ViewMode>('code');
-	let isAnalyzing = $state(false);
+	let analysisError = $state<string | null>(null);
+	let analysisRequests = $state<Map<string, AnalysisRequest>>(new Map());
 	let cache = $state<Map<string, SemanticLevel>>(new Map());
 	let selectedSemanticNode = $state<SemanticNode | null>(null);
 
 	return {
-		get currentLevel() { return currentLevel; },
-		set currentLevel(v: SemanticLevel | null) { currentLevel = v; },
+		get currentLevel() {
+			return currentLevel;
+		},
+		set currentLevel(v: SemanticLevel | null) {
+			currentLevel = v;
+		},
 
-		get drilldownPath() { return drilldownPath; },
-		set drilldownPath(v: { nodeId: string; label: string }[]) { drilldownPath = v; },
+		get drilldownPath() {
+			return drilldownPath;
+		},
+		set drilldownPath(v: { nodeId: string; label: string }[]) {
+			drilldownPath = v;
+		},
 
-		get viewMode() { return viewMode; },
-		set viewMode(v: ViewMode) { viewMode = v; },
+		get viewMode() {
+			return viewMode;
+		},
+		set viewMode(v: ViewMode) {
+			viewMode = v;
+		},
 
-		get isAnalyzing() { return isAnalyzing; },
-		set isAnalyzing(v: boolean) { isAnalyzing = v; },
+		// Derived from analysisRequests for backward compatibility
+		get isAnalyzing() {
+			return analysisRequests.size > 0;
+		},
+		set isAnalyzing(_v: boolean) {
+			/* no-op, managed via analysisRequests */
+		},
 
-		get cache() { return cache; },
+		get analysisError() {
+			return analysisError;
+		},
+		set analysisError(v: string | null) {
+			analysisError = v;
+		},
 
-		get selectedSemanticNode() { return selectedSemanticNode; },
-		set selectedSemanticNode(v: SemanticNode | null) { selectedSemanticNode = v; },
+		// Latest request's progress for pill display
+		get analysisProgress() {
+			if (analysisRequests.size === 0) return '';
+			const entries = [...analysisRequests.values()];
+			const latest = entries[entries.length - 1];
+			return latest.progress ? `[${latest.nodeLabel}] ${latest.progress}` : '';
+		},
+		set analysisProgress(_v: string) {
+			/* no-op, managed via analysisRequests */
+		},
+
+		get analysisRequests() {
+			return analysisRequests;
+		},
+
+		addAnalysisRequest(nodeId: string, nodeLabel: string): AbortController {
+			const abortController = new AbortController();
+			const next = new Map(analysisRequests);
+			next.set(nodeId, { nodeId, nodeLabel, progress: '', abortController });
+			analysisRequests = next;
+			return abortController;
+		},
+
+		updateAnalysisProgress(nodeId: string, progress: string) {
+			const req = analysisRequests.get(nodeId);
+			if (req) {
+				const next = new Map(analysisRequests);
+				next.set(nodeId, { ...req, progress });
+				analysisRequests = next;
+			}
+		},
+
+		removeAnalysisRequest(nodeId: string) {
+			const next = new Map(analysisRequests);
+			next.delete(nodeId);
+			analysisRequests = next;
+		},
+
+		cancelAnalysisRequest(nodeId: string) {
+			const req = analysisRequests.get(nodeId);
+			if (req) {
+				req.abortController.abort();
+				const next = new Map(analysisRequests);
+				next.delete(nodeId);
+				analysisRequests = next;
+			}
+		},
+
+		isNodeAnalyzing(nodeId: string): boolean {
+			return analysisRequests.has(nodeId);
+		},
+
+		get cache() {
+			return cache;
+		},
+
+		get selectedSemanticNode() {
+			return selectedSemanticNode;
+		},
+		set selectedSemanticNode(v: SemanticNode | null) {
+			selectedSemanticNode = v;
+		},
 
 		get highlightedFilePaths(): string[] {
 			return selectedSemanticNode?.filePaths ?? [];
@@ -76,9 +166,7 @@ function createSemanticStore() {
 			if (drilldownPath.length === 0) return;
 
 			const newPath = drilldownPath.slice(0, -1);
-			const parentKey = newPath.length > 0
-				? newPath[newPath.length - 1].nodeId
-				: '__root__';
+			const parentKey = newPath.length > 0 ? newPath[newPath.length - 1].nodeId : '__root__';
 
 			const cached = cache.get(parentKey);
 			if (cached) {
@@ -111,14 +199,19 @@ function createSemanticStore() {
 
 		findSemanticNodeForFile(filePath: string): SemanticNode | null {
 			if (!currentLevel) return null;
-			return currentLevel.nodes.find(n => n.filePaths.includes(filePath)) ?? null;
+			return currentLevel.nodes.find((n) => n.filePaths.includes(filePath)) ?? null;
 		},
 
 		clear() {
+			// Cancel all pending analysis requests
+			for (const req of analysisRequests.values()) {
+				req.abortController.abort();
+			}
 			currentLevel = null;
 			drilldownPath = [];
 			viewMode = 'code';
-			isAnalyzing = false;
+			analysisRequests = new Map();
+			analysisError = null;
 			cache = new Map();
 			selectedSemanticNode = null;
 		}

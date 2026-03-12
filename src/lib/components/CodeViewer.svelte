@@ -24,7 +24,7 @@
 		rust: 'rust',
 		java: 'java',
 		c: 'c',
-		cpp: 'cpp',
+		cpp: 'cpp'
 	};
 
 	let fileContent = $state('');
@@ -33,17 +33,18 @@
 	let loadError = $state('');
 
 	// Determine the file path to display
+	// Priority: selectedNode (direct file selection) > selectedSemanticNode (semantic node's representative file)
 	const targetFilePath = $derived.by(() => {
-		// From semantic selection (single file in selected node)
-		const semNode = semanticStore.selectedSemanticNode;
-		if (semNode && semNode.filePaths.length > 0) {
-			return semNode.filePaths[0];
-		}
-
-		// From graph node selection
+		// From direct file/symbol selection (File Explorer click, SearchBar, etc.)
 		const sel = selectionStore.selectedNode;
 		if (sel?.filePath) {
 			return sel.filePath;
+		}
+
+		// Fallback: from semantic node's representative file
+		const semNode = semanticStore.selectedSemanticNode;
+		if (semNode && semNode.filePaths.length > 0) {
+			return semNode.filePaths[0];
 		}
 
 		return '';
@@ -73,9 +74,9 @@
 			return html.split('\n');
 		}
 		// Plain text fallback — escape HTML
-		return fileContent.split('\n').map(line =>
-			line.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-		);
+		return fileContent
+			.split('\n')
+			.map((line) => line.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'));
 	});
 
 	// Load file content when target changes
@@ -183,7 +184,13 @@
 							onclick={() => handleSymbolClick(sym)}
 							title="{sym.kind}: {sym.name} (L{sym.lineStart})"
 						>
-							<span class="symbol-kind-icon" class:fn={sym.kind === 'function' || sym.kind === 'method'} class:cls={sym.kind === 'class'} class:var={sym.kind === 'variable'} class:type={sym.kind === 'interface' || sym.kind === 'type'}>
+							<span
+								class="symbol-kind-icon"
+								class:fn={sym.kind === 'function' || sym.kind === 'method'}
+								class:cls={sym.kind === 'class'}
+								class:var={sym.kind === 'variable'}
+								class:type={sym.kind === 'interface' || sym.kind === 'type'}
+							>
 								{#if sym.kind === 'function' || sym.kind === 'method'}f
 								{:else if sym.kind === 'class'}C
 								{:else if sym.kind === 'variable'}v
@@ -265,7 +272,9 @@
 	}
 
 	@keyframes spin {
-		to { transform: rotate(360deg); }
+		to {
+			transform: rotate(360deg);
+		}
 	}
 
 	.code-error {
@@ -375,10 +384,22 @@
 		color: var(--text-muted);
 	}
 
-	.symbol-kind-icon.fn { color: #89b4fa; background: rgba(137, 180, 250, 0.1); }
-	.symbol-kind-icon.cls { color: #f9e2af; background: rgba(249, 226, 175, 0.1); }
-	.symbol-kind-icon.var { color: #a6e3a1; background: rgba(166, 227, 161, 0.1); }
-	.symbol-kind-icon.type { color: #cba6f7; background: rgba(203, 166, 247, 0.1); }
+	.symbol-kind-icon.fn {
+		color: #89b4fa;
+		background: rgba(137, 180, 250, 0.1);
+	}
+	.symbol-kind-icon.cls {
+		color: #f9e2af;
+		background: rgba(249, 226, 175, 0.1);
+	}
+	.symbol-kind-icon.var {
+		color: #a6e3a1;
+		background: rgba(166, 227, 161, 0.1);
+	}
+	.symbol-kind-icon.type {
+		color: #cba6f7;
+		background: rgba(203, 166, 247, 0.1);
+	}
 
 	.symbol-name {
 		flex: 1;

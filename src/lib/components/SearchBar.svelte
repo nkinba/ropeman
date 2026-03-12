@@ -67,6 +67,7 @@
 
 	function navigateToResult(result: SearchResult) {
 		close();
+		semanticStore.selectedSemanticNode = null;
 
 		if (result.type === 'file') {
 			// Switch to code view and select file

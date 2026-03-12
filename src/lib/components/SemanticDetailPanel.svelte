@@ -14,8 +14,9 @@
 			filePath,
 			parentId: null,
 			childCount: 0,
-			isExpanded: false,
+			isExpanded: false
 		};
+		// Keep selectedSemanticNode (S6: preserve analysis flow when clicking files in detail panel)
 		selectionStore.selectedNode = syntheticNode;
 		selectionStore.breadcrumb = [syntheticNode];
 		semanticStore.viewMode = 'code';
@@ -27,49 +28,58 @@
 </script>
 
 {#if node}
-<div class="semantic-detail-panel">
-	<div class="panel-header">
-		<span class="panel-label" style="color: {node.color};">{node.label}</span>
-		<button class="panel-close" onclick={handleClose} title="Close">
-			<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-				<line x1="18" y1="6" x2="6" y2="18"/>
-				<line x1="6" y1="6" x2="18" y2="18"/>
-			</svg>
-		</button>
+	<div class="semantic-detail-panel">
+		<div class="panel-header">
+			<span class="panel-label" style="color: {node.color};">{node.label}</span>
+			<button class="panel-close" onclick={handleClose} title="Close">
+				<svg
+					width="14"
+					height="14"
+					viewBox="0 0 24 24"
+					fill="none"
+					stroke="currentColor"
+					stroke-width="2"
+					stroke-linecap="round"
+					stroke-linejoin="round"
+				>
+					<line x1="18" y1="6" x2="6" y2="18" />
+					<line x1="6" y1="6" x2="18" y2="18" />
+				</svg>
+			</button>
+		</div>
+
+		{#if node.description}
+			<div class="panel-section">
+				<div class="section-title">Description</div>
+				<p class="panel-description">{node.description}</p>
+			</div>
+		{/if}
+
+		{#if node.filePaths.length > 0}
+			<div class="panel-section">
+				<div class="section-title">Files <span class="file-count">{node.fileCount}</span></div>
+				<div class="file-list">
+					{#each node.filePaths as fp}
+						<button class="file-item" onclick={() => handleFileClick(fp)}>
+							<span class="file-icon">&#128196;</span>
+							<span class="file-path">{fp}</span>
+						</button>
+					{/each}
+				</div>
+			</div>
+		{/if}
+
+		{#if node.keySymbols.length > 0}
+			<div class="panel-section">
+				<div class="section-title">Key Symbols</div>
+				<div class="symbol-tags">
+					{#each node.keySymbols as sym}
+						<span class="symbol-tag">{sym}</span>
+					{/each}
+				</div>
+			</div>
+		{/if}
 	</div>
-
-	{#if node.description}
-		<div class="panel-section">
-			<div class="section-title">Description</div>
-			<p class="panel-description">{node.description}</p>
-		</div>
-	{/if}
-
-	{#if node.filePaths.length > 0}
-		<div class="panel-section">
-			<div class="section-title">Files <span class="file-count">{node.fileCount}</span></div>
-			<div class="file-list">
-				{#each node.filePaths as fp}
-					<button class="file-item" onclick={() => handleFileClick(fp)}>
-						<span class="file-icon">&#128196;</span>
-						<span class="file-path">{fp}</span>
-					</button>
-				{/each}
-			</div>
-		</div>
-	{/if}
-
-	{#if node.keySymbols.length > 0}
-		<div class="panel-section">
-			<div class="section-title">Key Symbols</div>
-			<div class="symbol-tags">
-				{#each node.keySymbols as sym}
-					<span class="symbol-tag">{sym}</span>
-				{/each}
-			</div>
-		</div>
-	{/if}
-</div>
 {/if}
 
 <style>
@@ -201,7 +211,7 @@
 		font-size: 11px;
 		font-family: var(--font-mono, monospace);
 		color: var(--text-secondary);
-		background: var(--bg-tertiary, rgba(255,255,255,0.06));
+		background: var(--bg-tertiary, rgba(255, 255, 255, 0.06));
 		padding: 3px 8px;
 		border-radius: 4px;
 	}

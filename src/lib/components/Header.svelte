@@ -103,7 +103,7 @@
 				class="header-btn text-btn view-toggle"
 				class:active={semanticStore.viewMode === 'semantic'}
 				onclick={toggleViewMode}
-				title="Toggle View Mode"
+				title="Toggle View Mode (Ctrl+Shift+V)"
 			>
 				{#if semanticStore.viewMode === 'semantic'}
 					<svg
@@ -147,11 +147,11 @@
 		<button
 			class="header-btn"
 			onclick={toggleTheme}
-			title={$t($theme === 'dark' ? 'lightMode' : 'darkMode')}
+			title="{$t($theme === 'dark' ? 'lightMode' : 'darkMode')} (Ctrl+Shift+D)"
 		>
 			{$theme === 'dark' ? '\u2600' : '\u263D'}
 		</button>
-		<button class="header-btn" onclick={onsettings} title={$t('settings')}>
+		<button class="header-btn" onclick={onsettings} title="{$t('settings')} (?)">
 			<svg
 				width="18"
 				height="18"
