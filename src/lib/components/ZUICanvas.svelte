@@ -4,6 +4,7 @@
 
 	import { selectionStore } from '$lib/stores/selectionStore.svelte';
 	import { semanticStore } from '$lib/stores/semanticStore.svelte';
+	import { tabStore } from '$lib/stores/tabStore.svelte';
 	import { projectStore } from '$lib/stores/projectStore.svelte';
 	import { t } from '$lib/stores/i18nStore';
 	import { toSemanticFlowNodes, toSemanticFlowEdges } from '$lib/services/semanticGraphBuilder';
@@ -173,13 +174,6 @@
 
 	// Effect: Semantic view — render from semanticStore.currentLevel
 	$effect(() => {
-		if (semanticStore.viewMode !== 'semantic') {
-			flowNodes = [];
-			flowEdges = [];
-			allEdges = [];
-			return;
-		}
-
 		const level = semanticStore.currentLevel;
 		if (!level) {
 			flowNodes = [];
@@ -276,10 +270,12 @@
 			const semNode = semanticStore.currentLevel?.nodes.find((n) => n.id === node.id);
 			if (!semNode) return;
 
-			// Leaf node (1 file): switch to code view with that file selected
+			// Leaf node (1 file): open code tab with that file
 			if (semNode.fileCount === 1) {
 				semanticStore.selectedSemanticNode = semNode;
-				semanticStore.viewMode = 'code';
+				const filePath = semNode.filePaths[0];
+				const fileName = filePath.split('/').pop() ?? filePath;
+				tabStore.openCodeTab(filePath, fileName, false);
 				return;
 			}
 
@@ -294,6 +290,8 @@
 			if (!wasCached) {
 				analyzeDrilldown(semNode);
 			}
+			// Open/focus the diagram tab for the new drilldown level
+			tabStore.openDiagramTab(semanticStore.drilldownPath, semNode.label);
 			return;
 		}
 	}
@@ -381,7 +379,7 @@
 	{/if}
 
 	<!-- U1-9: Diagram top toolbar (legend, minimap toggle, export) -->
-	{#if semanticStore.viewMode === 'semantic' && semanticStore.currentLevel}
+	{#if semanticStore.currentLevel}
 		<div class="diagram-toolbar">
 			<!-- Legend toggle -->
 			<div class="toolbar-item">

@@ -1,4 +1,5 @@
 import type { SemanticLevel, SemanticNode } from '$lib/types/semantic';
+import { tabStore } from './tabStore.svelte';
 
 export type ViewMode = 'semantic' | 'code';
 
@@ -12,7 +13,6 @@ export interface AnalysisRequest {
 function createSemanticStore() {
 	let currentLevel = $state<SemanticLevel | null>(null);
 	let drilldownPath = $state<{ nodeId: string; label: string }[]>([]);
-	let viewMode = $state<ViewMode>('code');
 	let analysisError = $state<string | null>(null);
 	let analysisRequests = $state<Map<string, AnalysisRequest>>(new Map());
 	let cache = $state<Map<string, SemanticLevel>>(new Map());
@@ -33,11 +33,20 @@ function createSemanticStore() {
 			drilldownPath = v;
 		},
 
-		get viewMode() {
-			return viewMode;
+		get viewMode(): ViewMode {
+			return tabStore.viewMode;
 		},
 		set viewMode(v: ViewMode) {
-			viewMode = v;
+			// Backward compatibility: setting viewMode opens a tab of the appropriate type
+			// For 'code', callers should use tabStore.openCodeTab() directly
+			// For 'semantic', callers should use tabStore.openDiagramTab() directly
+			if (v === 'semantic') {
+				tabStore.openDiagramTab(
+					drilldownPath,
+					drilldownPath.length > 0 ? drilldownPath[drilldownPath.length - 1].label : 'Project'
+				);
+			}
+			// For 'code', we don't auto-open a tab — the caller should specify which file
 		},
 
 		// Derived from analysisRequests for backward compatibility
@@ -209,11 +218,11 @@ function createSemanticStore() {
 			}
 			currentLevel = null;
 			drilldownPath = [];
-			viewMode = 'code';
 			analysisRequests = new Map();
 			analysisError = null;
 			cache = new Map();
 			selectedSemanticNode = null;
+			tabStore.clear();
 		}
 	};
 }

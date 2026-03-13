@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { semanticStore } from '$lib/stores/semanticStore.svelte';
 	import { selectionStore } from '$lib/stores/selectionStore.svelte';
+	import { tabStore } from '$lib/stores/tabStore.svelte';
 	import type { GraphNode } from '$lib/types/graph';
 
 	const node = $derived(semanticStore.selectedSemanticNode);
@@ -19,7 +20,7 @@
 		// Keep selectedSemanticNode (S6: preserve analysis flow when clicking files in detail panel)
 		selectionStore.selectedNode = syntheticNode;
 		selectionStore.breadcrumb = [syntheticNode];
-		semanticStore.viewMode = 'code';
+		tabStore.openCodeTab(filePath, fileName, true);
 	}
 
 	function handleClose() {

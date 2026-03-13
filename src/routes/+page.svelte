@@ -5,7 +5,7 @@
 	import CodeViewer from '$lib/components/CodeViewer.svelte';
 	import NodeDetailPanel from '$lib/components/NodeDetailPanel.svelte';
 	import SemanticDetailPanel from '$lib/components/SemanticDetailPanel.svelte';
-	import FileExplorer from '$lib/components/FileExplorer.svelte';
+	import Sidebar from '$lib/components/Sidebar.svelte';
 	import ChatPopup from '$lib/components/ChatPopup.svelte';
 	import LoadingOverlay from '$lib/components/LoadingOverlay.svelte';
 	import SettingsModal from '$lib/components/SettingsModal.svelte';
@@ -16,6 +16,8 @@
 	import { semanticStore } from '$lib/stores/semanticStore.svelte';
 	import { authStore } from '$lib/stores/authStore.svelte';
 	import { toggleTheme } from '$lib/stores/themeStore';
+	import { tabStore } from '$lib/stores/tabStore.svelte';
+	import TabBar from '$lib/components/TabBar.svelte';
 	import { analyzeTopLevel } from '$lib/services/semanticAnalysisService';
 	import { t } from '$lib/stores/i18nStore';
 	import { loadTestProject } from '$lib/services/testLoader';
@@ -130,7 +132,7 @@
 	const hasProject = $derived(projectStore.fileTree !== null);
 	const hasSelection = $derived(selectionStore.selectedNode !== null);
 	const hasSemanticSelection = $derived(
-		semanticStore.viewMode === 'semantic' && semanticStore.selectedSemanticNode !== null
+		tabStore.viewMode === 'semantic' && semanticStore.selectedSemanticNode !== null
 	);
 	const isSnippetMode = $derived(projectStore.isSnippetMode);
 
@@ -145,6 +147,47 @@
 			semanticStore.currentLevel === null
 		) {
 			analyzeTopLevel();
+		}
+	});
+
+	// Tab switch: restore semantic store state when switching between diagram tabs
+	$effect(() => {
+		const tab = tabStore.activeTab;
+		if (!tab) return;
+
+		if (tab.type === 'diagram' && tab.drilldownPath) {
+			// Restore the drilldown path and level from cache
+			const targetPath = tab.drilldownPath;
+			const currentPath = semanticStore.drilldownPath;
+
+			// Only update if the path actually differs
+			const pathKey = targetPath.map((p) => p.nodeId).join('/');
+			const currentKey = currentPath.map((p) => p.nodeId).join('/');
+			if (pathKey !== currentKey) {
+				const levelKey =
+					targetPath.length > 0 ? targetPath[targetPath.length - 1].nodeId : '__root__';
+				const cached = semanticStore.getCachedLevel(levelKey);
+				if (cached) {
+					semanticStore.currentLevel = cached;
+				}
+				semanticStore.drilldownPath = [...targetPath];
+			}
+		} else if (tab.type === 'code' && tab.filePath) {
+			// Ensure the selection matches the active code tab's file
+			const currentFilePath = selectionStore.selectedNode?.filePath;
+			if (currentFilePath !== tab.filePath) {
+				const fileName = tab.filePath.split('/').pop() ?? tab.filePath;
+				selectionStore.selectedNode = {
+					id: `file:${tab.filePath}`,
+					kind: 'file',
+					label: fileName,
+					filePath: tab.filePath,
+					parentId: null,
+					childCount: 0,
+					isExpanded: false
+				};
+				selectionStore.breadcrumb = [selectionStore.selectedNode];
+			}
 		}
 	});
 
@@ -208,10 +251,25 @@
 			return;
 		}
 
-		// Ctrl+Shift+V: Toggle view mode (semantic <-> code)
-		if (e.ctrlKey && e.shiftKey && e.key === 'V') {
+		// Ctrl+W: Close active tab
+		if (e.ctrlKey && !e.shiftKey && e.key === 'w') {
 			e.preventDefault();
-			semanticStore.viewMode = semanticStore.viewMode === 'semantic' ? 'code' : 'semantic';
+			if (tabStore.activeTabId) {
+				tabStore.closeTab(tabStore.activeTabId);
+			}
+			return;
+		}
+
+		// Ctrl+Tab: Next tab / Ctrl+Shift+Tab: Previous tab
+		if (e.ctrlKey && e.key === 'Tab') {
+			e.preventDefault();
+			const tabs = tabStore.tabs;
+			if (tabs.length <= 1) return;
+			const currentIdx = tabs.findIndex((t) => t.id === tabStore.activeTabId);
+			const nextIdx = e.shiftKey
+				? (currentIdx - 1 + tabs.length) % tabs.length
+				: (currentIdx + 1) % tabs.length;
+			tabStore.activateTab(tabs[nextIdx].id);
 			return;
 		}
 
@@ -257,18 +315,28 @@
 	{:else if hasProject}
 		<div class="main-layout">
 			{#if !isSnippetMode}
-				<FileExplorer
+				<Sidebar
 					collapsed={explorerCollapsed}
 					mobile={isMobile}
 					ontoggle={() => (explorerCollapsed = !explorerCollapsed)}
 				/>
 			{/if}
 			<div class="canvas-area">
-				{#if semanticStore.viewMode === 'semantic'}
-					<ZUICanvas bind:this={zuiCanvasRef} />
-				{:else}
-					<CodeViewer />
-				{/if}
+				<TabBar />
+				<div class="canvas-content">
+					{#if tabStore.activeTab?.type === 'diagram'}
+						<ZUICanvas bind:this={zuiCanvasRef} />
+					{:else if tabStore.activeTab?.type === 'code'}
+						<CodeViewer />
+					{:else}
+						<!-- No active tab: show diagram if semantic data exists, otherwise code viewer -->
+						{#if semanticStore.currentLevel}
+							<ZUICanvas bind:this={zuiCanvasRef} />
+						{:else}
+							<CodeViewer />
+						{/if}
+					{/if}
+				</div>
 			</div>
 			{#if hasSemanticSelection}
 				<div class="detail-panel">
@@ -353,6 +421,14 @@
 	.canvas-area {
 		flex: 1;
 		min-width: 0;
+		position: relative;
+		display: flex;
+		flex-direction: column;
+	}
+
+	.canvas-content {
+		flex: 1;
+		min-height: 0;
 		position: relative;
 	}
 

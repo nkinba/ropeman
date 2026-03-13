@@ -3,6 +3,7 @@
 	import { selectionStore } from '$lib/stores/selectionStore.svelte';
 	import { graphStore } from '$lib/stores/graphStore.svelte';
 	import { semanticStore } from '$lib/stores/semanticStore.svelte';
+	import { tabStore } from '$lib/stores/tabStore.svelte';
 	import { buildIndex, searchIndex } from '$lib/services/searchService';
 	import type { SearchResult } from '$lib/services/searchService';
 	import type { GraphNode } from '$lib/types/graph';
@@ -70,8 +71,8 @@
 		semanticStore.selectedSemanticNode = null;
 
 		if (result.type === 'file') {
-			// Switch to code view and select file
-			semanticStore.viewMode = 'code';
+			// Open code tab for the file
+			tabStore.openCodeTab(result.path, result.name, false);
 			const syntheticNode: GraphNode = {
 				id: `file:${result.path}`,
 				kind: 'file',
@@ -94,7 +95,7 @@
 			if (existingNode) {
 				selectionStore.select(existingNode);
 			} else {
-				semanticStore.viewMode = 'code';
+				tabStore.openCodeTab(result.path, result.name, false);
 				const syntheticNode: GraphNode = {
 					id: `symbol:${result.path}:${result.name}:${result.lineStart}`,
 					kind: (result.kind as GraphNode['kind']) ?? 'function',
