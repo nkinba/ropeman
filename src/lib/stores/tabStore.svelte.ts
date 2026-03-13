@@ -157,6 +157,37 @@ function createTabStore() {
 			return tab.id;
 		},
 
+		/** Get view mode for a specific tab */
+		viewModeForTab(tabId: string | null): 'semantic' | 'code' {
+			if (!tabId) return 'code';
+			const tab = tabs.find((t) => t.id === tabId);
+			return tab?.type === 'diagram' ? 'semantic' : 'code';
+		},
+
+		/** Get tabs filtered by pane */
+		tabsForPane(paneId: 'primary' | 'secondary'): Tab[] {
+			return tabs.filter((t) => (t.paneId ?? 'primary') === paneId);
+		},
+
+		/** Move tab to a specific pane */
+		moveTabToPane(tabId: string, paneId: 'primary' | 'secondary') {
+			const tab = tabs.find((t) => t.id === tabId);
+			if (tab) {
+				tab.paneId = paneId;
+				tabs = [...tabs]; // trigger reactivity
+			}
+		},
+
+		/** Merge all secondary pane tabs to primary */
+		mergeSecondaryToPrimary() {
+			for (const tab of tabs) {
+				if (tab.paneId === 'secondary') {
+					tab.paneId = 'primary';
+				}
+			}
+			tabs = [...tabs];
+		},
+
 		pinTab(tabId: string) {
 			const tab = tabs.find((t) => t.id === tabId);
 			if (tab) {

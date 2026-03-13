@@ -1,11 +1,26 @@
 <script lang="ts">
 	import { tabStore } from '$lib/stores/tabStore.svelte';
+	import type { Tab } from '$lib/types/tab';
+
+	let {
+		paneId = 'primary',
+		tabs = tabStore.tabs,
+		activeTabId = tabStore.activeTabId,
+		onactivate = (id: string) => tabStore.activateTab(id),
+		onclose = (id: string) => tabStore.closeTab(id)
+	}: {
+		paneId?: 'primary' | 'secondary';
+		tabs?: Tab[];
+		activeTabId?: string | null;
+		onactivate?: (id: string) => void;
+		onclose?: (id: string) => void;
+	} = $props();
 
 	function handleMouseDown(e: MouseEvent, tabId: string) {
 		// Middle-click to close
 		if (e.button === 1) {
 			e.preventDefault();
-			tabStore.closeTab(tabId);
+			onclose(tabId);
 		}
 	}
 
@@ -14,22 +29,22 @@
 	}
 </script>
 
-{#if tabStore.tabs.length > 0}
+{#if tabs.length > 0}
 	<div class="tab-bar">
 		<div class="tab-list">
-			{#each tabStore.tabs as tab (tab.id)}
+			{#each tabs as tab (tab.id)}
 				<!-- svelte-ignore a11y_no_static_element_interactions -->
 				<div
 					class="tab"
-					class:active={tab.id === tabStore.activeTabId}
+					class:active={tab.id === activeTabId}
 					class:preview={tab.preview}
-					onclick={() => tabStore.activateTab(tab.id)}
+					onclick={() => onactivate(tab.id)}
 					onmousedown={(e) => handleMouseDown(e, tab.id)}
 					ondblclick={() => handleDblClick(tab.id)}
 					title={tab.type === 'code' ? (tab.filePath ?? tab.label) : tab.label}
 					role="tab"
 					tabindex="0"
-					aria-selected={tab.id === tabStore.activeTabId}
+					aria-selected={tab.id === activeTabId}
 				>
 					<span class="tab-icon">
 						{#if tab.type === 'diagram'}
@@ -70,7 +85,7 @@
 						class="tab-close"
 						onclick={(e) => {
 							e.stopPropagation();
-							tabStore.closeTab(tab.id);
+							onclose(tab.id);
 						}}
 						title="Close"
 					>
