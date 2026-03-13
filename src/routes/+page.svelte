@@ -17,7 +17,9 @@
 	import { authStore } from '$lib/stores/authStore.svelte';
 	import { toggleTheme } from '$lib/stores/themeStore';
 	import { tabStore } from '$lib/stores/tabStore.svelte';
+	import { layoutStore } from '$lib/stores/layoutStore.svelte';
 	import TabBar from '$lib/components/TabBar.svelte';
+	import SplitPane from '$lib/components/SplitPane.svelte';
 	import { analyzeTopLevel } from '$lib/services/semanticAnalysisService';
 	import { t } from '$lib/stores/i18nStore';
 	import { loadTestProject } from '$lib/services/testLoader';
@@ -213,6 +215,23 @@
 		}
 	});
 
+	// When split is toggled off, merge secondary tabs to primary
+	let prevIsSplit = $state(false);
+	$effect(() => {
+		const current = layoutStore.isSplit;
+		if (prevIsSplit && !current) {
+			tabStore.mergeSecondaryToPrimary();
+		}
+		prevIsSplit = current;
+	});
+
+	// Disable split on mobile
+	$effect(() => {
+		if (isMobile && layoutStore.isSplit) {
+			layoutStore.isSplit = false;
+		}
+	});
+
 	// Dev-only: auto-load test project from ?testDir= URL parameter
 	onMount(() => {
 		if (!import.meta.env.DEV) return;
@@ -291,6 +310,31 @@
 			return;
 		}
 
+		// Ctrl+\: Toggle split
+		if (e.ctrlKey && e.key === '\\') {
+			e.preventDefault();
+			if (!isMobile) {
+				layoutStore.toggleSplit();
+			}
+			return;
+		}
+
+		// Ctrl+1: Focus primary pane
+		if (e.ctrlKey && e.key === '1') {
+			e.preventDefault();
+			layoutStore.focusPrimary();
+			return;
+		}
+
+		// Ctrl+2: Focus secondary pane
+		if (e.ctrlKey && e.key === '2') {
+			e.preventDefault();
+			if (layoutStore.isSplit) {
+				layoutStore.focusSecondary();
+			}
+			return;
+		}
+
 		// ? or Ctrl+/: Show keyboard shortcuts help (open settings modal)
 		if (e.key === '?' || (e.ctrlKey && e.key === '/')) {
 			e.preventDefault();
@@ -322,21 +366,29 @@
 				<Sidebar bind:this={sidebarRef} mobile={isMobile} />
 			{/if}
 			<div class="canvas-area">
-				<TabBar />
-				<div class="canvas-content">
-					{#if tabStore.activeTab?.type === 'diagram'}
-						<ZUICanvas bind:this={zuiCanvasRef} />
-					{:else if tabStore.activeTab?.type === 'code'}
-						<CodeViewer />
-					{:else}
-						<!-- No active tab: show diagram if semantic data exists, otherwise code viewer -->
-						{#if semanticStore.currentLevel}
+				{#if layoutStore.isSplit && !isMobile}
+					<SplitPane
+						zuiCanvasBindPrimary={(ref) => {
+							zuiCanvasRef = ref;
+						}}
+					/>
+				{:else}
+					<TabBar />
+					<div class="canvas-content">
+						{#if tabStore.activeTab?.type === 'diagram'}
 							<ZUICanvas bind:this={zuiCanvasRef} />
-						{:else}
+						{:else if tabStore.activeTab?.type === 'code'}
 							<CodeViewer />
+						{:else}
+							<!-- No active tab: show diagram if semantic data exists, otherwise code viewer -->
+							{#if semanticStore.currentLevel}
+								<ZUICanvas bind:this={zuiCanvasRef} />
+							{:else}
+								<CodeViewer />
+							{/if}
 						{/if}
-					{/if}
-				</div>
+					</div>
+				{/if}
 			</div>
 			{#if hasSemanticSelection}
 				<div class="detail-panel">

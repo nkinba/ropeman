@@ -9,8 +9,7 @@
 	import { t } from '$lib/stores/i18nStore';
 	import { toSemanticFlowNodes, toSemanticFlowEdges } from '$lib/services/semanticGraphBuilder';
 	import { analyzeDrilldown } from '$lib/services/semanticAnalysisService';
-	import { exportAsPNG, exportAsSVG } from '$lib/services/exportService';
-
+	import ExportController from './ExportController.svelte';
 	import SemanticNodeComponent from './nodes/SemanticNode.svelte';
 
 	const nodeTypes = {
@@ -149,26 +148,19 @@
 
 	// --- U1-3: Export diagram ---
 	let exportMenuOpen = $state(false);
+	let exportFns = $state<{ exportPNG: () => void; exportSVG: () => void } | null>(null);
 
 	export function triggerExport() {
 		exportMenuOpen = !exportMenuOpen;
 	}
 
 	function handleExportPNG() {
-		const el = document.querySelector('.zui-canvas .svelte-flow') as HTMLElement | null;
-		if (el) {
-			const name = projectStore.projectName || 'diagram';
-			exportAsPNG(el, `${name}.png`);
-		}
+		exportFns?.exportPNG();
 		exportMenuOpen = false;
 	}
 
 	function handleExportSVG() {
-		const el = document.querySelector('.zui-canvas .svelte-flow') as HTMLElement | null;
-		if (el) {
-			const name = projectStore.projectName || 'diagram';
-			exportAsSVG(el, `${name}.svg`);
-		}
+		exportFns?.exportSVG();
 		exportMenuOpen = false;
 	}
 
@@ -332,6 +324,7 @@
 			<MiniMap />
 		{/if}
 		<Background gap={20} size={1} />
+		<ExportController onready={(fns) => (exportFns = fns)} />
 	</SvelteFlow>
 
 	<!-- U1-2: Node hover relationship preview -->

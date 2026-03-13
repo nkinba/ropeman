@@ -1,0 +1,76 @@
+<script lang="ts">
+	import { useSvelteFlow } from '@xyflow/svelte';
+	import { getViewportForBounds } from '@xyflow/system';
+	import { exportAsPNG, exportAsSVG } from '$lib/services/exportService';
+	import { projectStore } from '$lib/stores/projectStore.svelte';
+	import { onMount } from 'svelte';
+
+	let { onready }: { onready: (fns: { exportPNG: () => void; exportSVG: () => void }) => void } =
+		$props();
+
+	const { getNodes, getNodesBounds } = useSvelteFlow();
+
+	function getExportElement(): HTMLElement | null {
+		return document.querySelector('.svelte-flow__viewport') as HTMLElement | null;
+	}
+
+	function calcBounds() {
+		const nodes = getNodes();
+		if (nodes.length === 0) return null;
+		const bounds = getNodesBounds(nodes);
+		const padding = 50;
+		return {
+			x: bounds.x - padding,
+			y: bounds.y - padding,
+			width: bounds.width + padding * 2,
+			height: bounds.height + padding * 2
+		};
+	}
+
+	async function handleExportPNG() {
+		const el = getExportElement();
+		if (!el) return;
+		const bounds = calcBounds();
+		const name = projectStore.projectName || 'diagram';
+
+		if (bounds) {
+			// Set viewport to fit all nodes before export
+			const viewport = getViewportForBounds(bounds, bounds.width, bounds.height, 0.05, 4, 0);
+			const prevTransform = el.style.transform;
+			el.style.transform = `translate(${viewport.x}px, ${viewport.y}px) scale(${viewport.zoom})`;
+
+			try {
+				await exportAsPNG(el, `${name}.png`, { width: bounds.width, height: bounds.height });
+			} finally {
+				el.style.transform = prevTransform;
+			}
+		} else {
+			await exportAsPNG(el, `${name}.png`);
+		}
+	}
+
+	async function handleExportSVG() {
+		const el = getExportElement();
+		if (!el) return;
+		const bounds = calcBounds();
+		const name = projectStore.projectName || 'diagram';
+
+		if (bounds) {
+			const viewport = getViewportForBounds(bounds, bounds.width, bounds.height, 0.05, 4, 0);
+			const prevTransform = el.style.transform;
+			el.style.transform = `translate(${viewport.x}px, ${viewport.y}px) scale(${viewport.zoom})`;
+
+			try {
+				await exportAsSVG(el, `${name}.svg`, { width: bounds.width, height: bounds.height });
+			} finally {
+				el.style.transform = prevTransform;
+			}
+		} else {
+			await exportAsSVG(el, `${name}.svg`);
+		}
+	}
+
+	onMount(() => {
+		onready({ exportPNG: handleExportPNG, exportSVG: handleExportSVG });
+	});
+</script>
