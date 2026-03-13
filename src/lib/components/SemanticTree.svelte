@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { semanticStore } from '$lib/stores/semanticStore.svelte';
 	import { tabStore } from '$lib/stores/tabStore.svelte';
+	import { analyzeDrilldown } from '$lib/services/semanticAnalysisService';
 	import type { SemanticNode, SemanticLevel } from '$lib/types/semantic';
 
 	interface TreeNode {
@@ -61,26 +62,76 @@
 	}
 
 	function handleNodeClick(node: TreeNode) {
-		if (node.status === 'cached') {
-			// Navigate to this level's diagram tab
-			const pathWithoutLast = node.drilldownPath.slice(0, -1);
-			const parentKey =
-				pathWithoutLast.length > 0
-					? pathWithoutLast[pathWithoutLast.length - 1].nodeId
-					: '__root__';
-			const level = semanticStore.getCachedLevel(parentKey);
-			if (level) {
-				semanticStore.currentLevel = level;
-				semanticStore.drilldownPath = pathWithoutLast;
-			}
-			// Also open/focus diagram tab
-			const tabLabel =
-				pathWithoutLast.length > 0 ? pathWithoutLast[pathWithoutLast.length - 1].label : 'Project';
-			tabStore.openDiagramTab(pathWithoutLast, tabLabel);
+		// Navigate to the parent level containing this node
+		const pathWithoutLast = node.drilldownPath.slice(0, -1);
+		const parentKey =
+			pathWithoutLast.length > 0 ? pathWithoutLast[pathWithoutLast.length - 1].nodeId : '__root__';
+		const level = semanticStore.getCachedLevel(parentKey);
+		if (level) {
+			semanticStore.currentLevel = level;
+			semanticStore.drilldownPath = pathWithoutLast;
+		}
+		// Open/focus diagram tab showing this node's parent level
+		const tabLabel =
+			pathWithoutLast.length > 0 ? pathWithoutLast[pathWithoutLast.length - 1].label : 'Project';
+		tabStore.openDiagramTab(pathWithoutLast, tabLabel);
 
-			// Select this node in the semantic store
-			const semNode = level?.nodes.find((n) => n.id === node.id) ?? null;
+		// Select this node in the semantic store → highlights on diagram
+		const semNode = level?.nodes.find((n) => n.id === node.id) ?? null;
+		semanticStore.selectedSemanticNode = semNode;
+	}
+
+	function pulseElement(selector: string) {
+		const el = document.querySelector(selector);
+		if (el) {
+			el.classList.remove('pulse');
+			void (el as HTMLElement).offsetWidth;
+			el.classList.add('pulse');
+		}
+	}
+
+	function handleNodeDblClick(node: TreeNode) {
+		// Resolve the SemanticNode from the parent level
+		const pathWithoutLast = node.drilldownPath.slice(0, -1);
+		const parentKey =
+			pathWithoutLast.length > 0 ? pathWithoutLast[pathWithoutLast.length - 1].nodeId : '__root__';
+		const level = semanticStore.getCachedLevel(parentKey);
+		const semNode = level?.nodes.find((n) => n.id === node.id);
+		if (!semNode) return;
+
+		// Leaf node (1 file): open code tab
+		if (semNode.fileCount === 1) {
 			semanticStore.selectedSemanticNode = semNode;
+			const filePath = semNode.filePaths[0];
+			const fileName = filePath.split('/').pop() ?? filePath;
+			tabStore.openCodeTab(filePath, fileName, false);
+			return;
+		}
+
+		// Already analyzing → pulse pill
+		if (semanticStore.isNodeAnalyzing(semNode.id)) {
+			pulseElement('.analysis-progress-pill');
+			return;
+		}
+
+		// Navigate to this node's parent level first
+		if (level) {
+			semanticStore.currentLevel = level;
+			semanticStore.drilldownPath = pathWithoutLast;
+		}
+
+		// Drill down (cached or trigger AI analysis)
+		const wasCached = semanticStore.drillDown(semNode);
+		if (!wasCached) {
+			analyzeDrilldown(semNode);
+		}
+		tabStore.openDiagramTab(semanticStore.drilldownPath, semNode.label);
+
+		// Auto-expand the tree node
+		if (!expandedNodes.has(node.id)) {
+			const next = new Set(expandedNodes);
+			next.add(node.id);
+			expandedNodes = next;
 		}
 	}
 
@@ -137,6 +188,7 @@
 			class="tree-node"
 			class:selected={semanticStore.selectedSemanticNode?.id === node.id}
 			onclick={() => handleNodeClick(node)}
+			ondblclick={() => handleNodeDblClick(node)}
 		>
 			<span class="node-color" style="background: {node.color};"></span>
 			<span class="node-label">{node.label}</span>

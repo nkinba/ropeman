@@ -17,6 +17,7 @@ function createSemanticStore() {
 	let analysisRequests = $state<Map<string, AnalysisRequest>>(new Map());
 	let cache = $state<Map<string, SemanticLevel>>(new Map());
 	let selectedSemanticNode = $state<SemanticNode | null>(null);
+	let panelDismissed = $state(false);
 
 	return {
 		get currentLevel() {
@@ -125,6 +126,17 @@ function createSemanticStore() {
 		},
 		set selectedSemanticNode(v: SemanticNode | null) {
 			selectedSemanticNode = v;
+			// Auto-reset panelDismissed when a new node is selected
+			if (v !== null) {
+				panelDismissed = false;
+			}
+		},
+
+		get panelDismissed() {
+			return panelDismissed;
+		},
+		set panelDismissed(v: boolean) {
+			panelDismissed = v;
 		},
 
 		get highlightedFilePaths(): string[] {
@@ -145,7 +157,9 @@ function createSemanticStore() {
 		},
 
 		cacheLevel(key: string, level: SemanticLevel) {
-			cache.set(key, level);
+			const next = new Map(cache);
+			next.set(key, level);
+			cache = next;
 		},
 
 		getCachedLevel(key: string): SemanticLevel | undefined {
@@ -156,7 +170,9 @@ function createSemanticStore() {
 			// Cache current level before drilling down
 			const cacheKey = currentLevel?.parentId ?? '__root__';
 			if (currentLevel) {
-				cache.set(cacheKey, currentLevel);
+				const next = new Map(cache);
+				next.set(cacheKey, currentLevel);
+				cache = next;
 			}
 
 			drilldownPath = [...drilldownPath, { nodeId: node.id, label: node.label }];
@@ -222,6 +238,7 @@ function createSemanticStore() {
 			analysisError = null;
 			cache = new Map();
 			selectedSemanticNode = null;
+			panelDismissed = false;
 			tabStore.clear();
 		}
 	};

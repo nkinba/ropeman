@@ -1,15 +1,15 @@
 import type { SemanticLevel } from '$lib/types/semantic';
-import type { Node, Edge } from '@xyflow/svelte';
+import type { Node, Edge, MarkerType } from '@xyflow/svelte';
 import dagre from '@dagrejs/dagre';
 
 const SEMANTIC_NODE_WIDTH = 280;
 const SEMANTIC_NODE_HEIGHT = 160;
 
-const EDGE_TYPE_STYLES: Record<string, string> = {
-	depends_on: 'stroke: #94a3b8; stroke-width: 2px;',
-	calls: 'stroke: #3b82f6; stroke-width: 2px;',
-	extends: 'stroke: #a855f7; stroke-width: 2px;',
-	uses: 'stroke: #22c55e; stroke-width: 2px;'
+const EDGE_TYPE_COLORS: Record<string, string> = {
+	depends_on: '#94a3b8',
+	calls: '#3b82f6',
+	extends: '#a855f7',
+	uses: '#22c55e'
 };
 
 export function toSemanticFlowNodes(level: SemanticLevel): Node[] {
@@ -36,7 +36,15 @@ export function toSemanticFlowNodes(level: SemanticLevel): Node[] {
 
 	dagre.layout(g);
 
-	return level.nodes.map(node => {
+	// Count source/target connections per node for handle distribution
+	const sourceCount = new Map<string, number>();
+	const targetCount = new Map<string, number>();
+	for (const edge of level.edges) {
+		sourceCount.set(edge.source, (sourceCount.get(edge.source) ?? 0) + 1);
+		targetCount.set(edge.target, (targetCount.get(edge.target) ?? 0) + 1);
+	}
+
+	return level.nodes.map((node) => {
 		const pos = g.node(node.id);
 		return {
 			id: node.id,
@@ -54,7 +62,9 @@ export function toSemanticFlowNodes(level: SemanticLevel): Node[] {
 				fileCount: node.fileCount,
 				parentId: node.parentId,
 				depth: node.depth,
-				id: node.id
+				id: node.id,
+				sourceHandleCount: sourceCount.get(node.id) ?? 1,
+				targetHandleCount: targetCount.get(node.id) ?? 1
 			},
 			width: SEMANTIC_NODE_WIDTH,
 			height: SEMANTIC_NODE_HEIGHT
@@ -63,14 +73,34 @@ export function toSemanticFlowNodes(level: SemanticLevel): Node[] {
 }
 
 export function toSemanticFlowEdges(level: SemanticLevel): Edge[] {
-	return level.edges.map(edge => ({
-		id: edge.id,
-		source: edge.source,
-		target: edge.target,
-		type: 'smoothstep',
-		animated: true,
-		...(edge.label ? { label: edge.label } : {}),
-		style: EDGE_TYPE_STYLES[edge.type] ?? EDGE_TYPE_STYLES.uses,
-		data: { edgeType: edge.type }
-	}));
+	// Track per-node source/target index to assign handles
+	const sourceIndex = new Map<string, number>();
+	const targetIndex = new Map<string, number>();
+
+	return level.edges.map((edge) => {
+		const color = EDGE_TYPE_COLORS[edge.type] ?? EDGE_TYPE_COLORS.uses;
+
+		const sIdx = sourceIndex.get(edge.source) ?? 0;
+		sourceIndex.set(edge.source, sIdx + 1);
+
+		const tIdx = targetIndex.get(edge.target) ?? 0;
+		targetIndex.set(edge.target, tIdx + 1);
+
+		return {
+			id: edge.id,
+			source: edge.source,
+			target: edge.target,
+			sourceHandle: `source-${sIdx}`,
+			targetHandle: `target-${tIdx}`,
+			type: 'smoothstep',
+			animated: true,
+			...(edge.label ? { label: edge.label } : {}),
+			style: `stroke: ${color}; stroke-width: 2px;`,
+			markerEnd: {
+				type: 'arrowclosed' as MarkerType,
+				color
+			},
+			data: { edgeType: edge.type }
+		};
+	});
 }
