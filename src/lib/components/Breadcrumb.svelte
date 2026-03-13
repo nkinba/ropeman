@@ -237,13 +237,9 @@
 		padding: 6px 20px;
 		background: var(--bg-secondary);
 		border-bottom: 1px solid var(--border);
-		overflow-x: auto;
+		overflow: visible;
 		flex-shrink: 0;
 		min-height: 32px;
-	}
-
-	.breadcrumb-bar::-webkit-scrollbar {
-		height: 0;
 	}
 
 	.separator {

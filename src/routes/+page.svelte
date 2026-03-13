@@ -33,9 +33,11 @@
 	let showSettings = $state(false);
 	let showConnect = $state(false);
 	let showOnboarding = $state(false);
-	let explorerCollapsed = $state(false);
+	// explorerCollapsed removed — sidebar icon bar is always visible,
+	// content panel is managed internally by Sidebar component
 	let isMobile = $state(false);
 	let zuiCanvasRef: ZUICanvas | undefined = $state(undefined);
+	let sidebarRef: Sidebar | undefined = $state(undefined);
 
 	// U1-5: Responsive layout — detect mobile viewport
 	$effect(() => {
@@ -43,9 +45,6 @@
 		const mql = window.matchMedia('(max-width: 768px)');
 		const handler = (e: MediaQueryListEvent | MediaQueryList) => {
 			isMobile = e.matches;
-			if (e.matches) {
-				explorerCollapsed = true;
-			}
 		};
 		handler(mql);
 		mql.addEventListener('change', handler);
@@ -130,9 +129,13 @@
 	}
 
 	const hasProject = $derived(projectStore.fileTree !== null);
-	const hasSelection = $derived(selectionStore.selectedNode !== null);
+	const hasSelection = $derived(
+		tabStore.viewMode === 'code' && selectionStore.selectedNode !== null
+	);
 	const hasSemanticSelection = $derived(
-		tabStore.viewMode === 'semantic' && semanticStore.selectedSemanticNode !== null
+		tabStore.viewMode === 'semantic' &&
+			semanticStore.selectedSemanticNode !== null &&
+			!semanticStore.panelDismissed
 	);
 	const isSnippetMode = $derived(projectStore.isSnippetMode);
 
@@ -150,9 +153,13 @@
 		}
 	});
 
-	// Tab switch: restore semantic store state when switching between diagram tabs
+	// Tab switch: restore state when the active tab changes
+	let prevActiveTabId = $state<string | null>(null);
 	$effect(() => {
 		const tab = tabStore.activeTab;
+		const tabId = tab?.id ?? null;
+		if (tabId === prevActiveTabId) return;
+		prevActiveTabId = tabId;
 		if (!tab) return;
 
 		if (tab.type === 'diagram' && tab.drilldownPath) {
@@ -173,21 +180,18 @@
 				semanticStore.drilldownPath = [...targetPath];
 			}
 		} else if (tab.type === 'code' && tab.filePath) {
-			// Ensure the selection matches the active code tab's file
-			const currentFilePath = selectionStore.selectedNode?.filePath;
-			if (currentFilePath !== tab.filePath) {
-				const fileName = tab.filePath.split('/').pop() ?? tab.filePath;
-				selectionStore.selectedNode = {
-					id: `file:${tab.filePath}`,
-					kind: 'file',
-					label: fileName,
-					filePath: tab.filePath,
-					parentId: null,
-					childCount: 0,
-					isExpanded: false
-				};
-				selectionStore.breadcrumb = [selectionStore.selectedNode];
-			}
+			// Sync the selection to match the active code tab's file
+			const fileName = tab.filePath.split('/').pop() ?? tab.filePath;
+			selectionStore.selectedNode = {
+				id: `file:${tab.filePath}`,
+				kind: 'file',
+				label: fileName,
+				filePath: tab.filePath,
+				parentId: null,
+				childCount: 0,
+				isExpanded: false
+			};
+			selectionStore.breadcrumb = [selectionStore.selectedNode];
 		}
 	});
 
@@ -273,10 +277,10 @@
 			return;
 		}
 
-		// Ctrl+B: Toggle sidebar
+		// Ctrl+B: Toggle sidebar content panel
 		if (e.ctrlKey && !e.shiftKey && e.key === 'b') {
 			e.preventDefault();
-			explorerCollapsed = !explorerCollapsed;
+			sidebarRef?.toggleContent();
 			return;
 		}
 
@@ -315,11 +319,7 @@
 	{:else if hasProject}
 		<div class="main-layout">
 			{#if !isSnippetMode}
-				<Sidebar
-					collapsed={explorerCollapsed}
-					mobile={isMobile}
-					ontoggle={() => (explorerCollapsed = !explorerCollapsed)}
-				/>
+				<Sidebar bind:this={sidebarRef} mobile={isMobile} />
 			{/if}
 			<div class="canvas-area">
 				<TabBar />
@@ -340,7 +340,7 @@
 			</div>
 			{#if hasSemanticSelection}
 				<div class="detail-panel">
-					<SemanticDetailPanel />
+					<SemanticDetailPanel ondismiss={() => (semanticStore.panelDismissed = true)} />
 				</div>
 			{:else if hasSelection}
 				<div class="detail-panel">

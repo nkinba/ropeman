@@ -7,9 +7,19 @@
 	const displaySymbols = data.keySymbols?.slice(0, maxSymbols) ?? [];
 	const moreCount = (data.keySymbols?.length ?? 0) - maxSymbols;
 	const isLeaf = data.fileCount === 1;
+
+	const targetHandleCount: number = data.targetHandleCount ?? 1;
+	const sourceHandleCount: number = data.sourceHandleCount ?? 1;
 </script>
 
-<Handle type="target" position={Position.Left} />
+{#each Array(targetHandleCount) as _, i}
+	<Handle
+		type="target"
+		position={Position.Left}
+		id="target-{i}"
+		style="top: {((i + 1) / (targetHandleCount + 1)) * 100}%;"
+	/>
+{/each}
 
 <div
 	class="semantic-node"
@@ -23,7 +33,9 @@
 	<div class="node-header">
 		<span class="node-label" style="color: {data.color};">{data.label}</span>
 		<span class="node-badge" style="background: {data.color}30; color: {data.color};">
-			{#if isLeaf}&#128196; {/if}{data.fileCount} {data.fileCount === 1 ? 'file' : 'files'}
+			{#if isLeaf}&#128196;
+			{/if}{data.fileCount}
+			{data.fileCount === 1 ? 'file' : 'files'}
 		</span>
 	</div>
 
@@ -49,7 +61,14 @@
 	{/if}
 </div>
 
-<Handle type="source" position={Position.Right} />
+{#each Array(sourceHandleCount) as _, i}
+	<Handle
+		type="source"
+		position={Position.Right}
+		id="source-{i}"
+		style="top: {((i + 1) / (sourceHandleCount + 1)) * 100}%;"
+	/>
+{/each}
 
 <style>
 	.semantic-node {
@@ -60,7 +79,9 @@
 		padding: 16px;
 		cursor: pointer;
 		position: relative;
-		transition: box-shadow 0.2s ease, transform 0.15s ease;
+		transition:
+			box-shadow 0.2s ease,
+			transform 0.15s ease;
 		display: flex;
 		flex-direction: column;
 		gap: 8px;
@@ -72,7 +93,10 @@
 	}
 
 	.semantic-node.highlighted {
-		box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5), 0 0 16px rgba(59, 130, 246, 0.3), 0 4px 20px rgba(0, 0, 0, 0.3);
+		box-shadow:
+			0 0 0 3px rgba(59, 130, 246, 0.5),
+			0 0 16px rgba(59, 130, 246, 0.3),
+			0 4px 20px rgba(0, 0, 0, 0.3);
 		opacity: 0.95;
 		transform: scale(1.03);
 		animation: pulse 2s ease-in-out infinite;
@@ -81,12 +105,25 @@
 	.semantic-node.dimmed {
 		opacity: 0.4;
 		filter: grayscale(0.3);
-		transition: opacity 0.3s ease, filter 0.3s ease;
+		transition:
+			opacity 0.3s ease,
+			filter 0.3s ease;
 	}
 
 	@keyframes pulse {
-		0%, 100% { box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5), 0 0 16px rgba(59, 130, 246, 0.3), 0 4px 20px rgba(0, 0, 0, 0.3); }
-		50% { box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.6), 0 0 24px rgba(59, 130, 246, 0.4), 0 4px 20px rgba(0, 0, 0, 0.3); }
+		0%,
+		100% {
+			box-shadow:
+				0 0 0 3px rgba(59, 130, 246, 0.5),
+				0 0 16px rgba(59, 130, 246, 0.3),
+				0 4px 20px rgba(0, 0, 0, 0.3);
+		}
+		50% {
+			box-shadow:
+				0 0 0 4px rgba(59, 130, 246, 0.6),
+				0 0 24px rgba(59, 130, 246, 0.4),
+				0 4px 20px rgba(0, 0, 0, 0.3);
+		}
 	}
 
 	.node-header {
@@ -137,7 +174,7 @@
 		font-size: 10px;
 		font-family: var(--font-mono, monospace);
 		color: var(--text-secondary);
-		background: var(--bg-tertiary, rgba(255,255,255,0.06));
+		background: var(--bg-tertiary, rgba(255, 255, 255, 0.06));
 		padding: 1px 6px;
 		border-radius: 4px;
 		max-width: 120px;

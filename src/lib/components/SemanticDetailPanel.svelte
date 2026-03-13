@@ -4,6 +4,8 @@
 	import { tabStore } from '$lib/stores/tabStore.svelte';
 	import type { GraphNode } from '$lib/types/graph';
 
+	let { ondismiss }: { ondismiss?: () => void } = $props();
+
 	const node = $derived(semanticStore.selectedSemanticNode);
 
 	function handleFileClick(filePath: string) {
@@ -24,7 +26,7 @@
 	}
 
 	function handleClose() {
-		semanticStore.selectedSemanticNode = null;
+		ondismiss?.();
 	}
 </script>
 

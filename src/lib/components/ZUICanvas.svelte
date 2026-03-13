@@ -297,9 +297,18 @@
 	}
 
 	function handlePaneClick(_: { event: MouseEvent }) {
-		selectionStore.clear();
-		semanticStore.selectedSemanticNode = null;
 		exportMenuOpen = false;
+
+		if (semanticStore.selectedSemanticNode) {
+			if (!semanticStore.panelDismissed) {
+				// First background click: dismiss panel, keep node highlighted
+				semanticStore.panelDismissed = true;
+			} else {
+				// Second background click: clear node selection
+				semanticStore.selectedSemanticNode = null;
+			}
+		}
+		selectionStore.clear();
 	}
 </script>
 
