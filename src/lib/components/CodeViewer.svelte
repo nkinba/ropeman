@@ -15,6 +15,8 @@
 	import 'prismjs/components/prism-c';
 	import 'prismjs/components/prism-cpp';
 
+	let { filePath: propFilePath }: { filePath?: string } = $props();
+
 	// Prism language name mapping (our detector names → Prism grammar keys)
 	const PRISM_LANG_MAP: Record<string, string> = {
 		python: 'python',
@@ -33,8 +35,10 @@
 	let loadError = $state('');
 
 	// Determine the file path to display
-	// Priority: selectedNode (direct file selection) > selectedSemanticNode (semantic node's representative file)
+	// If prop filePath is provided, use it directly; otherwise fall back to stores
 	const targetFilePath = $derived.by(() => {
+		if (propFilePath) return propFilePath;
+
 		// From direct file/symbol selection (File Explorer click, SearchBar, etc.)
 		const sel = selectionStore.selectedNode;
 		if (sel?.filePath) {

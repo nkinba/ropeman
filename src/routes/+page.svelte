@@ -131,9 +131,8 @@
 	}
 
 	const hasProject = $derived(projectStore.fileTree !== null);
-	const hasSelection = $derived(
-		tabStore.viewMode === 'code' && selectionStore.selectedNode !== null
-	);
+	// Code-mode file detail panel disabled — info already visible in code header & breadcrumb
+	const hasSelection = $derived(false);
 	const hasSemanticSelection = $derived(
 		tabStore.viewMode === 'semantic' &&
 			semanticStore.selectedSemanticNode !== null &&
@@ -214,6 +213,41 @@
 			snippetOnboardingShown = false;
 		}
 	});
+
+	// Drag-to-split: track drop zone state for non-split mode
+	let splitDropZone = $state<'none' | 'right'>('none');
+
+	function handleCanvasDragOver(e: DragEvent) {
+		if (layoutStore.isSplit || isMobile) return;
+		if (!e.dataTransfer?.types.includes('text/x-tab-id')) return;
+		e.preventDefault();
+		e.dataTransfer.dropEffect = 'move';
+		const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+		const relX = (e.clientX - rect.left) / rect.width;
+		splitDropZone = relX > 0.5 ? 'right' : 'none';
+	}
+
+	function handleCanvasDragLeave() {
+		splitDropZone = 'none';
+	}
+
+	function handleCanvasDrop(e: DragEvent) {
+		if (layoutStore.isSplit || isMobile) return;
+		if (splitDropZone === 'none') return;
+		if (!e.dataTransfer) return;
+		e.preventDefault();
+		const tabId = e.dataTransfer.getData('text/x-tab-id');
+		if (!tabId) {
+			splitDropZone = 'none';
+			return;
+		}
+		// Move tab to secondary pane and activate split
+		tabStore.moveTabToPane(tabId, 'secondary');
+		layoutStore.secondaryActiveTabId = tabId;
+		layoutStore.isSplit = true;
+		layoutStore.focusedPane = 'secondary';
+		splitDropZone = 'none';
+	}
 
 	// When split is toggled off, merge secondary tabs to primary
 	let prevIsSplit = $state(false);
@@ -365,7 +399,18 @@
 			{#if !isSnippetMode}
 				<Sidebar bind:this={sidebarRef} mobile={isMobile} />
 			{/if}
-			<div class="canvas-area">
+			<!-- svelte-ignore a11y_no_static_element_interactions -->
+			<div
+				class="canvas-area"
+				ondragover={handleCanvasDragOver}
+				ondragleave={handleCanvasDragLeave}
+				ondrop={handleCanvasDrop}
+			>
+				{#if splitDropZone === 'right'}
+					<div class="split-drop-overlay">
+						<div class="split-drop-hint">Drop to split</div>
+					</div>
+				{/if}
 				{#if layoutStore.isSplit && !isMobile}
 					<SplitPane
 						zuiCanvasBindPrimary={(ref) => {
@@ -373,7 +418,13 @@
 						}}
 					/>
 				{:else}
-					<TabBar />
+					<TabBar
+						paneId="primary"
+						tabs={tabStore.tabs}
+						activeTabId={tabStore.activeTabId}
+						onactivate={(id) => tabStore.activateTab(id)}
+						onclose={(id) => tabStore.closeTab(id)}
+					/>
 					<div class="canvas-content">
 						{#if tabStore.activeTab?.type === 'diagram'}
 							<ZUICanvas bind:this={zuiCanvasRef} />
@@ -482,6 +533,32 @@
 		flex: 1;
 		min-height: 0;
 		position: relative;
+	}
+
+	.split-drop-overlay {
+		position: absolute;
+		top: 0;
+		right: 0;
+		width: 50%;
+		height: 100%;
+		background: rgba(59, 130, 246, 0.08);
+		border: 2px dashed var(--accent, #3b82f6);
+		border-radius: 8px;
+		z-index: 20;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		pointer-events: none;
+	}
+
+	.split-drop-hint {
+		font-size: 14px;
+		font-weight: 600;
+		color: var(--accent, #3b82f6);
+		background: var(--bg-secondary);
+		padding: 8px 16px;
+		border-radius: 8px;
+		border: 1px solid var(--accent, #3b82f6);
 	}
 
 	.detail-panel {

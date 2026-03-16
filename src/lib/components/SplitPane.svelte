@@ -33,7 +33,13 @@
 	const primaryTabs = $derived(tabStore.tabsForPane('primary'));
 	const secondaryTabs = $derived(tabStore.tabsForPane('secondary'));
 
-	const primaryActiveTab = $derived(tabStore.activeTab);
+	const primaryActiveTab = $derived(
+		tabStore.activeTabId
+			? tabStore.tabs.find(
+					(t) => t.id === tabStore.activeTabId && (t.paneId ?? 'primary') === 'primary'
+				)
+			: null
+	);
 	const secondaryActiveTab = $derived(
 		layoutStore.secondaryActiveTabId
 			? tabStore.tabs.find((t) => t.id === layoutStore.secondaryActiveTabId)
@@ -77,6 +83,24 @@
 	function handlePaneFocus(pane: 'primary' | 'secondary') {
 		layoutStore.focusedPane = pane;
 	}
+
+	function handleDropOnPrimary(tabId: string, fromPane: string) {
+		if (fromPane === 'primary') return; // already in primary
+		tabStore.moveTabToPane(tabId, 'primary');
+		tabStore.activateTab(tabId);
+		layoutStore.focusedPane = 'primary';
+		// If secondary has no more tabs, close split
+		if (tabStore.tabsForPane('secondary').length === 0) {
+			layoutStore.isSplit = false;
+		}
+	}
+
+	function handleDropOnSecondary(tabId: string, fromPane: string) {
+		if (fromPane === 'secondary') return; // already in secondary
+		tabStore.moveTabToPane(tabId, 'secondary');
+		layoutStore.secondaryActiveTabId = tabId;
+		layoutStore.focusedPane = 'secondary';
+	}
 </script>
 
 <div class="split-container" class:vertical={isVertical} class:horizontal={!isVertical}>
@@ -94,12 +118,13 @@
 			activeTabId={tabStore.activeTabId}
 			onactivate={handlePrimaryActivate}
 			onclose={handlePrimaryClose}
+			ondroptab={handleDropOnPrimary}
 		/>
 		<div class="pane-content">
 			{#if primaryActiveTab?.type === 'diagram'}
 				<ZUICanvas bind:this={primaryCanvasRef} />
 			{:else if primaryActiveTab?.type === 'code'}
-				<CodeViewer />
+				<CodeViewer filePath={primaryActiveTab.filePath} />
 			{:else if semanticStore.currentLevel}
 				<ZUICanvas bind:this={primaryCanvasRef} />
 			{:else}
@@ -124,12 +149,13 @@
 			activeTabId={layoutStore.secondaryActiveTabId}
 			onactivate={handleSecondaryActivate}
 			onclose={handleSecondaryClose}
+			ondroptab={handleDropOnSecondary}
 		/>
 		<div class="pane-content">
 			{#if secondaryActiveTab?.type === 'diagram'}
 				<ZUICanvas bind:this={secondaryCanvasRef} />
 			{:else if secondaryActiveTab?.type === 'code'}
-				<CodeViewer />
+				<CodeViewer filePath={secondaryActiveTab.filePath} />
 			{:else}
 				<div class="empty-pane">
 					<p>Open a file or drag a tab here</p>
