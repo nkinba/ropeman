@@ -36,4 +36,5 @@ bun.lock
 
 docs/history
 docs/private
+.spec
 playwright-report

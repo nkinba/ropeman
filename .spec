@@ -1,1 +1,0 @@
-/Users/yoonsoochang/Documents/gdv/Obsidian/Yersona/200. Area/201. Dev/2010. Project/003. Ropeman(Project Visualizer)/spec/
