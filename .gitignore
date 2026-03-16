@@ -34,6 +34,5 @@ Thumbs.db
 # Lock files (bun)
 bun.lock
 
-docs/history
 docs/private
 playwright-report
