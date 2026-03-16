@@ -230,6 +230,8 @@ function isAbortError(error: unknown): boolean {
 	return error instanceof DOMException && error.name === 'AbortError';
 }
 
+const EDGE_PROXY_URL = 'https://ropeman-api.ysc9606.workers.dev';
+
 async function callAI(
 	systemPrompt: string,
 	userPrompt: string,
@@ -239,6 +241,8 @@ async function callAI(
 
 	if (track === 'bridge') {
 		return await sendViaBridge(systemPrompt + '\n\n' + userPrompt);
+	} else if (track === 'edge') {
+		return await callEdgeProxy(systemPrompt, userPrompt, signal);
 	} else if (track === 'byok') {
 		// Anthropic requires bridge due to CORS
 		if (settingsStore.aiProvider === 'anthropic') {
@@ -250,6 +254,37 @@ async function callAI(
 	} else {
 		throw new Error('AI not connected');
 	}
+}
+
+async function callEdgeProxy(
+	systemPrompt: string,
+	userPrompt: string,
+	signal?: AbortSignal
+): Promise<string> {
+	const response = await fetch(EDGE_PROXY_URL, {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		signal,
+		body: JSON.stringify({
+			messages: [{ role: 'user', content: userPrompt }],
+			system: systemPrompt
+		})
+	});
+
+	if (response.status === 429) {
+		const data = await response.json().catch(() => ({}));
+		throw new Error((data as { error?: string }).error || 'Rate limit exceeded. Try again later.');
+	}
+
+	if (!response.ok) {
+		const errText = await response.text().catch(() => '');
+		console.error('Edge proxy error:', response.status, errText);
+		throw new Error(`Edge proxy error: HTTP ${response.status}`);
+	}
+
+	// Worker returns Gemini API response format
+	const data = await response.json();
+	return data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
 }
 
 async function callGemini(

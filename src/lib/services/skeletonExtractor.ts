@@ -9,6 +9,57 @@ import type {
 
 const SKIP_KINDS = new Set(['variable', 'interface', 'type']);
 
+// ~150KB JSON ≈ ~50K tokens (JSON은 토큰 효율이 낮음)
+// Gemini 2.5 Flash 무료 티어: 250K TPM → 여유 있게 제한
+const MAX_SKELETON_BYTES = 150_000;
+
+// 핵심 디렉토리 (우선 포함)
+const CORE_DIR_PATTERNS = [
+	/^src\//,
+	/^lib\//,
+	/^app\//,
+	/^packages\//,
+	/^core\//,
+	/^internal\//,
+	/^cmd\//,
+	/^pkg\//
+];
+
+// 제외 디렉토리 (분석 불필요)
+const EXCLUDE_DIR_PATTERNS = [
+	/^test[s]?\//,
+	/\/__tests__\//,
+	/\/test[s]?\//,
+	/^docs?\//,
+	/^examples?\//,
+	/^benchmark[s]?\//,
+	/^fixtures?\//,
+	/^scripts?\//,
+	/^\.github\//,
+	/^\.circleci\//,
+	/^node_modules\//,
+	/^dist\//,
+	/^build\//,
+	/^vendor\//,
+	/^i18n\//,
+	/^notebooks?\//
+];
+
+function filePriority(filePath: string): number {
+	// 제외 대상: 가장 낮은 우선순위
+	for (const pat of EXCLUDE_DIR_PATTERNS) {
+		if (pat.test(filePath)) return 0;
+	}
+	// 핵심 디렉토리: 높은 우선순위
+	for (const pat of CORE_DIR_PATTERNS) {
+		if (pat.test(filePath)) return 3;
+	}
+	// 루트 파일 (setup.py, main.py 등): 중간
+	if (!filePath.includes('/')) return 2;
+	// 그 외
+	return 1;
+}
+
 export function extractSkeleton(
 	projectName: string,
 	fileTree: FileNode | null,
@@ -16,8 +67,19 @@ export function extractSkeleton(
 ): SkeletonPayload {
 	const files: SkeletonFile[] = [];
 	let totalSymbols = 0;
+	let estimatedBytes = 0;
+	let truncated = false;
 
 	const filePaths = collectFilePaths(fileTree);
+
+	const fileEntries: {
+		path: string;
+		symbols: SkeletonSymbol[];
+		imports: SkeletonImport[];
+		language: string | null;
+		priority: number;
+		symbolCount: number;
+	}[] = [];
 
 	for (const filePath of filePaths) {
 		const astSymbols = astMap.get(filePath);
@@ -36,14 +98,53 @@ export function extractSkeleton(
 
 		if (symbols.length === 0 && imports.length === 0) continue;
 
-		totalSymbols += countSymbols(symbols);
-
 		const language = inferLanguage(filePath);
-		files.push({ path: filePath, language, symbols, imports });
+		const priority = filePriority(filePath);
+		fileEntries.push({
+			path: filePath,
+			symbols,
+			imports,
+			language,
+			priority,
+			symbolCount: countSymbols(symbols)
+		});
+	}
+
+	// 우선순위 높은 파일 먼저, 같은 우선순위면 심볼 수 많은 파일 먼저
+	fileEntries.sort((a, b) => b.priority - a.priority || b.symbolCount - a.symbolCount);
+
+	const totalEntries = fileEntries.length;
+
+	for (const entry of fileEntries) {
+		if (entry.priority === 0) continue; // 제외 디렉토리는 스킵
+
+		const fileJson = JSON.stringify({
+			path: entry.path,
+			language: entry.language,
+			symbols: entry.symbols,
+			imports: entry.imports
+		});
+		const fileBytes = new TextEncoder().encode(fileJson).byteLength;
+
+		if (estimatedBytes + fileBytes > MAX_SKELETON_BYTES) {
+			truncated = true;
+			break;
+		}
+
+		estimatedBytes += fileBytes;
+		totalSymbols += entry.symbolCount;
+		files.push({
+			path: entry.path,
+			language: entry.language,
+			symbols: entry.symbols,
+			imports: entry.imports
+		});
 	}
 
 	return {
-		projectName,
+		projectName: truncated
+			? `${projectName} (analyzed ${files.length}/${totalEntries} files, core directories prioritized)`
+			: projectName,
 		totalFiles: files.length,
 		totalSymbols,
 		files,

@@ -55,8 +55,10 @@
 
 	function handleTrackSelect(track: 'edge' | 'byok' | 'bridge') {
 		showOnboarding = false;
-		if (!authStore.isReady) {
-			// edge proxy not yet implemented — require bridge or BYOK auth
+		if (track === 'edge') {
+			authStore.edgeEnabled = true;
+			analyzeTopLevel();
+		} else if (!authStore.isReady) {
 			showConnect = true;
 		} else {
 			analyzeTopLevel();

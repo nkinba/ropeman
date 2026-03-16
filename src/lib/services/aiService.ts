@@ -21,31 +21,35 @@ interface GeminiContent {
 	parts: { text: string }[];
 }
 
-function buildRequestBody(message: string, systemPrompt: string, history: { role: string; content: string }[]) {
+function buildRequestBody(
+	message: string,
+	systemPrompt: string,
+	history: { role: string; content: string }[]
+) {
 	const contents: GeminiContent[] = [];
 
 	for (const msg of history) {
 		contents.push({
 			role: msg.role === 'assistant' ? 'model' : 'user',
-			parts: [{ text: msg.content }],
+			parts: [{ text: msg.content }]
 		});
 	}
 
 	contents.push({
 		role: 'user',
-		parts: [{ text: message }],
+		parts: [{ text: message }]
 	});
 
 	return {
 		system_instruction: {
-			parts: [{ text: systemPrompt }],
+			parts: [{ text: systemPrompt }]
 		},
 		contents,
 		generationConfig: {
 			temperature: 0.7,
 			topP: 0.9,
-			maxOutputTokens: 2048,
-		},
+			maxOutputTokens: 2048
+		}
 	};
 }
 
@@ -59,8 +63,37 @@ export async function sendMessage(
 	if (track === 'none') {
 		return {
 			content: 'AI not connected. Please set up an API key or connect the local bridge.',
-			relatedNodes: [],
+			relatedNodes: []
 		};
+	}
+
+	// Edge proxy track: send via edge worker
+	if (track === 'edge') {
+		try {
+			const contextPrefix = nodeContext
+				? `[Context: ${nodeContext.label} (${nodeContext.kind}) in ${nodeContext.filePath}]\n\n`
+				: '';
+			const response = await fetch('https://ropeman-api.ysc9606.workers.dev', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					messages: [{ role: 'user', content: contextPrefix + message }],
+					system: buildContext(nodeContext)
+				})
+			});
+			if (!response.ok) {
+				const data = await response.json().catch(() => ({}));
+				throw new Error((data as { error?: string }).error || `HTTP ${response.status}`);
+			}
+			const data = await response.json();
+			const content = data?.candidates?.[0]?.content?.parts?.[0]?.text || 'No response received.';
+			return { content, relatedNodes: nodeContext ? [nodeContext.id] : [] };
+		} catch (error) {
+			return {
+				content: `Edge proxy error: ${(error as Error).message}`,
+				relatedNodes: []
+			};
+		}
 	}
 
 	// Bridge track: send via WebSocket
@@ -74,7 +107,7 @@ export async function sendMessage(
 		} catch (error) {
 			return {
 				content: `Bridge error: ${(error as Error).message}`,
-				relatedNodes: [],
+				relatedNodes: []
 			};
 		}
 	}
@@ -82,14 +115,16 @@ export async function sendMessage(
 	// BYOK track: Anthropic requires bridge
 	if (settingsStore.aiProvider === 'anthropic') {
 		return {
-			content: 'Anthropic API requires Local Bridge mode due to browser CORS restrictions. Please connect via the Local Bridge tab in AI Connection settings.',
-			relatedNodes: [],
+			content:
+				'Anthropic API requires Local Bridge mode due to browser CORS restrictions. Please connect via the Local Bridge tab in AI Connection settings.',
+			relatedNodes: []
 		};
 	}
 
 	// BYOK track: use Gemini REST API
 	const apiKey = settingsStore.geminiApiKey;
-	const model = settingsStore.aiProvider === 'google' ? settingsStore.aiModel : 'gemini-2.5-flash-lite';
+	const model =
+		settingsStore.aiProvider === 'google' ? settingsStore.aiModel : 'gemini-2.5-flash-lite';
 	const endpoint = getGeminiEndpoint(model);
 
 	// Cache lookup (only for first messages without history for simplicity)
@@ -103,7 +138,7 @@ export async function sendMessage(
 					return {
 						content: cached.response,
 						relatedNodes: cached.nodeId ? [cached.nodeId] : [],
-						fromCache: true,
+						fromCache: true
 					};
 				}
 			}
@@ -121,18 +156,20 @@ export async function sendMessage(
 			const response = await fetch(`${endpoint}?key=${apiKey}`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify(body),
+				body: JSON.stringify(body)
 			});
 
 			if (response.status === 429) {
 				const waitMs = Math.pow(2, attempt) * 1000;
-				await new Promise(resolve => setTimeout(resolve, waitMs));
+				await new Promise((resolve) => setTimeout(resolve, waitMs));
 				continue;
 			}
 
 			if (!response.ok) {
 				const errorData = await response.json().catch(() => ({}));
-				const errorMessage = (errorData as { error?: { message?: string } })?.error?.message || `HTTP ${response.status}`;
+				const errorMessage =
+					(errorData as { error?: { message?: string } })?.error?.message ||
+					`HTTP ${response.status}`;
 				throw new Error(`Gemini API error: ${errorMessage}`);
 			}
 
@@ -163,7 +200,7 @@ export async function sendMessage(
 			if (attempt === maxRetries - 1) {
 				return {
 					content: `Error: ${(error as Error).message}`,
-					relatedNodes: [],
+					relatedNodes: []
 				};
 			}
 		}
@@ -171,6 +208,6 @@ export async function sendMessage(
 
 	return {
 		content: 'Error: Maximum retries exceeded. Please try again later.',
-		relatedNodes: [],
+		relatedNodes: []
 	};
 }

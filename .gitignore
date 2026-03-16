@@ -36,5 +36,14 @@ bun.lock
 
 docs/history
 docs/private
+docs/guide-cloudflare-edge-proxy.md
 .spec
 playwright-report
+# Cloudflare Types
+/worker-configuration.d.ts
+
+# wrangler files
+.wrangler
+.dev.vars*
+!.dev.vars.example
+!.env.example
