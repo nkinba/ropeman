@@ -17,7 +17,9 @@
 	import { authStore } from '$lib/stores/authStore.svelte';
 	import { toggleTheme } from '$lib/stores/themeStore';
 	import { tabStore } from '$lib/stores/tabStore.svelte';
+	import { layoutStore } from '$lib/stores/layoutStore.svelte';
 	import TabBar from '$lib/components/TabBar.svelte';
+	import SplitPane from '$lib/components/SplitPane.svelte';
 	import { analyzeTopLevel } from '$lib/services/semanticAnalysisService';
 	import { t } from '$lib/stores/i18nStore';
 	import { loadTestProject } from '$lib/services/testLoader';
@@ -129,9 +131,8 @@
 	}
 
 	const hasProject = $derived(projectStore.fileTree !== null);
-	const hasSelection = $derived(
-		tabStore.viewMode === 'code' && selectionStore.selectedNode !== null
-	);
+	// Code-mode file detail panel disabled — info already visible in code header & breadcrumb
+	const hasSelection = $derived(false);
 	const hasSemanticSelection = $derived(
 		tabStore.viewMode === 'semantic' &&
 			semanticStore.selectedSemanticNode !== null &&
@@ -213,6 +214,58 @@
 		}
 	});
 
+	// Drag-to-split: track drop zone state for non-split mode
+	let splitDropZone = $state<'none' | 'right'>('none');
+
+	function handleCanvasDragOver(e: DragEvent) {
+		if (layoutStore.isSplit || isMobile) return;
+		if (!e.dataTransfer?.types.includes('text/x-tab-id')) return;
+		e.preventDefault();
+		e.dataTransfer.dropEffect = 'move';
+		const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+		const relX = (e.clientX - rect.left) / rect.width;
+		splitDropZone = relX > 0.5 ? 'right' : 'none';
+	}
+
+	function handleCanvasDragLeave() {
+		splitDropZone = 'none';
+	}
+
+	function handleCanvasDrop(e: DragEvent) {
+		if (layoutStore.isSplit || isMobile) return;
+		if (splitDropZone === 'none') return;
+		if (!e.dataTransfer) return;
+		e.preventDefault();
+		const tabId = e.dataTransfer.getData('text/x-tab-id');
+		if (!tabId) {
+			splitDropZone = 'none';
+			return;
+		}
+		// Move tab to secondary pane and activate split
+		tabStore.moveTabToPane(tabId, 'secondary');
+		layoutStore.secondaryActiveTabId = tabId;
+		layoutStore.isSplit = true;
+		layoutStore.focusedPane = 'secondary';
+		splitDropZone = 'none';
+	}
+
+	// When split is toggled off, merge secondary tabs to primary
+	let prevIsSplit = $state(false);
+	$effect(() => {
+		const current = layoutStore.isSplit;
+		if (prevIsSplit && !current) {
+			tabStore.mergeSecondaryToPrimary();
+		}
+		prevIsSplit = current;
+	});
+
+	// Disable split on mobile
+	$effect(() => {
+		if (isMobile && layoutStore.isSplit) {
+			layoutStore.isSplit = false;
+		}
+	});
+
 	// Dev-only: auto-load test project from ?testDir= URL parameter
 	onMount(() => {
 		if (!import.meta.env.DEV) return;
@@ -255,25 +308,45 @@
 			return;
 		}
 
-		// Ctrl+W: Close active tab
+		// Ctrl+W: Close active tab in focused pane
 		if (e.ctrlKey && !e.shiftKey && e.key === 'w') {
 			e.preventDefault();
-			if (tabStore.activeTabId) {
+			if (layoutStore.isSplit && layoutStore.focusedPane === 'secondary') {
+				const secTabId = layoutStore.secondaryActiveTabId;
+				if (secTabId) {
+					const secTabs = tabStore.tabsForPane('secondary');
+					tabStore.closeTab(secTabId);
+					if (secTabs.length <= 1) {
+						layoutStore.isSplit = false;
+					} else {
+						const remaining = secTabs.filter((t) => t.id !== secTabId);
+						layoutStore.secondaryActiveTabId = remaining.length > 0 ? remaining[0].id : null;
+					}
+				}
+			} else if (tabStore.activeTabId) {
 				tabStore.closeTab(tabStore.activeTabId);
 			}
 			return;
 		}
 
-		// Ctrl+Tab: Next tab / Ctrl+Shift+Tab: Previous tab
+		// Ctrl+Tab: Next tab / Ctrl+Shift+Tab: Previous tab (within focused pane)
 		if (e.ctrlKey && e.key === 'Tab') {
 			e.preventDefault();
-			const tabs = tabStore.tabs;
-			if (tabs.length <= 1) return;
-			const currentIdx = tabs.findIndex((t) => t.id === tabStore.activeTabId);
+			const isSecondary = layoutStore.isSplit && layoutStore.focusedPane === 'secondary';
+			const paneTabs = isSecondary
+				? tabStore.tabsForPane('secondary')
+				: tabStore.tabsForPane('primary');
+			if (paneTabs.length <= 1) return;
+			const currentId = isSecondary ? layoutStore.secondaryActiveTabId : tabStore.activeTabId;
+			const currentIdx = paneTabs.findIndex((t) => t.id === currentId);
 			const nextIdx = e.shiftKey
-				? (currentIdx - 1 + tabs.length) % tabs.length
-				: (currentIdx + 1) % tabs.length;
-			tabStore.activateTab(tabs[nextIdx].id);
+				? (currentIdx - 1 + paneTabs.length) % paneTabs.length
+				: (currentIdx + 1) % paneTabs.length;
+			if (isSecondary) {
+				layoutStore.secondaryActiveTabId = paneTabs[nextIdx].id;
+			} else {
+				tabStore.activateTab(paneTabs[nextIdx].id);
+			}
 			return;
 		}
 
@@ -288,6 +361,31 @@
 		if (e.ctrlKey && e.shiftKey && e.key === 'E') {
 			e.preventDefault();
 			zuiCanvasRef?.triggerExport();
+			return;
+		}
+
+		// Ctrl+\: Toggle split
+		if (e.ctrlKey && e.key === '\\') {
+			e.preventDefault();
+			if (!isMobile) {
+				layoutStore.toggleSplit();
+			}
+			return;
+		}
+
+		// Ctrl+1: Focus primary pane
+		if (e.ctrlKey && e.key === '1') {
+			e.preventDefault();
+			layoutStore.focusPrimary();
+			return;
+		}
+
+		// Ctrl+2: Focus secondary pane
+		if (e.ctrlKey && e.key === '2') {
+			e.preventDefault();
+			if (layoutStore.isSplit) {
+				layoutStore.focusSecondary();
+			}
 			return;
 		}
 
@@ -321,22 +419,47 @@
 			{#if !isSnippetMode}
 				<Sidebar bind:this={sidebarRef} mobile={isMobile} />
 			{/if}
-			<div class="canvas-area">
-				<TabBar />
-				<div class="canvas-content">
-					{#if tabStore.activeTab?.type === 'diagram'}
-						<ZUICanvas bind:this={zuiCanvasRef} />
-					{:else if tabStore.activeTab?.type === 'code'}
-						<CodeViewer />
-					{:else}
-						<!-- No active tab: show diagram if semantic data exists, otherwise code viewer -->
-						{#if semanticStore.currentLevel}
+			<!-- svelte-ignore a11y_no_static_element_interactions -->
+			<div
+				class="canvas-area"
+				ondragover={handleCanvasDragOver}
+				ondragleave={handleCanvasDragLeave}
+				ondrop={handleCanvasDrop}
+			>
+				{#if splitDropZone === 'right'}
+					<div class="split-drop-overlay">
+						<div class="split-drop-hint">Drop to split</div>
+					</div>
+				{/if}
+				{#if layoutStore.isSplit && !isMobile}
+					<SplitPane
+						zuiCanvasBindPrimary={(ref) => {
+							zuiCanvasRef = ref;
+						}}
+					/>
+				{:else}
+					<TabBar
+						paneId="primary"
+						tabs={tabStore.tabs}
+						activeTabId={tabStore.activeTabId}
+						onactivate={(id) => tabStore.activateTab(id)}
+						onclose={(id) => tabStore.closeTab(id)}
+					/>
+					<div class="canvas-content">
+						{#if tabStore.activeTab?.type === 'diagram'}
 							<ZUICanvas bind:this={zuiCanvasRef} />
+						{:else if tabStore.activeTab?.type === 'code'}
+							<CodeViewer filePath={tabStore.activeTab.filePath} />
 						{:else}
-							<CodeViewer />
+							<!-- No active tab: show diagram if semantic data exists, otherwise code viewer -->
+							{#if semanticStore.currentLevel}
+								<ZUICanvas bind:this={zuiCanvasRef} />
+							{:else}
+								<CodeViewer />
+							{/if}
 						{/if}
-					{/if}
-				</div>
+					</div>
+				{/if}
 			</div>
 			{#if hasSemanticSelection}
 				<div class="detail-panel">
@@ -430,6 +553,32 @@
 		flex: 1;
 		min-height: 0;
 		position: relative;
+	}
+
+	.split-drop-overlay {
+		position: absolute;
+		top: 0;
+		right: 0;
+		width: 50%;
+		height: 100%;
+		background: rgba(59, 130, 246, 0.08);
+		border: 2px dashed var(--accent, #3b82f6);
+		border-radius: 8px;
+		z-index: 20;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		pointer-events: none;
+	}
+
+	.split-drop-hint {
+		font-size: 14px;
+		font-weight: 600;
+		color: var(--accent, #3b82f6);
+		background: var(--bg-secondary);
+		padding: 8px 16px;
+		border-radius: 8px;
+		border: 1px solid var(--accent, #3b82f6);
 	}
 
 	.detail-panel {

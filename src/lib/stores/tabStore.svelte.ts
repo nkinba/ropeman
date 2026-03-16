@@ -1,4 +1,5 @@
 import type { Tab, TabType } from '$lib/types/tab';
+import { layoutStore } from './layoutStore.svelte';
 
 const MAX_TABS = 15;
 
@@ -38,7 +39,16 @@ function createTabStore() {
 	function activateTab(tabId: string) {
 		const tab = tabs.find((t) => t.id === tabId);
 		if (!tab) return;
-		activeTabId = tabId;
+		const pane = tab.paneId ?? 'primary';
+		if (pane === 'secondary' && layoutStore.isSplit) {
+			layoutStore.secondaryActiveTabId = tabId;
+			layoutStore.focusedPane = 'secondary';
+		} else {
+			activeTabId = tabId;
+			if (layoutStore.isSplit) {
+				layoutStore.focusedPane = 'primary';
+			}
+		}
 		tab.lastAccessed = Date.now();
 	}
 
@@ -46,13 +56,26 @@ function createTabStore() {
 		const idx = tabs.findIndex((t) => t.id === tabId);
 		if (idx === -1) return;
 
+		const closedTab = tabs[idx];
 		const wasActive = tabId === activeTabId;
+		const wasSecondaryActive = tabId === layoutStore.secondaryActiveTabId;
 		tabs = tabs.filter((t) => t.id !== tabId);
 
+		if (wasSecondaryActive) {
+			// Handle secondary pane active tab removal
+			const remaining = tabs.filter((t) => t.paneId === 'secondary');
+			layoutStore.secondaryActiveTabId = remaining.length > 0 ? remaining[0].id : null;
+		}
+
 		if (wasActive && tabs.length > 0) {
-			// Activate nearest neighbor
-			const nextIdx = Math.min(idx, tabs.length - 1);
-			activateTab(tabs[nextIdx].id);
+			// Activate nearest neighbor in primary pane
+			const primaryTabs = tabs.filter((t) => (t.paneId ?? 'primary') === 'primary');
+			if (primaryTabs.length > 0) {
+				const nextIdx = Math.min(idx, primaryTabs.length - 1);
+				activateTab(primaryTabs[nextIdx].id);
+			} else {
+				activeTabId = null;
+			}
 		} else if (tabs.length === 0) {
 			activeTabId = null;
 		}
@@ -113,7 +136,7 @@ function createTabStore() {
 		 * When preview=true, replaces any existing preview tab.
 		 * Returns the tab ID.
 		 */
-		openCodeTab(filePath: string, label: string, preview = true): string {
+		openCodeTab(filePath: string, label: string, preview = false): string {
 			const key = filePath;
 			const existing = findByKey(key);
 			if (existing) {
@@ -126,9 +149,12 @@ function createTabStore() {
 				return existing.id;
 			}
 
+			// Determine target pane: use focused pane in split mode
+			const targetPane = layoutStore.isSplit ? layoutStore.focusedPane : 'primary';
+
 			if (preview) {
-				// Replace existing preview tab
-				const previewTab = findPreviewTab();
+				// Replace existing preview tab in the same pane
+				const previewTab = tabs.find((t) => t.preview && (t.paneId ?? 'primary') === targetPane);
 				if (previewTab) {
 					previewTab.key = key;
 					previewTab.label = label;
@@ -148,13 +174,63 @@ function createTabStore() {
 				pinned: !preview,
 				preview,
 				lastAccessed: Date.now(),
-				filePath
+				filePath,
+				paneId: targetPane
 			};
 
 			tabs = [...tabs, tab];
 			enforceTabLimit();
 			activateTab(tab.id);
 			return tab.id;
+		},
+
+		/** Get view mode for a specific tab */
+		viewModeForTab(tabId: string | null): 'semantic' | 'code' {
+			if (!tabId) return 'code';
+			const tab = tabs.find((t) => t.id === tabId);
+			return tab?.type === 'diagram' ? 'semantic' : 'code';
+		},
+
+		/** Get tabs filtered by pane */
+		tabsForPane(paneId: 'primary' | 'secondary'): Tab[] {
+			return tabs.filter((t) => (t.paneId ?? 'primary') === paneId);
+		},
+
+		/** Move tab to a specific pane */
+		moveTabToPane(tabId: string, paneId: 'primary' | 'secondary') {
+			const tab = tabs.find((t) => t.id === tabId);
+			if (!tab) return;
+			const oldPane = tab.paneId ?? 'primary';
+			tab.paneId = paneId;
+
+			// If moving active primary tab away, switch to another primary tab
+			if (oldPane === 'primary' && paneId === 'secondary' && tabId === activeTabId) {
+				const remaining = tabs.filter(
+					(t) => t.id !== tabId && (t.paneId ?? 'primary') === 'primary'
+				);
+				activeTabId = remaining.length > 0 ? remaining[0].id : null;
+			}
+			// If moving active secondary tab away, clear secondary active
+			if (
+				oldPane === 'secondary' &&
+				paneId === 'primary' &&
+				tabId === layoutStore.secondaryActiveTabId
+			) {
+				const remaining = tabs.filter((t) => t.id !== tabId && t.paneId === 'secondary');
+				layoutStore.secondaryActiveTabId = remaining.length > 0 ? remaining[0].id : null;
+			}
+
+			tabs = [...tabs]; // trigger reactivity
+		},
+
+		/** Merge all secondary pane tabs to primary */
+		mergeSecondaryToPrimary() {
+			for (const tab of tabs) {
+				if (tab.paneId === 'secondary') {
+					tab.paneId = 'primary';
+				}
+			}
+			tabs = [...tabs];
 		},
 
 		pinTab(tabId: string) {

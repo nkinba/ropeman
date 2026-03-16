@@ -1,35 +1,92 @@
 <script lang="ts">
 	import { tabStore } from '$lib/stores/tabStore.svelte';
+	import type { Tab } from '$lib/types/tab';
+
+	let {
+		paneId = 'primary',
+		tabs = tabStore.tabs,
+		activeTabId = tabStore.activeTabId,
+		onactivate = (id: string) => tabStore.activateTab(id),
+		onclose = (id: string) => tabStore.closeTab(id),
+		ondroptab
+	}: {
+		paneId?: 'primary' | 'secondary';
+		tabs?: Tab[];
+		activeTabId?: string | null;
+		onactivate?: (id: string) => void;
+		onclose?: (id: string) => void;
+		ondroptab?: (tabId: string, fromPane: string) => void;
+	} = $props();
+
+	let dropTarget = $state(false);
 
 	function handleMouseDown(e: MouseEvent, tabId: string) {
 		// Middle-click to close
 		if (e.button === 1) {
 			e.preventDefault();
-			tabStore.closeTab(tabId);
+			onclose(tabId);
 		}
 	}
 
 	function handleDblClick(tabId: string) {
 		tabStore.pinTab(tabId);
 	}
+
+	function handleDragStart(e: DragEvent, tab: Tab) {
+		if (!e.dataTransfer) return;
+		e.dataTransfer.effectAllowed = 'move';
+		e.dataTransfer.setData('text/x-tab-id', tab.id);
+		e.dataTransfer.setData('text/x-tab-pane', tab.paneId ?? 'primary');
+	}
+
+	function handleDragOver(e: DragEvent) {
+		if (!e.dataTransfer?.types.includes('text/x-tab-id')) return;
+		e.preventDefault();
+		e.dataTransfer.dropEffect = 'move';
+		dropTarget = true;
+	}
+
+	function handleDragLeave() {
+		dropTarget = false;
+	}
+
+	function handleDrop(e: DragEvent) {
+		dropTarget = false;
+		if (!e.dataTransfer) return;
+		e.preventDefault();
+		const tabId = e.dataTransfer.getData('text/x-tab-id');
+		const fromPane = e.dataTransfer.getData('text/x-tab-pane');
+		if (tabId && ondroptab) {
+			ondroptab(tabId, fromPane);
+		}
+	}
 </script>
 
-{#if tabStore.tabs.length > 0}
-	<div class="tab-bar">
+<!-- svelte-ignore a11y_no_static_element_interactions -->
+{#if tabs.length > 0 || dropTarget}
+	<div
+		class="tab-bar"
+		class:drop-target={dropTarget}
+		ondragover={handleDragOver}
+		ondragleave={handleDragLeave}
+		ondrop={handleDrop}
+	>
 		<div class="tab-list">
-			{#each tabStore.tabs as tab (tab.id)}
+			{#each tabs as tab (tab.id)}
 				<!-- svelte-ignore a11y_no_static_element_interactions -->
 				<div
 					class="tab"
-					class:active={tab.id === tabStore.activeTabId}
+					class:active={tab.id === activeTabId}
 					class:preview={tab.preview}
-					onclick={() => tabStore.activateTab(tab.id)}
+					draggable="true"
+					onclick={() => onactivate(tab.id)}
 					onmousedown={(e) => handleMouseDown(e, tab.id)}
 					ondblclick={() => handleDblClick(tab.id)}
+					ondragstart={(e) => handleDragStart(e, tab)}
 					title={tab.type === 'code' ? (tab.filePath ?? tab.label) : tab.label}
 					role="tab"
 					tabindex="0"
-					aria-selected={tab.id === tabStore.activeTabId}
+					aria-selected={tab.id === activeTabId}
 				>
 					<span class="tab-icon">
 						{#if tab.type === 'diagram'}
@@ -70,7 +127,7 @@
 						class="tab-close"
 						onclick={(e) => {
 							e.stopPropagation();
-							tabStore.closeTab(tab.id);
+							onclose(tab.id);
 						}}
 						title="Close"
 					>
@@ -104,6 +161,12 @@
 		min-height: 35px;
 		overflow-x: auto;
 		overflow-y: hidden;
+	}
+
+	.tab-bar.drop-target {
+		background: var(--accent-bg, rgba(59, 130, 246, 0.12));
+		outline: 2px dashed var(--accent, #3b82f6);
+		outline-offset: -2px;
 	}
 
 	.tab-bar::-webkit-scrollbar {

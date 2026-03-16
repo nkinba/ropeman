@@ -13,4 +13,6 @@ export interface Tab {
 	filePath?: string;
 	/** Drilldown path snapshot for diagram tabs */
 	drilldownPath?: { nodeId: string; label: string }[];
+	/** Which pane this tab belongs to (default: 'primary') */
+	paneId?: 'primary' | 'secondary';
 }
