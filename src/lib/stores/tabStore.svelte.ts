@@ -56,13 +56,26 @@ function createTabStore() {
 		const idx = tabs.findIndex((t) => t.id === tabId);
 		if (idx === -1) return;
 
+		const closedTab = tabs[idx];
 		const wasActive = tabId === activeTabId;
+		const wasSecondaryActive = tabId === layoutStore.secondaryActiveTabId;
 		tabs = tabs.filter((t) => t.id !== tabId);
 
+		if (wasSecondaryActive) {
+			// Handle secondary pane active tab removal
+			const remaining = tabs.filter((t) => t.paneId === 'secondary');
+			layoutStore.secondaryActiveTabId = remaining.length > 0 ? remaining[0].id : null;
+		}
+
 		if (wasActive && tabs.length > 0) {
-			// Activate nearest neighbor
-			const nextIdx = Math.min(idx, tabs.length - 1);
-			activateTab(tabs[nextIdx].id);
+			// Activate nearest neighbor in primary pane
+			const primaryTabs = tabs.filter((t) => (t.paneId ?? 'primary') === 'primary');
+			if (primaryTabs.length > 0) {
+				const nextIdx = Math.min(idx, primaryTabs.length - 1);
+				activateTab(primaryTabs[nextIdx].id);
+			} else {
+				activeTabId = null;
+			}
 		} else if (tabs.length === 0) {
 			activeTabId = null;
 		}

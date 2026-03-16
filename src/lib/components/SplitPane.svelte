@@ -67,16 +67,11 @@
 	}
 
 	function handleSecondaryClose(tabId: string) {
-		const tabs = tabStore.tabsForPane('secondary');
+		const tabCount = tabStore.tabsForPane('secondary').length;
 		tabStore.closeTab(tabId);
 		// If no more secondary tabs, close split
-		if (tabs.length <= 1) {
+		if (tabCount <= 1) {
 			layoutStore.isSplit = false;
-		} else if (tabId === layoutStore.secondaryActiveTabId) {
-			const remaining = tabs.filter((t) => t.id !== tabId);
-			if (remaining.length > 0) {
-				layoutStore.secondaryActiveTabId = remaining[0].id;
-			}
 		}
 	}
 

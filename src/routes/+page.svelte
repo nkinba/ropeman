@@ -308,25 +308,45 @@
 			return;
 		}
 
-		// Ctrl+W: Close active tab
+		// Ctrl+W: Close active tab in focused pane
 		if (e.ctrlKey && !e.shiftKey && e.key === 'w') {
 			e.preventDefault();
-			if (tabStore.activeTabId) {
+			if (layoutStore.isSplit && layoutStore.focusedPane === 'secondary') {
+				const secTabId = layoutStore.secondaryActiveTabId;
+				if (secTabId) {
+					const secTabs = tabStore.tabsForPane('secondary');
+					tabStore.closeTab(secTabId);
+					if (secTabs.length <= 1) {
+						layoutStore.isSplit = false;
+					} else {
+						const remaining = secTabs.filter((t) => t.id !== secTabId);
+						layoutStore.secondaryActiveTabId = remaining.length > 0 ? remaining[0].id : null;
+					}
+				}
+			} else if (tabStore.activeTabId) {
 				tabStore.closeTab(tabStore.activeTabId);
 			}
 			return;
 		}
 
-		// Ctrl+Tab: Next tab / Ctrl+Shift+Tab: Previous tab
+		// Ctrl+Tab: Next tab / Ctrl+Shift+Tab: Previous tab (within focused pane)
 		if (e.ctrlKey && e.key === 'Tab') {
 			e.preventDefault();
-			const tabs = tabStore.tabs;
-			if (tabs.length <= 1) return;
-			const currentIdx = tabs.findIndex((t) => t.id === tabStore.activeTabId);
+			const isSecondary = layoutStore.isSplit && layoutStore.focusedPane === 'secondary';
+			const paneTabs = isSecondary
+				? tabStore.tabsForPane('secondary')
+				: tabStore.tabsForPane('primary');
+			if (paneTabs.length <= 1) return;
+			const currentId = isSecondary ? layoutStore.secondaryActiveTabId : tabStore.activeTabId;
+			const currentIdx = paneTabs.findIndex((t) => t.id === currentId);
 			const nextIdx = e.shiftKey
-				? (currentIdx - 1 + tabs.length) % tabs.length
-				: (currentIdx + 1) % tabs.length;
-			tabStore.activateTab(tabs[nextIdx].id);
+				? (currentIdx - 1 + paneTabs.length) % paneTabs.length
+				: (currentIdx + 1) % paneTabs.length;
+			if (isSecondary) {
+				layoutStore.secondaryActiveTabId = paneTabs[nextIdx].id;
+			} else {
+				tabStore.activateTab(paneTabs[nextIdx].id);
+			}
 			return;
 		}
 
@@ -429,7 +449,7 @@
 						{#if tabStore.activeTab?.type === 'diagram'}
 							<ZUICanvas bind:this={zuiCanvasRef} />
 						{:else if tabStore.activeTab?.type === 'code'}
-							<CodeViewer />
+							<CodeViewer filePath={tabStore.activeTab.filePath} />
 						{:else}
 							<!-- No active tab: show diagram if semantic data exists, otherwise code viewer -->
 							{#if semanticStore.currentLevel}
