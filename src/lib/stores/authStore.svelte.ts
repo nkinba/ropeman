@@ -1,6 +1,7 @@
 import { settingsStore } from './settingsStore.svelte';
+import { webgpuStore } from './webgpuStore.svelte';
 
-export type AuthTrack = 'none' | 'edge' | 'byok' | 'bridge';
+export type AuthTrack = 'none' | 'edge' | 'byok' | 'bridge' | 'webgpu';
 export type BridgeStatus = 'disconnected' | 'connecting' | 'connected' | 'reconnecting' | 'error';
 
 function createAuthStore() {
@@ -39,13 +40,19 @@ function createAuthStore() {
 		},
 
 		get isReady(): boolean {
-			return edgeEnabled || settingsStore.hasApiKey || bridgeStatus === 'connected';
+			return (
+				edgeEnabled ||
+				settingsStore.hasApiKey ||
+				bridgeStatus === 'connected' ||
+				webgpuStore.isReady
+			);
 		},
 
 		get activeTrack(): AuthTrack {
 			if (bridgeStatus === 'connected') return 'bridge';
-			if (settingsStore.hasApiKey) return 'byok';
 			if (edgeEnabled) return 'edge';
+			if (webgpuStore.isReady) return 'webgpu';
+			if (settingsStore.hasApiKey) return 'byok';
 			return 'none';
 		}
 	};

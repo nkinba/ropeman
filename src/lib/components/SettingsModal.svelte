@@ -18,6 +18,8 @@
 	});
 
 	let cacheEnabled = $state(settingsStore.cacheEnabled);
+	let maxSkeletonKB = $state(settingsStore.maxSkeletonKB);
+	let skeletonUnlimited = $state(settingsStore.skeletonUnlimited);
 	let lang = $state<'ko' | 'en'>(settingsStore.language);
 	let syntaxTheme = $state(settingsStore.syntaxTheme);
 	let cacheSize = $state(0);
@@ -25,6 +27,8 @@
 	$effect(() => {
 		if (open) {
 			cacheEnabled = settingsStore.cacheEnabled;
+			maxSkeletonKB = settingsStore.maxSkeletonKB;
+			skeletonUnlimited = settingsStore.skeletonUnlimited;
 			lang = settingsStore.language;
 			syntaxTheme = settingsStore.syntaxTheme;
 			getCacheSize().then((n) => {
@@ -32,6 +36,17 @@
 			});
 		}
 	});
+
+	function handleSkeletonKBChange(e: Event) {
+		const v = parseInt((e.target as HTMLInputElement).value) || 150;
+		maxSkeletonKB = v;
+		settingsStore.maxSkeletonKB = v;
+	}
+
+	function handleSkeletonUnlimitedToggle() {
+		skeletonUnlimited = !skeletonUnlimited;
+		settingsStore.skeletonUnlimited = skeletonUnlimited;
+	}
 
 	function handleCacheToggle() {
 		cacheEnabled = !cacheEnabled;
@@ -53,6 +68,8 @@
 		await clearCache();
 		settingsStore.clearAll();
 		cacheEnabled = true;
+		maxSkeletonKB = 150;
+		skeletonUnlimited = false;
 		lang = 'ko';
 		syntaxTheme = 'tomorrow';
 		cacheSize = 0;
@@ -91,6 +108,38 @@
 					>
 						Configure AI
 					</button>
+				</section>
+
+				<section class="settings-section">
+					<label class="settings-label">Skeleton Size Limit</label>
+					<div class="settings-row">
+						<label class="checkbox-label">
+							<input
+								type="checkbox"
+								checked={skeletonUnlimited}
+								onchange={handleSkeletonUnlimitedToggle}
+							/>
+							Unlimited
+						</label>
+					</div>
+					{#if !skeletonUnlimited}
+						<div class="settings-row">
+							<input
+								type="range"
+								class="settings-range"
+								min="50"
+								max="1000"
+								step="50"
+								value={maxSkeletonKB}
+								oninput={handleSkeletonKBChange}
+							/>
+							<span class="range-value">{maxSkeletonKB} KB</span>
+						</div>
+					{/if}
+					<p class="settings-hint">
+						AI 분석 시 전송되는 코드 스켈레톤 최대 크기. 큰 프로젝트에서 API 오류 발생 시 줄이세요.
+						(기본: 150KB)
+					</p>
 				</section>
 
 				<section class="settings-section">
@@ -290,6 +339,34 @@
 	.cache-size {
 		font-size: 12px;
 		color: var(--text-secondary, #a6adc8);
+	}
+	.checkbox-label {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		font-size: 13px;
+		color: var(--text-primary, #cdd6f4);
+		cursor: pointer;
+	}
+	.checkbox-label input[type='checkbox'] {
+		accent-color: var(--accent-color, #89b4fa);
+	}
+	.settings-range {
+		flex: 1;
+		accent-color: var(--accent-color, #89b4fa);
+	}
+	.range-value {
+		font-size: 13px;
+		color: var(--text-primary, #cdd6f4);
+		min-width: 60px;
+		text-align: right;
+	}
+	.settings-hint {
+		font-size: 11px;
+		color: var(--text-secondary, #a6adc8);
+		margin: 0;
+		opacity: 0.7;
+		line-height: 1.5;
 	}
 	.shortcuts-section {
 		border-top: 1px solid var(--border-color, #333);

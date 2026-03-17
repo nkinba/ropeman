@@ -3,11 +3,11 @@
 	"version": "0.0.0",
 	"private": true,
 	"scripts": {
-		"deploy": "wrangler deploy",
-		"dev": "wrangler dev",
-		"start": "wrangler dev",
-		"test": "vitest",
-		"cf-typegen": "wrangler types"
+		"deploy:demo": "wrangler deploy -c wrangler.demo.toml",
+		"deploy:proxy": "wrangler deploy -c wrangler.proxy.toml",
+		"dev:demo": "wrangler dev -c wrangler.demo.toml",
+		"dev:proxy": "wrangler dev -c wrangler.proxy.toml",
+		"test": "vitest"
 	},
 	"devDependencies": {
 		"@cloudflare/vitest-pool-workers": "^0.12.4",

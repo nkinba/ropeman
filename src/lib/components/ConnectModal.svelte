@@ -1,13 +1,16 @@
 <script lang="ts">
 	import { settingsStore } from '$lib/stores/settingsStore.svelte';
 	import { authStore } from '$lib/stores/authStore.svelte';
+	import { webgpuStore } from '$lib/stores/webgpuStore.svelte';
 	import { connectBridge, disconnectBridge } from '$lib/services/bridgeService';
 	import { AI_PROVIDERS, getProvider, getDefaultModel } from '$lib/data/aiProviders';
 	import type { AIProviderId } from '$lib/stores/settingsStore.svelte';
+	import WebGPUSetupModal from './WebGPUSetupModal.svelte';
 
 	let { open, onclose }: { open: boolean; onclose: () => void } = $props();
 
-	let activeTab = $state<'byok' | 'bridge'>('byok');
+	let activeTab = $state<'edge' | 'byok' | 'bridge' | 'webgpu'>('byok');
+	let showWebGPUSetup = $state(false);
 	let testStatus = $state<'idle' | 'testing' | 'success' | 'error'>('idle');
 	let testError = $state('');
 	let bridgePort = $state(authStore.bridgePort);
@@ -33,6 +36,12 @@
 			selectedModel = settingsStore.aiModel;
 			testStatus = 'idle';
 			bridgePort = authStore.bridgePort;
+			// Auto-select tab matching current track
+			const track = authStore.activeTrack;
+			if (track === 'bridge') activeTab = 'bridge';
+			else if (track === 'webgpu') activeTab = 'webgpu';
+			else if (track === 'edge') activeTab = 'edge';
+			else activeTab = 'byok';
 		}
 	});
 
@@ -87,10 +96,24 @@
 					testStatus = 'error';
 				}
 			} else if (selectedProvider === 'anthropic') {
-				// Anthropic has CORS restrictions for browser direct calls
-				testError =
-					'Anthropic API cannot be called directly from the browser due to CORS. Use Local Bridge mode instead.';
-				testStatus = 'error';
+				const { PROXY_URL } = await import('$lib/config');
+				const res = await fetch(PROXY_URL, {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({
+						provider: 'anthropic',
+						apiKey: key,
+						model: selectedModel,
+						messages: [{ role: 'user', content: 'Say "ok"' }]
+					})
+				});
+				if (res.ok) {
+					testStatus = 'success';
+				} else {
+					const data = await res.json().catch(() => ({}));
+					testError = (data as { error?: string })?.error || `HTTP ${res.status}`;
+					testStatus = 'error';
+				}
 			}
 		} catch (err) {
 			testError = (err as Error).message;
@@ -108,6 +131,16 @@
 
 	function handleDisconnect() {
 		disconnectBridge();
+	}
+
+	function activateEdge() {
+		authStore.edgeEnabled = true;
+		onclose();
+	}
+
+	function activateByok() {
+		authStore.edgeEnabled = false;
+		onclose();
 	}
 
 	function handleBridgePortInput(e: Event) {
@@ -141,6 +174,13 @@
 			<div class="connect-tabs">
 				<button
 					class="connect-tab"
+					class:active={activeTab === 'edge'}
+					onclick={() => (activeTab = 'edge')}
+				>
+					Demo
+				</button>
+				<button
+					class="connect-tab"
 					class:active={activeTab === 'byok'}
 					onclick={() => (activeTab = 'byok')}
 				>
@@ -153,10 +193,35 @@
 				>
 					Local Bridge
 				</button>
+				<button
+					class="connect-tab"
+					class:active={activeTab === 'webgpu'}
+					onclick={() => (activeTab = 'webgpu')}
+				>
+					Browser AI
+					<span class="tab-badge">Beta</span>
+				</button>
 			</div>
 
 			<div class="connect-body">
-				{#if activeTab === 'byok'}
+				{#if activeTab === 'edge'}
+					<section class="connect-section">
+						<p class="connect-hint" style="font-size:13px; opacity:1;">
+							서버를 경유하여 AI 분석을 수행합니다. API 키 없이 무료로 사용 가능하며, 파일 구조
+							메타데이터만 전달됩니다.
+						</p>
+						<div class="edge-status">
+							{#if authStore.activeTrack === 'edge'}
+								<span class="connect-status success">Active</span>
+							{:else}
+								<span class="connect-status">Inactive</span>
+							{/if}
+						</div>
+						<button class="connect-btn" onclick={activateEdge}>
+							{authStore.activeTrack === 'edge' ? 'Using Demo Mode' : 'Use Demo Mode'}
+						</button>
+					</section>
+				{:else if activeTab === 'byok'}
 					<section class="connect-section">
 						<!-- Provider Selection -->
 						<label class="connect-label">Provider</label>
@@ -174,47 +239,39 @@
 							{/each}
 						</select>
 
-						{#if requiresBridge}
-							<div class="bridge-notice">
-								<span class="notice-icon">&#9888;</span>
-								<span class="notice-text">
-									{currentProvider?.label} API cannot be called directly from the browser due to CORS
-									restrictions. Please use the
-									<button class="notice-link" onclick={() => (activeTab = 'bridge')}
-										>Local Bridge</button
-									> mode instead.
-								</span>
-							</div>
-						{:else}
-							<!-- API Key Input -->
-							<label class="connect-label">{currentProvider?.label ?? ''} API Key</label>
-							<div class="connect-row">
-								<input
-									type="password"
-									class="connect-input"
-									placeholder="Enter API key"
-									value={apiKeyValue}
-									oninput={handleApiKeyInput}
-								/>
-								<button
-									class="connect-btn"
-									onclick={testKey}
-									disabled={!apiKeyValue || testStatus === 'testing'}
-								>
-									{testStatus === 'testing' ? '...' : 'Test'}
-								</button>
-							</div>
-							{#if testStatus === 'success'}
-								<span class="connect-status success">Valid key</span>
-							{:else if testStatus === 'error'}
-								<span class="connect-status error">{testError || 'Invalid key'}</span>
-							{/if}
-							<p class="connect-hint">
-								Your API key is stored locally and never sent to our servers.
-							</p>
+						<!-- API Key Input -->
+						<label class="connect-label">{currentProvider?.label ?? ''} API Key</label>
+						<div class="connect-row">
+							<input
+								type="password"
+								class="connect-input"
+								placeholder="Enter API key"
+								value={apiKeyValue}
+								oninput={handleApiKeyInput}
+							/>
+							<button
+								class="connect-btn"
+								onclick={testKey}
+								disabled={!apiKeyValue || testStatus === 'testing'}
+							>
+								{testStatus === 'testing' ? '...' : 'Test'}
+							</button>
+						</div>
+						{#if testStatus === 'success'}
+							<span class="connect-status success">Valid key</span>
+						{:else if testStatus === 'error'}
+							<span class="connect-status error">{testError || 'Invalid key'}</span>
+						{/if}
+						<p class="connect-hint">
+							Your API key is stored locally and never sent to our servers.
+						</p>
+						{#if apiKeyValue}
+							<button class="connect-btn" onclick={activateByok}>
+								{authStore.activeTrack === 'byok' ? 'Using API Key' : 'Use API Key'}
+							</button>
 						{/if}
 					</section>
-				{:else}
+				{:else if activeTab === 'bridge'}
 					<section class="connect-section">
 						<label class="connect-label">Bridge Port</label>
 						<div class="connect-row">
@@ -276,11 +333,48 @@
 							Run this command in your terminal to start the local bridge server.
 						</p>
 					</section>
+				{:else if activeTab === 'webgpu'}
+					<section class="connect-section">
+						{#if !webgpuStore.isSupported}
+							<div class="bridge-notice">
+								<span class="notice-icon">&#9888;</span>
+								<span class="notice-text">
+									Your browser does not support WebGPU. Please use Chrome 113+ or Edge 113+.
+								</span>
+							</div>
+						{:else}
+							<div class="webgpu-status-row">
+								<span class="connect-label">Status</span>
+								{#if webgpuStore.isReady}
+									<span class="connect-status success">Model loaded</span>
+								{:else if webgpuStore.status === 'downloading'}
+									<span class="connect-status">Downloading... {webgpuStore.downloadProgress}%</span>
+								{:else if webgpuStore.status === 'error'}
+									<span class="connect-status error">{webgpuStore.errorMessage}</span>
+								{:else}
+									<span class="connect-status">Not initialized</span>
+								{/if}
+							</div>
+							<p class="connect-hint">
+								Run a small AI model (Qwen2.5-Coder-1.5B) directly in your browser using WebGPU. No
+								data leaves your machine.
+							</p>
+							<button
+								class="connect-btn"
+								disabled={webgpuStore.status === 'downloading'}
+								onclick={() => (showWebGPUSetup = true)}
+							>
+								{webgpuStore.isReady ? 'Reconfigure' : 'Setup Model'}
+							</button>
+						{/if}
+					</section>
 				{/if}
 			</div>
 		</div>
 	</div>
 {/if}
+
+<WebGPUSetupModal open={showWebGPUSetup} onclose={() => (showWebGPUSetup = false)} />
 
 <style>
 	.connect-backdrop {
@@ -341,6 +435,19 @@
 	.connect-tab.active {
 		color: var(--accent-color, #89b4fa);
 		border-bottom-color: var(--accent-color, #89b4fa);
+	}
+	.tab-badge {
+		font-size: 9px;
+		padding: 1px 5px;
+		border-radius: 8px;
+		background: var(--bg-secondary, #181825);
+		color: var(--text-secondary, #a6adc8);
+		vertical-align: super;
+	}
+	.webgpu-status-row {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
 	}
 	.connect-body {
 		padding: 20px;

@@ -174,8 +174,9 @@ dist
 # Dependencies
 node_modules/
 
-# Lock files (bun 사용 시)
-package-lock.json
+# Lock files (bun — npm의 package-lock.json은 추적함)
+bun.lock
+bun.lockb
 
 # Wrangler
 .wrangler/

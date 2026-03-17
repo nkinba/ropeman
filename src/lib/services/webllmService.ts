@@ -1,0 +1,102 @@
+import { webgpuStore } from '$lib/stores/webgpuStore.svelte';
+
+let worker: Worker | null = null;
+let requestId = 0;
+const pendingRequests = new Map<
+	string,
+	{ resolve: (value: string) => void; reject: (err: Error) => void }
+>();
+
+function getWorker(): Worker {
+	if (!worker) {
+		worker = new Worker(new URL('$lib/workers/webllmWorker.ts', import.meta.url), {
+			type: 'module'
+		});
+		worker.onmessage = handleMessage;
+	}
+	return worker;
+}
+
+function handleMessage(e: MessageEvent) {
+	const { type, id, payload } = e.data;
+
+	switch (type) {
+		case 'init-progress':
+			webgpuStore.downloadProgress = payload.progress;
+			webgpuStore.downloadStage = payload.stage;
+			break;
+
+		case 'init-done':
+			webgpuStore.status = 'ready';
+			webgpuStore.downloadProgress = 100;
+			resolvePending(id, 'ok');
+			break;
+
+		case 'generate-result':
+			resolvePending(id, payload.text);
+			break;
+
+		case 'error':
+			rejectPending(id, new Error(payload.message));
+			break;
+
+		case 'cancel-ack':
+			webgpuStore.reset();
+			resolvePending(id, 'cancelled');
+			break;
+	}
+}
+
+function resolvePending(id: string, value: string) {
+	const pending = pendingRequests.get(id);
+	if (pending) {
+		pendingRequests.delete(id);
+		pending.resolve(value);
+	}
+}
+
+function rejectPending(id: string, err: Error) {
+	const pending = pendingRequests.get(id);
+	if (pending) {
+		pendingRequests.delete(id);
+		pending.reject(err);
+	}
+}
+
+function sendRequest(type: string, payload?: unknown): Promise<string> {
+	const id = String(++requestId);
+	return new Promise((resolve, reject) => {
+		pendingRequests.set(id, { resolve, reject });
+		getWorker().postMessage({ type, id, payload });
+	});
+}
+
+export async function initModel(): Promise<void> {
+	webgpuStore.status = 'downloading';
+	webgpuStore.downloadProgress = 0;
+	webgpuStore.downloadStage = 'Starting model download...';
+
+	try {
+		await sendRequest('init');
+	} catch (err) {
+		webgpuStore.status = 'error';
+		webgpuStore.errorMessage = err instanceof Error ? err.message : String(err);
+		throw err;
+	}
+}
+
+export async function generate(system: string, prompt: string): Promise<string> {
+	return sendRequest('generate', { system, prompt });
+}
+
+export function cancelDownload(): void {
+	if (worker) {
+		const id = String(++requestId);
+		worker.postMessage({ type: 'cancel-download', id });
+	}
+	webgpuStore.reset();
+}
+
+export function checkWebGPUSupport(): boolean {
+	return typeof navigator !== 'undefined' && 'gpu' in navigator;
+}

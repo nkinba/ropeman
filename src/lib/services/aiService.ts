@@ -1,7 +1,9 @@
 import { settingsStore } from '$lib/stores/settingsStore.svelte';
 import { authStore } from '$lib/stores/authStore.svelte';
 import { sendViaBridge } from '$lib/services/bridgeService';
+import { generate as webllmGenerate } from '$lib/services/webllmService';
 import { buildContext } from '$lib/utils/contextBuilder';
+import { DEMO_URL, PROXY_URL } from '$lib/config';
 import type { GraphNode } from '$lib/types/graph';
 import { searchCache, addToCache, initCache } from '$lib/services/cacheService';
 import { getEmbedding } from '$lib/services/embeddingService';
@@ -67,13 +69,29 @@ export async function sendMessage(
 		};
 	}
 
-	// Edge proxy track: send via edge worker
+	// WebGPU track: local model inference
+	if (track === 'webgpu') {
+		try {
+			const contextPrefix = nodeContext
+				? `[Context: ${nodeContext.label} (${nodeContext.kind}) in ${nodeContext.filePath}]\n\n`
+				: '';
+			const content = await webllmGenerate(buildContext(nodeContext), contextPrefix + message);
+			return { content, relatedNodes: nodeContext ? [nodeContext.id] : [] };
+		} catch (error) {
+			return {
+				content: `WebGPU inference error: ${(error as Error).message}`,
+				relatedNodes: []
+			};
+		}
+	}
+
+	// Edge proxy track: send via demo worker
 	if (track === 'edge') {
 		try {
 			const contextPrefix = nodeContext
 				? `[Context: ${nodeContext.label} (${nodeContext.kind}) in ${nodeContext.filePath}]\n\n`
 				: '';
-			const response = await fetch('https://ropeman-api.ysc9606.workers.dev', {
+			const response = await fetch(DEMO_URL, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
@@ -112,13 +130,38 @@ export async function sendMessage(
 		}
 	}
 
-	// BYOK track: Anthropic requires bridge
+	// BYOK track: Anthropic → proxy worker (CORS 우회)
 	if (settingsStore.aiProvider === 'anthropic') {
-		return {
-			content:
-				'Anthropic API requires Local Bridge mode due to browser CORS restrictions. Please connect via the Local Bridge tab in AI Connection settings.',
-			relatedNodes: []
-		};
+		try {
+			const contextPrefix = nodeContext
+				? `[Context: ${nodeContext.label} (${nodeContext.kind}) in ${nodeContext.filePath}]\n\n`
+				: '';
+			const response = await fetch(PROXY_URL, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					provider: 'anthropic',
+					apiKey: settingsStore.anthropicApiKey,
+					model: settingsStore.aiModel,
+					messages: [{ role: 'user', content: contextPrefix + message }],
+					system: buildContext(nodeContext)
+				})
+			});
+			if (!response.ok) {
+				const errData = await response.json().catch(() => ({}));
+				throw new Error(
+					(errData as { error?: string }).error || `Proxy error: HTTP ${response.status}`
+				);
+			}
+			const data = await response.json();
+			const content = (data as { text?: string }).text || 'No response received.';
+			return { content, relatedNodes: nodeContext ? [nodeContext.id] : [] };
+		} catch (error) {
+			return {
+				content: `Proxy error: ${(error as Error).message}`,
+				relatedNodes: []
+			};
+		}
 	}
 
 	// BYOK track: use Gemini REST API

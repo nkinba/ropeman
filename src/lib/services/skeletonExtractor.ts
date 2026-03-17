@@ -6,12 +6,12 @@ import type {
 	SkeletonPayload,
 	SkeletonSymbol
 } from '$lib/types/skeleton';
+import { settingsStore } from '$lib/stores/settingsStore.svelte';
 
 const SKIP_KINDS = new Set(['variable', 'interface', 'type']);
 
-// ~150KB JSON ≈ ~50K tokens (JSON은 토큰 효율이 낮음)
-// Gemini 2.5 Flash 무료 티어: 250K TPM → 여유 있게 제한
-const MAX_SKELETON_BYTES = 150_000;
+// 기본값 150KB, settingsStore.maxSkeletonKB로 조절 가능
+const DEFAULT_MAX_SKELETON_KB = 150;
 
 // 핵심 디렉토리 (우선 포함)
 const CORE_DIR_PATTERNS = [
@@ -126,9 +126,12 @@ export function extractSkeleton(
 		});
 		const fileBytes = new TextEncoder().encode(fileJson).byteLength;
 
-		if (estimatedBytes + fileBytes > MAX_SKELETON_BYTES) {
-			truncated = true;
-			break;
+		if (!settingsStore.skeletonUnlimited) {
+			const maxBytes = (settingsStore.maxSkeletonKB ?? DEFAULT_MAX_SKELETON_KB) * 1000;
+			if (estimatedBytes + fileBytes > maxBytes) {
+				truncated = true;
+				break;
+			}
 		}
 
 		estimatedBytes += fileBytes;

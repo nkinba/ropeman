@@ -7,6 +7,8 @@ import { locale, getProgressMessage } from '$lib/stores/i18nStore';
 import { extractSkeleton, formatPayloadPreview } from './skeletonExtractor';
 import { extractSubSkeleton } from './skeletonExtractor';
 import { sendViaBridge } from './bridgeService';
+import { generate as webllmGenerate } from './webllmService';
+import { DEMO_URL, PROXY_URL } from '$lib/config';
 import type { SemanticLevel, SemanticNode, SemanticEdge } from '$lib/types/semantic';
 
 function getGeminiEndpoint(model: string): string {
@@ -230,8 +232,6 @@ function isAbortError(error: unknown): boolean {
 	return error instanceof DOMException && error.name === 'AbortError';
 }
 
-const EDGE_PROXY_URL = 'https://ropeman-api.ysc9606.workers.dev';
-
 async function callAI(
 	systemPrompt: string,
 	userPrompt: string,
@@ -241,13 +241,19 @@ async function callAI(
 
 	if (track === 'bridge') {
 		return await sendViaBridge(systemPrompt + '\n\n' + userPrompt);
+	} else if (track === 'webgpu') {
+		return await webllmGenerate(systemPrompt, userPrompt);
 	} else if (track === 'edge') {
 		return await callEdgeProxy(systemPrompt, userPrompt, signal);
 	} else if (track === 'byok') {
-		// Anthropic requires bridge due to CORS
 		if (settingsStore.aiProvider === 'anthropic') {
-			throw new Error(
-				'Anthropic API requires Local Bridge mode due to browser CORS restrictions. Please connect via Local Bridge.'
+			return await callProxyWorker(
+				'anthropic',
+				settingsStore.anthropicApiKey,
+				settingsStore.aiModel,
+				systemPrompt,
+				userPrompt,
+				signal
 			);
 		}
 		return await callGemini(systemPrompt, userPrompt, signal);
@@ -256,12 +262,46 @@ async function callAI(
 	}
 }
 
+async function callProxyWorker(
+	provider: 'anthropic' | 'openai' | 'google',
+	apiKey: string,
+	model: string,
+	systemPrompt: string,
+	userPrompt: string,
+	signal?: AbortSignal
+): Promise<string> {
+	if (!apiKey) throw new Error(`No ${provider} API key`);
+
+	const response = await fetch(PROXY_URL, {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		signal,
+		body: JSON.stringify({
+			provider,
+			apiKey,
+			model,
+			messages: [{ role: 'user', content: userPrompt }],
+			system: systemPrompt
+		})
+	});
+
+	if (!response.ok) {
+		const errData = await response.json().catch(() => ({}));
+		throw new Error(
+			(errData as { error?: string }).error || `Proxy error: HTTP ${response.status}`
+		);
+	}
+
+	const data = await response.json();
+	return (data as { text?: string }).text || '';
+}
+
 async function callEdgeProxy(
 	systemPrompt: string,
 	userPrompt: string,
 	signal?: AbortSignal
 ): Promise<string> {
-	const response = await fetch(EDGE_PROXY_URL, {
+	const response = await fetch(DEMO_URL, {
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
 		signal,
@@ -337,34 +377,46 @@ function repairJSON(text: string): string {
 		// Continue with repair
 	}
 
-	// Attempt truncation repair: close unclosed brackets/braces
+	// Progressive truncation: try cutting back to each previous complete role object
+	// Find all positions where a role object ends: '},\n    {' or similar
+	const cutPoints: number[] = [];
+	// Match '},' that likely ends a role object in the roles array
+	const roleBoundary = /\}\s*,\s*\{/g;
+	let m;
+	while ((m = roleBoundary.exec(fixed)) !== null) {
+		cutPoints.push(m.index + 1); // position after '}'
+	}
+
+	// Also try the last '},' as a cut point
+	let lastObjEnd = fixed.lastIndexOf('},');
+	while (lastObjEnd > 0) {
+		if (!cutPoints.includes(lastObjEnd + 1)) {
+			cutPoints.push(lastObjEnd + 1);
+		}
+		lastObjEnd = fixed.lastIndexOf('},', lastObjEnd - 1);
+		if (cutPoints.length > 20) break; // limit search
+	}
+
+	// Sort cut points descending (try longest valid prefix first)
+	cutPoints.sort((a, b) => b - a);
+
+	// Try closeBrackets on the full text first
 	const repaired = closeBrackets(fixed);
 	try {
 		JSON.parse(repaired);
 		return repaired;
-	} catch (e) {
-		// If still failing, try to extract valid portion up to the error position
-		const posMatch = String(e).match(/position\s+(\d+)/);
-		if (posMatch) {
-			const errorPos = parseInt(posMatch[1], 10);
-			// Cut just before the error and try to close brackets
-			const truncated = closeBrackets(fixed.substring(0, errorPos));
-			try {
-				JSON.parse(truncated);
-				return truncated;
-			} catch {
-				// Last resort: cut further back to last complete array element
-				const lastGoodEnd = fixed.lastIndexOf('},', errorPos);
-				if (lastGoodEnd > 0) {
-					const aggressiveCut = closeBrackets(fixed.substring(0, lastGoodEnd + 1));
-					try {
-						JSON.parse(aggressiveCut);
-						return aggressiveCut;
-					} catch {
-						/* fall through */
-					}
-				}
-			}
+	} catch {
+		// fall through to progressive cuts
+	}
+
+	// Try each cut point
+	for (const pos of cutPoints) {
+		const candidate = closeBrackets(fixed.substring(0, pos));
+		try {
+			JSON.parse(candidate);
+			return candidate;
+		} catch {
+			continue;
 		}
 	}
 
@@ -424,9 +476,8 @@ function escapeControlCharsInStrings(text: string): string {
 function closeBrackets(text: string): string {
 	let fixed = text;
 
-	// Count unclosed brackets and braces
-	let braces = 0;
-	let brackets = 0;
+	// Track open bracket/brace stack to close in correct order
+	const stack: string[] = [];
 	let inString = false;
 	let escape = false;
 
@@ -435,7 +486,7 @@ function closeBrackets(text: string): string {
 			escape = false;
 			continue;
 		}
-		if (ch === '\\') {
+		if (ch === '\\' && inString) {
 			escape = true;
 			continue;
 		}
@@ -444,64 +495,69 @@ function closeBrackets(text: string): string {
 			continue;
 		}
 		if (inString) continue;
-		if (ch === '{') braces++;
-		else if (ch === '}') braces--;
-		else if (ch === '[') brackets++;
-		else if (ch === ']') brackets--;
+		if (ch === '{') stack.push('}');
+		else if (ch === '[') stack.push(']');
+		else if (ch === '}' || ch === ']') stack.pop();
 	}
 
 	// If we're inside a string, close it
 	if (inString) fixed += '"';
 
-	// Remove any trailing partial value (e.g., truncated string or number)
-	// Trim to last complete element
-	const lastValid = Math.max(
-		fixed.lastIndexOf(','),
-		fixed.lastIndexOf('}'),
-		fixed.lastIndexOf(']'),
-		fixed.lastIndexOf('"')
-	);
-	if (lastValid > 0 && (braces > 0 || brackets > 0)) {
-		fixed = fixed.substring(0, lastValid + 1);
-		// Remove trailing comma if we just truncated
-		fixed = fixed.replace(/,\s*$/, '');
-		// Recount
-		braces = 0;
-		brackets = 0;
-		inString = false;
-		escape = false;
-		for (const ch of fixed) {
-			if (escape) {
-				escape = false;
-				continue;
+	// Remove trailing partial value — trim back to last structural char
+	if (stack.length > 0) {
+		const lastValid = Math.max(
+			fixed.lastIndexOf(','),
+			fixed.lastIndexOf('}'),
+			fixed.lastIndexOf(']'),
+			fixed.lastIndexOf('"')
+		);
+		if (lastValid > 0) {
+			fixed = fixed.substring(0, lastValid + 1);
+			fixed = fixed.replace(/,\s*$/, '');
+
+			// Rebuild stack from trimmed text
+			stack.length = 0;
+			inString = false;
+			escape = false;
+			for (const ch of fixed) {
+				if (escape) {
+					escape = false;
+					continue;
+				}
+				if (ch === '\\' && inString) {
+					escape = true;
+					continue;
+				}
+				if (ch === '"') {
+					inString = !inString;
+					continue;
+				}
+				if (inString) continue;
+				if (ch === '{') stack.push('}');
+				else if (ch === '[') stack.push(']');
+				else if (ch === '}' || ch === ']') stack.pop();
 			}
-			if (ch === '\\') {
-				escape = true;
-				continue;
-			}
-			if (ch === '"') {
-				inString = !inString;
-				continue;
-			}
-			if (inString) continue;
-			if (ch === '{') braces++;
-			else if (ch === '}') braces--;
-			else if (ch === '[') brackets++;
-			else if (ch === ']') brackets--;
 		}
 	}
 
-	// Close unclosed brackets/braces
-	for (let i = 0; i < brackets; i++) fixed += ']';
-	for (let i = 0; i < braces; i++) fixed += '}';
+	// Close in reverse order (correct nesting)
+	while (stack.length > 0) {
+		fixed += stack.pop();
+	}
 
 	return fixed;
 }
 
 function parseSemanticLevel(text: string, parentId: string | null, depth: number): SemanticLevel {
 	// Extract JSON from response (may be wrapped in markdown code block)
-	const jsonMatch = text.match(/\{[\s\S]*\}/);
-	if (!jsonMatch) throw new Error('No JSON found in response');
+	// First try complete JSON object, then fall back to truncated (opening { without closing })
+	let jsonMatch = text.match(/\{[\s\S]*\}/);
+	if (!jsonMatch) {
+		// Truncated response: find the first { and take everything after it
+		const firstBrace = text.indexOf('{');
+		if (firstBrace === -1) throw new Error('No JSON found in response');
+		jsonMatch = [text.substring(firstBrace)];
+	}
 
 	const repaired = repairJSON(jsonMatch[0]);
 	let raw: {

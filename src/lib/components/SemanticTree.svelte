@@ -1,8 +1,41 @@
 <script lang="ts">
 	import { semanticStore } from '$lib/stores/semanticStore.svelte';
 	import { tabStore } from '$lib/stores/tabStore.svelte';
+	import { settingsStore } from '$lib/stores/settingsStore.svelte';
 	import { analyzeDrilldown } from '$lib/services/semanticAnalysisService';
+	import DrilldownConfirmModal from './DrilldownConfirmModal.svelte';
 	import type { SemanticNode, SemanticLevel } from '$lib/types/semantic';
+
+	let drilldownConfirmOpen = $state(false);
+	let pendingDrilldownContext = $state<{
+		semNode: SemanticNode;
+		node: TreeNode;
+		level: SemanticLevel | undefined;
+		pathWithoutLast: Array<{ nodeId: string; label: string }>;
+	} | null>(null);
+
+	function executePendingDrilldown() {
+		if (!pendingDrilldownContext) return;
+		const { semNode, node, level, pathWithoutLast } = pendingDrilldownContext;
+
+		if (level) {
+			semanticStore.currentLevel = level;
+			semanticStore.drilldownPath = pathWithoutLast;
+		}
+
+		const wasCached = semanticStore.drillDown(semNode);
+		if (!wasCached) {
+			analyzeDrilldown(semNode);
+		}
+		tabStore.openDiagramTab(semanticStore.drilldownPath, semNode.label);
+
+		if (!expandedNodes.has(node.id)) {
+			const next = new Set(expandedNodes);
+			next.add(node.id);
+			expandedNodes = next;
+		}
+		pendingDrilldownContext = null;
+	}
 
 	interface TreeNode {
 		id: string;
@@ -114,24 +147,12 @@
 			return;
 		}
 
-		// Navigate to this node's parent level first
-		if (level) {
-			semanticStore.currentLevel = level;
-			semanticStore.drilldownPath = pathWithoutLast;
-		}
-
-		// Drill down (cached or trigger AI analysis)
-		const wasCached = semanticStore.drillDown(semNode);
-		if (!wasCached) {
-			analyzeDrilldown(semNode);
-		}
-		tabStore.openDiagramTab(semanticStore.drilldownPath, semNode.label);
-
-		// Auto-expand the tree node
-		if (!expandedNodes.has(node.id)) {
-			const next = new Set(expandedNodes);
-			next.add(node.id);
-			expandedNodes = next;
+		// Request drilldown (with or without confirm)
+		pendingDrilldownContext = { semNode, node, level, pathWithoutLast };
+		if (settingsStore.skipDrilldownConfirm) {
+			executePendingDrilldown();
+		} else {
+			drilldownConfirmOpen = true;
 		}
 	}
 
@@ -208,6 +229,19 @@
 		{/each}
 	{/if}
 {/snippet}
+
+<DrilldownConfirmModal
+	open={drilldownConfirmOpen}
+	nodeLabel={pendingDrilldownContext?.semNode.label ?? ''}
+	onconfirm={() => {
+		drilldownConfirmOpen = false;
+		executePendingDrilldown();
+	}}
+	oncancel={() => {
+		drilldownConfirmOpen = false;
+		pendingDrilldownContext = null;
+	}}
+/>
 
 <style>
 	.semantic-tree {

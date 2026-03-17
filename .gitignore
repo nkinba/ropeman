@@ -31,8 +31,9 @@ Thumbs.db
 *.swo
 *~
 
-# Lock files (bun)
+# Lock files (bun — npm의 package-lock.json은 추적함)
 bun.lock
+bun.lockb
 
 docs/history
 docs/private
