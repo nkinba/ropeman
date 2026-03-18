@@ -15,8 +15,10 @@ tests/screenshots/
 .env.local
 .env.*.local
 
-# Claude Code (session-local)
-.claude/
+# Claude Code (session-local, except shared skills/commands)
+.claude/*
+!.claude/skills/
+!.claude/commands/
 
 # IDE
 .vscode/
@@ -35,9 +37,7 @@ Thumbs.db
 bun.lock
 bun.lockb
 
-docs/history
 docs/private
-docs/guide-cloudflare-edge-proxy.md
 .spec
 playwright-report
 # Cloudflare Types

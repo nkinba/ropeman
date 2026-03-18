@@ -1,19 +1,11 @@
 import { get } from 'svelte/store';
-import { authStore } from '$lib/stores/authStore.svelte';
 import { semanticStore } from '$lib/stores/semanticStore.svelte';
 import { projectStore } from '$lib/stores/projectStore.svelte';
-import { settingsStore } from '$lib/stores/settingsStore.svelte';
 import { locale, getProgressMessage } from '$lib/stores/i18nStore';
 import { extractSkeleton, formatPayloadPreview } from './skeletonExtractor';
 import { extractSubSkeleton } from './skeletonExtractor';
-import { sendViaBridge } from './bridgeService';
-import { generate as webllmGenerate } from './webllmService';
-import { DEMO_URL, PROXY_URL } from '$lib/config';
+import { callAI } from './aiAdapter';
 import type { SemanticLevel, SemanticNode, SemanticEdge } from '$lib/types/semantic';
-
-function getGeminiEndpoint(model: string): string {
-	return `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
-}
 
 const SEMANTIC_COLORS = [
 	'#89b4fa',
@@ -145,11 +137,11 @@ export async function analyzeTopLevel(): Promise<void> {
 
 		throwIfAborted(abortController);
 		semanticStore.updateAnalysisProgress(nodeId, getProgressMessage('requestingAI'));
-		const responseText = await callAI(
-			TOP_LEVEL_SYSTEM_PROMPT + getLocaleInstruction(),
-			prompt,
-			abortController.signal
-		);
+		const responseText = await callAI({
+			system: TOP_LEVEL_SYSTEM_PROMPT + getLocaleInstruction(),
+			user: prompt,
+			signal: abortController.signal
+		});
 
 		throwIfAborted(abortController);
 		semanticStore.updateAnalysisProgress(nodeId, getProgressMessage('generatingDiagram'));
@@ -193,11 +185,11 @@ export async function analyzeDrilldown(parentNode: SemanticNode): Promise<void> 
 
 		throwIfAborted(abortController);
 		semanticStore.updateAnalysisProgress(parentNode.id, getProgressMessage('requestingAI'));
-		const responseText = await callAI(
-			DRILLDOWN_SYSTEM_PROMPT + getLocaleInstruction(),
-			prompt,
-			abortController.signal
-		);
+		const responseText = await callAI({
+			system: DRILLDOWN_SYSTEM_PROMPT + getLocaleInstruction(),
+			user: prompt,
+			signal: abortController.signal
+		});
 
 		throwIfAborted(abortController);
 		semanticStore.updateAnalysisProgress(parentNode.id, getProgressMessage('generatingDiagram'));
@@ -232,137 +224,7 @@ function isAbortError(error: unknown): boolean {
 	return error instanceof DOMException && error.name === 'AbortError';
 }
 
-async function callAI(
-	systemPrompt: string,
-	userPrompt: string,
-	signal?: AbortSignal
-): Promise<string> {
-	const track = authStore.activeTrack;
-
-	if (track === 'bridge') {
-		return await sendViaBridge(systemPrompt + '\n\n' + userPrompt);
-	} else if (track === 'webgpu') {
-		return await webllmGenerate(systemPrompt, userPrompt);
-	} else if (track === 'edge') {
-		return await callEdgeProxy(systemPrompt, userPrompt, signal);
-	} else if (track === 'byok') {
-		if (settingsStore.aiProvider === 'anthropic') {
-			return await callProxyWorker(
-				'anthropic',
-				settingsStore.anthropicApiKey,
-				settingsStore.aiModel,
-				systemPrompt,
-				userPrompt,
-				signal
-			);
-		}
-		return await callGemini(systemPrompt, userPrompt, signal);
-	} else {
-		throw new Error('AI not connected');
-	}
-}
-
-async function callProxyWorker(
-	provider: 'anthropic' | 'openai' | 'google',
-	apiKey: string,
-	model: string,
-	systemPrompt: string,
-	userPrompt: string,
-	signal?: AbortSignal
-): Promise<string> {
-	if (!apiKey) throw new Error(`No ${provider} API key`);
-
-	const response = await fetch(PROXY_URL, {
-		method: 'POST',
-		headers: { 'Content-Type': 'application/json' },
-		signal,
-		body: JSON.stringify({
-			provider,
-			apiKey,
-			model,
-			messages: [{ role: 'user', content: userPrompt }],
-			system: systemPrompt
-		})
-	});
-
-	if (!response.ok) {
-		const errData = await response.json().catch(() => ({}));
-		throw new Error(
-			(errData as { error?: string }).error || `Proxy error: HTTP ${response.status}`
-		);
-	}
-
-	const data = await response.json();
-	return (data as { text?: string }).text || '';
-}
-
-async function callEdgeProxy(
-	systemPrompt: string,
-	userPrompt: string,
-	signal?: AbortSignal
-): Promise<string> {
-	const response = await fetch(DEMO_URL, {
-		method: 'POST',
-		headers: { 'Content-Type': 'application/json' },
-		signal,
-		body: JSON.stringify({
-			messages: [{ role: 'user', content: userPrompt }],
-			system: systemPrompt
-		})
-	});
-
-	if (response.status === 429) {
-		const data = await response.json().catch(() => ({}));
-		throw new Error((data as { error?: string }).error || 'Rate limit exceeded. Try again later.');
-	}
-
-	if (!response.ok) {
-		const errText = await response.text().catch(() => '');
-		console.error('Edge proxy error:', response.status, errText);
-		throw new Error(`Edge proxy error: HTTP ${response.status}`);
-	}
-
-	// Worker returns Gemini API response format
-	const data = await response.json();
-	return data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
-}
-
-async function callGemini(
-	systemPrompt: string,
-	userPrompt: string,
-	signal?: AbortSignal
-): Promise<string> {
-	const apiKey = settingsStore.geminiApiKey;
-	if (!apiKey) throw new Error('No API key');
-
-	const model =
-		settingsStore.aiProvider === 'google' ? settingsStore.aiModel : 'gemini-2.5-flash-lite';
-	const endpoint = getGeminiEndpoint(model);
-
-	const response = await fetch(`${endpoint}?key=${apiKey}`, {
-		method: 'POST',
-		headers: { 'Content-Type': 'application/json' },
-		signal,
-		body: JSON.stringify({
-			system_instruction: { parts: [{ text: systemPrompt }] },
-			contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
-			generationConfig: {
-				temperature: 0.3,
-				maxOutputTokens: 16384,
-				response_mime_type: 'application/json'
-			}
-		})
-	});
-
-	if (!response.ok) {
-		throw new Error(`Gemini API error: HTTP ${response.status}`);
-	}
-
-	const data = await response.json();
-	return data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
-}
-
-function repairJSON(text: string): string {
+export function repairJSON(text: string): string {
 	// Escape control characters only inside JSON string values
 	let fixed = escapeControlCharsInStrings(text);
 
@@ -425,7 +287,7 @@ function repairJSON(text: string): string {
 }
 
 /** Escape unescaped control characters only inside JSON string values */
-function escapeControlCharsInStrings(text: string): string {
+export function escapeControlCharsInStrings(text: string): string {
 	let result = '';
 	let inString = false;
 	let escape = false;
@@ -473,7 +335,7 @@ function escapeControlCharsInStrings(text: string): string {
 	return result;
 }
 
-function closeBrackets(text: string): string {
+export function closeBrackets(text: string): string {
 	let fixed = text;
 
 	// Track open bracket/brace stack to close in correct order
@@ -548,7 +410,11 @@ function closeBrackets(text: string): string {
 	return fixed;
 }
 
-function parseSemanticLevel(text: string, parentId: string | null, depth: number): SemanticLevel {
+export function parseSemanticLevel(
+	text: string,
+	parentId: string | null,
+	depth: number
+): SemanticLevel {
 	// Extract JSON from response (may be wrapped in markdown code block)
 	// First try complete JSON object, then fall back to truncated (opening { without closing })
 	let jsonMatch = text.match(/\{[\s\S]*\}/);
