@@ -9,8 +9,44 @@
 	import { t } from '$lib/stores/i18nStore';
 	import { toSemanticFlowNodes, toSemanticFlowEdges } from '$lib/services/semanticGraphBuilder';
 	import { analyzeDrilldown } from '$lib/services/semanticAnalysisService';
+	import { settingsStore } from '$lib/stores/settingsStore.svelte';
 	import ExportController from './ExportController.svelte';
 	import SemanticNodeComponent from './nodes/SemanticNode.svelte';
+	import DrilldownConfirmModal from './DrilldownConfirmModal.svelte';
+	import type { SemanticNode } from '$lib/types/semantic';
+
+	let drilldownConfirmOpen = $state(false);
+	let pendingDrilldownNode = $state<SemanticNode | null>(null);
+
+	function requestDrilldown(semNode: SemanticNode) {
+		if (settingsStore.skipDrilldownConfirm) {
+			executeDrilldown(semNode);
+		} else {
+			pendingDrilldownNode = semNode;
+			drilldownConfirmOpen = true;
+		}
+	}
+
+	function executeDrilldown(semNode: SemanticNode) {
+		const wasCached = semanticStore.drillDown(semNode);
+		if (!wasCached) {
+			analyzeDrilldown(semNode);
+		}
+		tabStore.openDiagramTab(semanticStore.drilldownPath, semNode.label);
+	}
+
+	function confirmDrilldown() {
+		drilldownConfirmOpen = false;
+		if (pendingDrilldownNode) {
+			executeDrilldown(pendingDrilldownNode);
+			pendingDrilldownNode = null;
+		}
+	}
+
+	function cancelDrilldown() {
+		drilldownConfirmOpen = false;
+		pendingDrilldownNode = null;
+	}
 
 	const nodeTypes = {
 		semanticNode: SemanticNodeComponent
@@ -277,13 +313,8 @@
 				return;
 			}
 
-			// Already cached → load immediately via drillDown
-			const wasCached = semanticStore.drillDown(semNode);
-			if (!wasCached) {
-				analyzeDrilldown(semNode);
-			}
-			// Open/focus the diagram tab for the new drilldown level
-			tabStore.openDiagramTab(semanticStore.drilldownPath, semNode.label);
+			// Drilldown with confirmation
+			requestDrilldown(semNode);
 			return;
 		}
 	}
@@ -537,6 +568,13 @@
 		</div>
 	{/if}
 </div>
+
+<DrilldownConfirmModal
+	open={drilldownConfirmOpen}
+	nodeLabel={pendingDrilldownNode?.label ?? ''}
+	onconfirm={confirmDrilldown}
+	oncancel={cancelDrilldown}
+/>
 
 <style>
 	.zui-canvas {

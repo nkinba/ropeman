@@ -19,22 +19,20 @@
 	} = $props();
 
 	const hasProject = $derived(projectStore.fileTree !== null);
-	const showBridgeStatus = $derived(
-		authStore.bridgeStatus === 'connected' ||
-			authStore.bridgeStatus === 'reconnecting' ||
-			authStore.bridgeStatus === 'connecting'
-	);
 
-	const bridgeStatusLabel = $derived.by(() => {
-		switch (authStore.bridgeStatus) {
-			case 'connected':
-				return 'Bridge connected';
-			case 'reconnecting':
-				return 'Reconnecting...';
-			case 'connecting':
-				return 'Connecting...';
+	const trackInfo = $derived.by(() => {
+		const track = authStore.activeTrack;
+		switch (track) {
+			case 'bridge':
+				return { label: 'Bridge', color: '#a6e3a1', icon: '🔗' };
+			case 'edge':
+				return { label: 'Demo', color: '#89b4fa', icon: '⚡' };
+			case 'webgpu':
+				return { label: 'WebGPU', color: '#cba6f7', icon: '🧠' };
+			case 'byok':
+				return { label: 'API Key', color: '#f9e2af', icon: '🔑' };
 			default:
-				return 'Bridge disconnected';
+				return null;
 		}
 	});
 </script>
@@ -69,18 +67,14 @@
 			</button>
 		{/if}
 		{#if hasProject}
-			<button
-				class="header-btn text-btn"
-				onclick={() => onanalyze?.()}
-				title="AI Semantic Analysis"
-			>
+			<button class="analyze-btn" onclick={() => onanalyze?.()} title="AI Semantic Analysis">
 				<svg
-					width="16"
-					height="16"
+					width="14"
+					height="14"
 					viewBox="0 0 24 24"
 					fill="none"
 					stroke="currentColor"
-					stroke-width="2"
+					stroke-width="2.5"
 					stroke-linecap="round"
 					stroke-linejoin="round"
 				>
@@ -88,7 +82,7 @@
 						points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
 					/>
 				</svg>
-				<span class="btn-label">AI</span>
+				Analyze
 			</button>
 		{/if}
 		<button class="header-btn" onclick={toggleLocale} title="Toggle Language">
@@ -118,15 +112,16 @@
 				/>
 			</svg>
 		</button>
-		{#if showBridgeStatus}
-			<span
-				class="bridge-indicator"
-				class:connected={authStore.bridgeStatus === 'connected'}
-				class:reconnecting={authStore.bridgeStatus === 'reconnecting'}
-				title={bridgeStatusLabel}
+		{#if trackInfo}
+			<button
+				class="track-badge"
+				style="--track-color: {trackInfo.color}"
+				onclick={onconnect}
+				title="AI: {trackInfo.label} (click to change)"
 			>
-				<span class="bridge-dot"></span>
-			</span>
+				<span class="track-dot"></span>
+				<span class="track-label">{trackInfo.label}</span>
+			</button>
 		{/if}
 	</div>
 </header>
@@ -208,39 +203,54 @@
 		font-size: 13px;
 	}
 
-	.bridge-indicator {
+	.analyze-btn {
 		display: flex;
 		align-items: center;
-		justify-content: center;
-		width: 20px;
-		height: 20px;
+		gap: 6px;
+		padding: 6px 14px;
+		background: var(--accent, #89b4fa);
+		color: var(--bg-primary, #1e1e2e);
+		border: none;
+		border-radius: 8px;
+		font-size: 13px;
+		font-weight: 600;
+		cursor: pointer;
+		transition: opacity 0.2s;
+	}
+
+	.analyze-btn:hover {
+		opacity: 0.85;
+	}
+
+	.track-badge {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		padding: 4px 10px;
 		margin-left: 4px;
+		border-radius: 12px;
+		background: color-mix(in srgb, var(--track-color) 15%, transparent);
+		border: 1px solid color-mix(in srgb, var(--track-color) 30%, transparent);
+		cursor: pointer;
+		transition: background 0.2s;
 	}
 
-	.bridge-dot {
-		width: 8px;
-		height: 8px;
+	.track-badge:hover {
+		background: color-mix(in srgb, var(--track-color) 25%, transparent);
+	}
+
+	.track-dot {
+		width: 7px;
+		height: 7px;
 		border-radius: 50%;
-		background: #585b70;
+		background: var(--track-color);
+		flex-shrink: 0;
 	}
 
-	.bridge-indicator.connected .bridge-dot {
-		background: #a6e3a1;
-	}
-
-	.bridge-indicator.reconnecting .bridge-dot {
-		background: #f9e2af;
-		animation: bridge-pulse 1s infinite;
-	}
-
-	@keyframes bridge-pulse {
-		0%,
-		100% {
-			opacity: 1;
-		}
-		50% {
-			opacity: 0.3;
-		}
+	.track-label {
+		font-size: 11px;
+		font-weight: 600;
+		color: var(--track-color);
 	}
 
 	@media (max-width: 768px) {

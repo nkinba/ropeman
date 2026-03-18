@@ -9,8 +9,7 @@
 	import ChatPopup from '$lib/components/ChatPopup.svelte';
 	import LoadingOverlay from '$lib/components/LoadingOverlay.svelte';
 	import SettingsModal from '$lib/components/SettingsModal.svelte';
-	import ConnectModal from '$lib/components/ConnectModal.svelte';
-	import OnboardingModal from '$lib/components/OnboardingModal.svelte';
+	import AnalyzeModal from '$lib/components/AnalyzeModal.svelte';
 	import { projectStore } from '$lib/stores/projectStore.svelte';
 	import { selectionStore } from '$lib/stores/selectionStore.svelte';
 	import { semanticStore } from '$lib/stores/semanticStore.svelte';
@@ -33,8 +32,7 @@
 	import { onMount } from 'svelte';
 
 	let showSettings = $state(false);
-	let showConnect = $state(false);
-	let showOnboarding = $state(false);
+	let showAnalyze = $state(false);
 	// explorerCollapsed removed — sidebar icon bar is always visible,
 	// content panel is managed internally by Sidebar component
 	let isMobile = $state(false);
@@ -53,14 +51,14 @@
 		return () => mql.removeEventListener('change', handler);
 	});
 
-	function handleTrackSelect(track: 'edge' | 'byok' | 'bridge') {
-		showOnboarding = false;
-		if (!authStore.isReady) {
-			// edge proxy not yet implemented — require bridge or BYOK auth
-			showConnect = true;
+	function handleTrackSelect(track: 'edge' | 'byok' | 'bridge' | 'webgpu') {
+		showAnalyze = false;
+		if (track === 'edge') {
+			authStore.edgeEnabled = true;
 		} else {
-			analyzeTopLevel();
+			authStore.edgeEnabled = false;
 		}
+		analyzeTopLevel();
 	}
 
 	let fallbackInput: HTMLInputElement | undefined = $state(undefined);
@@ -207,7 +205,7 @@
 			!snippetOnboardingShown
 		) {
 			snippetOnboardingShown = true;
-			showOnboarding = true;
+			showAnalyze = true;
 		}
 		if (!isSnippetMode) {
 			snippetOnboardingShown = false;
@@ -286,10 +284,8 @@
 
 	function handleKeydown(e: KeyboardEvent) {
 		if (e.key === 'Escape') {
-			if (showOnboarding) {
-				showOnboarding = false;
-			} else if (showConnect) {
-				showConnect = false;
+			if (showAnalyze) {
+				showAnalyze = false;
 			} else if (showSettings) {
 				showSettings = false;
 			} else if (hasSelection) {
@@ -404,8 +400,8 @@
 	<Header
 		onsettings={() => (showSettings = !showSettings)}
 		onnewproject={handleNewProject}
-		onconnect={() => (showConnect = true)}
-		onanalyze={() => (showOnboarding = true)}
+		onconnect={() => (showAnalyze = true)}
+		onanalyze={() => (showAnalyze = true)}
 	/>
 
 	{#if projectStore.isLoading}
@@ -446,17 +442,12 @@
 						onclose={(id) => tabStore.closeTab(id)}
 					/>
 					<div class="canvas-content">
-						{#if tabStore.activeTab?.type === 'diagram'}
-							<ZUICanvas bind:this={zuiCanvasRef} />
-						{:else if tabStore.activeTab?.type === 'code'}
+						{#if tabStore.activeTab?.type === 'code'}
 							<CodeViewer filePath={tabStore.activeTab.filePath} />
+						{:else if tabStore.activeTab?.type === 'diagram' || semanticStore.currentLevel}
+							<ZUICanvas bind:this={zuiCanvasRef} />
 						{:else}
-							<!-- No active tab: show diagram if semantic data exists, otherwise code viewer -->
-							{#if semanticStore.currentLevel}
-								<ZUICanvas bind:this={zuiCanvasRef} />
-							{:else}
-								<CodeViewer />
-							{/if}
+							<CodeViewer />
 						{/if}
 					</div>
 				{/if}
@@ -489,7 +480,7 @@
 			</div>
 		{/if}
 
-		<ChatPopup onconnect={() => (showConnect = true)} />
+		<ChatPopup onconnect={() => (showAnalyze = true)} />
 	{/if}
 
 	{#if showSettings}
@@ -498,20 +489,16 @@
 			onclose={() => (showSettings = false)}
 			onconnect={() => {
 				showSettings = false;
-				showConnect = true;
+				showAnalyze = true;
 			}}
 		/>
 	{/if}
 
-	{#if showConnect}
-		<ConnectModal open={showConnect} onclose={() => (showConnect = false)} />
-	{/if}
-
-	{#if showOnboarding}
-		<OnboardingModal
-			open={showOnboarding}
-			onclose={() => (showOnboarding = false)}
-			onselect={handleTrackSelect}
+	{#if showAnalyze}
+		<AnalyzeModal
+			open={showAnalyze}
+			onclose={() => (showAnalyze = false)}
+			onanalyze={handleTrackSelect}
 		/>
 	{/if}
 

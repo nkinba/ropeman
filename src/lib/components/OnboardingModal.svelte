@@ -1,21 +1,34 @@
 <script lang="ts">
 	import { settingsStore } from '$lib/stores/settingsStore.svelte';
 	import { projectStore } from '$lib/stores/projectStore.svelte';
-	import { extractSkeleton, estimatePayloadSize, formatPayloadPreview } from '$lib/services/skeletonExtractor';
+	import { webgpuStore } from '$lib/stores/webgpuStore.svelte';
+	import {
+		extractSkeleton,
+		estimatePayloadSize,
+		formatPayloadPreview
+	} from '$lib/services/skeletonExtractor';
 	import { getProvider } from '$lib/data/aiProviders';
+	import WebGPUSetupModal from './WebGPUSetupModal.svelte';
 
-	let { open, onclose, onselect }: {
+	let {
+		open,
+		onclose,
+		onselect
+	}: {
 		open: boolean;
 		onclose: () => void;
-		onselect: (track: 'edge' | 'byok' | 'bridge') => void;
+		onselect: (track: 'edge' | 'byok' | 'bridge' | 'webgpu') => void;
 	} = $props();
+
+	let showWebGPUSetup = $state(false);
 
 	let showPreview = $state(false);
 
 	const hasApiKey = $derived(settingsStore.hasApiKey);
 	const currentProviderInfo = $derived(getProvider(settingsStore.aiProvider));
 	const currentModelLabel = $derived(
-		currentProviderInfo?.models.find(m => m.id === settingsStore.aiModel)?.label ?? settingsStore.aiModel
+		currentProviderInfo?.models.find((m) => m.id === settingsStore.aiModel)?.label ??
+			settingsStore.aiModel
 	);
 
 	const skeleton = $derived(
@@ -58,12 +71,11 @@
 						<div class="track-title">빠른 체험</div>
 						<div class="track-subtitle">1초 만에 논리적 구조 파악하기 (무료)</div>
 						<p class="track-desc">
-							서버를 경유하여 분석합니다. 소스 코드는 전송되지 않으며, 파일 구조 메타데이터만 전달됩니다.
+							서버를 경유하여 분석합니다. 소스 코드는 전송되지 않으며, 파일 구조 메타데이터만
+							전달됩니다.
 						</p>
 					</div>
-					<button class="track-btn primary" onclick={() => onselect('edge')}>
-						바로 시작
-					</button>
+					<button class="track-btn primary" onclick={() => onselect('edge')}> 바로 시작 </button>
 				</div>
 
 				<!-- Card B: BYOK -->
@@ -88,28 +100,46 @@
 					</button>
 				</div>
 
-				<!-- Card C: WebGPU (disabled) -->
-				<div class="track-card disabled">
+				<!-- Card C: WebGPU -->
+				<div class="track-card" class:disabled={!webgpuStore.isSupported}>
 					<div class="track-icon">🧠</div>
 					<div class="track-content">
 						<div class="track-title">
 							브라우저 내장 AI
 							<span class="badge muted">Beta</span>
 						</div>
-						<div class="track-subtitle">오프라인에서 분석 (Coming Soon)</div>
-						<p class="track-desc">
-							WebGPU를 활용한 로컬 AI 모델로 분석합니다.
-						</p>
+						{#if !webgpuStore.isSupported}
+							<div class="track-subtitle">WebGPU 미지원 브라우저</div>
+							<p class="track-desc">Chrome 113+ 또는 Edge 113+ 브라우저가 필요합니다.</p>
+						{:else if webgpuStore.isReady}
+							<div class="track-subtitle">모델 준비 완료</div>
+							<p class="track-desc">
+								로컬 AI 모델로 분석합니다. 데이터가 외부로 전송되지 않습니다.
+							</p>
+						{:else}
+							<div class="track-subtitle">최초 1회 모델 다운로드 (~900MB)</div>
+							<p class="track-desc">
+								WebGPU를 활용한 로컬 AI 모델로 분석합니다. 다운로드 후 캐싱됩니다.
+							</p>
+						{/if}
 					</div>
-					<button class="track-btn" disabled>
-						준비 중
-					</button>
+					{#if webgpuStore.isReady}
+						<button class="track-btn" onclick={() => onselect('webgpu')}> 시작 </button>
+					{:else}
+						<button
+							class="track-btn"
+							disabled={!webgpuStore.isSupported}
+							onclick={() => (showWebGPUSetup = true)}
+						>
+							{webgpuStore.isSupported ? '설정' : '미지원'}
+						</button>
+					{/if}
 				</div>
 
 				<!-- Payload Preview -->
 				{#if skeleton}
 					<div class="preview-section">
-						<button class="preview-toggle" onclick={() => showPreview = !showPreview}>
+						<button class="preview-toggle" onclick={() => (showPreview = !showPreview)}>
 							🔍 전송되는 데이터 미리보기
 							<span class="toggle-arrow" class:expanded={showPreview}>▸</span>
 						</button>
@@ -127,6 +157,8 @@
 		</div>
 	</div>
 {/if}
+
+<WebGPUSetupModal open={showWebGPUSetup} onclose={() => (showWebGPUSetup = false)} />
 
 <style>
 	.onboarding-backdrop {
@@ -196,7 +228,9 @@
 		border: 1px solid var(--border);
 		border-radius: 10px;
 		background: var(--bg-secondary);
-		transition: border-color 0.2s, box-shadow 0.2s;
+		transition:
+			border-color 0.2s,
+			box-shadow 0.2s;
 	}
 
 	.track-card:not(.disabled):hover {
@@ -262,7 +296,9 @@
 		background: var(--bg-tertiary);
 		cursor: pointer;
 		white-space: nowrap;
-		transition: background 0.2s, border-color 0.2s;
+		transition:
+			background 0.2s,
+			border-color 0.2s;
 	}
 
 	.track-btn:hover:not(:disabled) {

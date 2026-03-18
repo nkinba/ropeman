@@ -1,12 +1,14 @@
 import { settingsStore } from './settingsStore.svelte';
+import { webgpuStore } from './webgpuStore.svelte';
 
-export type AuthTrack = 'none' | 'byok' | 'bridge';
+export type AuthTrack = 'none' | 'edge' | 'byok' | 'bridge' | 'webgpu';
 export type BridgeStatus = 'disconnected' | 'connecting' | 'connected' | 'reconnecting' | 'error';
 
 function createAuthStore() {
 	let bridgeStatus = $state<BridgeStatus>('disconnected');
 	let bridgePort = $state(9876);
 	let bridgeError = $state('');
+	let edgeEnabled = $state(false);
 
 	return {
 		get bridgeStatus() {
@@ -30,12 +32,26 @@ function createAuthStore() {
 			bridgeError = v;
 		},
 
+		get edgeEnabled() {
+			return edgeEnabled;
+		},
+		set edgeEnabled(v: boolean) {
+			edgeEnabled = v;
+		},
+
 		get isReady(): boolean {
-			return settingsStore.hasApiKey || bridgeStatus === 'connected';
+			return (
+				edgeEnabled ||
+				settingsStore.hasApiKey ||
+				bridgeStatus === 'connected' ||
+				webgpuStore.isReady
+			);
 		},
 
 		get activeTrack(): AuthTrack {
 			if (bridgeStatus === 'connected') return 'bridge';
+			if (edgeEnabled) return 'edge';
+			if (webgpuStore.isReady) return 'webgpu';
 			if (settingsStore.hasApiKey) return 'byok';
 			return 'none';
 		}

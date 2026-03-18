@@ -8,9 +8,12 @@ function createSettingsStore() {
 	let anthropicApiKey = $state<string>(initial.anthropicApiKey ?? '');
 	let aiProvider = $state<AIProviderId>(initial.aiProvider ?? 'google');
 	let aiModel = $state<string>(initial.aiModel ?? 'gemini-2.5-flash-lite');
+	let maxSkeletonKB = $state<number>(initial.maxSkeletonKB ?? 150);
+	let skeletonUnlimited = $state<boolean>(initial.skeletonUnlimited ?? false);
 	let cacheEnabled = $state<boolean>(initial.cacheEnabled ?? true);
 	let language = $state<'ko' | 'en'>(initial.language ?? 'ko');
 	let syntaxTheme = $state<string>(initial.syntaxTheme ?? 'tomorrow');
+	let skipDrilldownConfirm = $state<boolean>(initial.skipDrilldownConfirm ?? false);
 
 	function persist() {
 		if (typeof window !== 'undefined') {
@@ -21,9 +24,12 @@ function createSettingsStore() {
 					anthropicApiKey,
 					aiProvider,
 					aiModel,
+					maxSkeletonKB,
+					skeletonUnlimited,
 					cacheEnabled,
 					language,
-					syntaxTheme
+					syntaxTheme,
+					skipDrilldownConfirm
 				})
 			);
 		}
@@ -62,6 +68,22 @@ function createSettingsStore() {
 			persist();
 		},
 
+		get maxSkeletonKB() {
+			return maxSkeletonKB;
+		},
+		set maxSkeletonKB(v: number) {
+			maxSkeletonKB = Math.max(50, Math.min(1000, v));
+			persist();
+		},
+
+		get skeletonUnlimited() {
+			return skeletonUnlimited;
+		},
+		set skeletonUnlimited(v: boolean) {
+			skeletonUnlimited = v;
+			persist();
+		},
+
 		get cacheEnabled() {
 			return cacheEnabled;
 		},
@@ -86,6 +108,14 @@ function createSettingsStore() {
 			persist();
 		},
 
+		get skipDrilldownConfirm() {
+			return skipDrilldownConfirm;
+		},
+		set skipDrilldownConfirm(v: boolean) {
+			skipDrilldownConfirm = v;
+			persist();
+		},
+
 		get hasApiKey() {
 			if (aiProvider === 'google') return geminiApiKey.length > 0;
 			if (aiProvider === 'anthropic') return anthropicApiKey.length > 0;
@@ -103,9 +133,12 @@ function createSettingsStore() {
 			anthropicApiKey = '';
 			aiProvider = 'google';
 			aiModel = 'gemini-2.5-flash-lite';
+			maxSkeletonKB = 150;
+			skeletonUnlimited = false;
 			cacheEnabled = true;
 			language = 'ko';
 			syntaxTheme = 'tomorrow';
+			skipDrilldownConfirm = false;
 			if (typeof window !== 'undefined') {
 				localStorage.removeItem('ropeman-settings');
 			}

@@ -1,0 +1,17 @@
+name = "ropeman-demo"
+main = "src/demo.ts"
+compatibility_date = "2026-03-10"
+compatibility_flags = ["nodejs_compat"]
+
+[placement]
+mode = "smart"
+hint = "wnam"
+
+[observability]
+enabled = true
+
+[vars]
+ALLOWED_ORIGINS = "https://ropeman.dev,http://localhost:5173,http://localhost:5174,http://localhost:4173"
+RATE_LIMIT_PER_MIN = "10"
+DAILY_LIMIT_TOTAL = "200"
+DEMO_MODEL = "gemini-2.5-flash"
