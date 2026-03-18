@@ -84,7 +84,9 @@
 - 새로운 유형의 버그는 새 문서(B00N-xxx.md)를 생성하고 INDEX에 등록.
 - `npm install` 후 이상 동작 발생 시 → B006 (의존성 오류) 먼저 의심. `node_modules/.vite` 삭제 후 재설치 시도.
 
-## Custom Commands(Claude Skills)
+## Custom Commands
+
+.claude/commands 하위의 각 md 파일에 다음 동작들이 명시되어있음.
 
 - `/sync` — 코드베이스 스캔 후 현재 아키텍처 파악
 - `/catchup` — .spec/history 읽고 이전 작업 맥락 파악

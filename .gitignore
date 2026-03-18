@@ -35,7 +35,6 @@ Thumbs.db
 bun.lock
 bun.lockb
 
-docs/history
 docs/private
 docs/guide-cloudflare-edge-proxy.md
 .spec
