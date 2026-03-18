@@ -84,8 +84,25 @@
 - 새로운 유형의 버그는 새 문서(B00N-xxx.md)를 생성하고 INDEX에 등록.
 - `npm install` 후 이상 동작 발생 시 → B006 (의존성 오류) 먼저 의심. `node_modules/.vite` 삭제 후 재설치 시도.
 
+## 테스트 규칙
+
+- 스프린트에서 서비스/로직 변경 시 해당 파일의 테스트를 반드시 추가 또는 업데이트한다.
+- `/generate-tests [파일경로]` 커맨드로 테스트 생성 가능.
+- 테스트 패턴: AAA (Arrange, Act, Assert), vitest 사용.
+- 외부 의존성(fetch, Worker, 스토어)은 `vi.mock()`으로 모킹.
+- 실제 발생했던 버그 케이스를 테스트에 포함 (regression test).
+- `npm run test:unit` 전체 통과 확인 후 커밋.
+
+## 코드 리뷰 규칙
+
+- 스프린트 종료 시 `/code-reviewer` 스킬의 체크리스트(`references/code_review_checklist.md`)로 리뷰 수행.
+- 리뷰 결과 리팩토링 필요 시 즉시 수정하거나 R2 등 리팩토링 태스크로 이월.
+- anti-pattern 발견 시 `references/common_antipatterns.md`에 추가.
+
 ## Custom Commands(Claude Skills)
 
 - `/sync` — 코드베이스 스캔 후 현재 아키텍처 파악
 - `/catchup` — .spec/history 읽고 이전 작업 맥락 파악
 - `/changelog` — 작업 완료 후 변경사항 자동 문서화
+- `/generate-tests [파일경로]` — 지정 파일의 테스트 자동 생성
+- `/code-reviewer` — 코드 리뷰 수행 (프로젝트 맞춤 체크리스트)
