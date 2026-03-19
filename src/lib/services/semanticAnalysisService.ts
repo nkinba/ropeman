@@ -1,7 +1,6 @@
-import { get } from 'svelte/store';
 import { semanticStore } from '$lib/stores/semanticStore.svelte';
 import { projectStore } from '$lib/stores/projectStore.svelte';
-import { locale, getProgressMessage } from '$lib/stores/i18nStore';
+import { i18nStore } from '$lib/stores/i18nStore.svelte';
 import { extractSkeleton, formatPayloadPreview } from './skeletonExtractor';
 import { extractSubSkeleton } from './skeletonExtractor';
 import { callAI } from './aiAdapter';
@@ -81,7 +80,7 @@ Rules:
 - Edge types: depends_on, calls, extends, uses`;
 
 function getLocaleInstruction(): string {
-	const lang = get(locale);
+	const lang = i18nStore.locale;
 	const langName = lang === 'ko' ? 'Korean' : 'English';
 	return `\n\nIMPORTANT: All labels and descriptions in your response MUST be written in ${langName}.`;
 }
@@ -115,13 +114,16 @@ export async function analyzeTopLevel(): Promise<void> {
 	try {
 		// Always wait for parsing to produce results
 		if (projectStore.isLoading || projectStore.astMap.size === 0) {
-			semanticStore.updateAnalysisProgress(nodeId, getProgressMessage('waitingParse'));
+			semanticStore.updateAnalysisProgress(nodeId, i18nStore.getProgressMessage('waitingParse'));
 			await waitForParsing();
 		}
 
 		throwIfAborted(abortController);
 
-		semanticStore.updateAnalysisProgress(nodeId, getProgressMessage('extractingSkeleton'));
+		semanticStore.updateAnalysisProgress(
+			nodeId,
+			i18nStore.getProgressMessage('extractingSkeleton')
+		);
 		const skeleton = extractSkeleton(
 			projectStore.projectName,
 			projectStore.fileTree,
@@ -136,7 +138,7 @@ export async function analyzeTopLevel(): Promise<void> {
 		const prompt = `Analyze the semantic architecture of this project:\n\n${formatPayloadPreview(skeleton)}`;
 
 		throwIfAborted(abortController);
-		semanticStore.updateAnalysisProgress(nodeId, getProgressMessage('requestingAI'));
+		semanticStore.updateAnalysisProgress(nodeId, i18nStore.getProgressMessage('requestingAI'));
 		const responseText = await callAI({
 			system: TOP_LEVEL_SYSTEM_PROMPT + getLocaleInstruction(),
 			user: prompt,
@@ -144,7 +146,7 @@ export async function analyzeTopLevel(): Promise<void> {
 		});
 
 		throwIfAborted(abortController);
-		semanticStore.updateAnalysisProgress(nodeId, getProgressMessage('generatingDiagram'));
+		semanticStore.updateAnalysisProgress(nodeId, i18nStore.getProgressMessage('generatingDiagram'));
 		const level = parseSemanticLevel(responseText, null, 0);
 
 		semanticStore.currentLevel = level;
@@ -171,7 +173,10 @@ export async function analyzeDrilldown(parentNode: SemanticNode): Promise<void> 
 	const pathSnapshot = [...semanticStore.drilldownPath];
 
 	try {
-		semanticStore.updateAnalysisProgress(parentNode.id, getProgressMessage('extractingSkeleton'));
+		semanticStore.updateAnalysisProgress(
+			parentNode.id,
+			i18nStore.getProgressMessage('extractingSkeleton')
+		);
 		const subSkeleton = extractSubSkeleton(
 			parentNode.filePaths,
 			projectStore.fileTree,
@@ -184,7 +189,10 @@ export async function analyzeDrilldown(parentNode: SemanticNode): Promise<void> 
 		const prompt = `Analyze the internal structure of the "${parentNode.label}" domain:\n\n${formatPayloadPreview(subSkeleton)}`;
 
 		throwIfAborted(abortController);
-		semanticStore.updateAnalysisProgress(parentNode.id, getProgressMessage('requestingAI'));
+		semanticStore.updateAnalysisProgress(
+			parentNode.id,
+			i18nStore.getProgressMessage('requestingAI')
+		);
 		const responseText = await callAI({
 			system: DRILLDOWN_SYSTEM_PROMPT + getLocaleInstruction(),
 			user: prompt,
@@ -192,7 +200,10 @@ export async function analyzeDrilldown(parentNode: SemanticNode): Promise<void> 
 		});
 
 		throwIfAborted(abortController);
-		semanticStore.updateAnalysisProgress(parentNode.id, getProgressMessage('generatingDiagram'));
+		semanticStore.updateAnalysisProgress(
+			parentNode.id,
+			i18nStore.getProgressMessage('generatingDiagram')
+		);
 		const level = parseSemanticLevel(responseText, parentNode.id, parentNode.depth + 1);
 
 		// Always cache the result

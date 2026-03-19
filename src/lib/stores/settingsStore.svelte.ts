@@ -1,4 +1,5 @@
-export type AIProviderId = 'google' | 'anthropic';
+export type AIProviderId = 'google' | 'anthropic' | 'openai';
+export type BridgeCliId = 'claude' | 'gemini' | 'auto';
 
 function createSettingsStore() {
 	const stored = typeof window !== 'undefined' ? localStorage.getItem('ropeman-settings') : null;
@@ -6,6 +7,7 @@ function createSettingsStore() {
 
 	let geminiApiKey = $state<string>(initial.geminiApiKey ?? '');
 	let anthropicApiKey = $state<string>(initial.anthropicApiKey ?? '');
+	let openaiApiKey = $state<string>(initial.openaiApiKey ?? '');
 	let aiProvider = $state<AIProviderId>(initial.aiProvider ?? 'google');
 	let aiModel = $state<string>(initial.aiModel ?? 'gemini-2.5-flash-lite');
 	let maxSkeletonKB = $state<number>(initial.maxSkeletonKB ?? 150);
@@ -14,6 +16,7 @@ function createSettingsStore() {
 	let language = $state<'ko' | 'en'>(initial.language ?? 'ko');
 	let syntaxTheme = $state<string>(initial.syntaxTheme ?? 'tomorrow');
 	let skipDrilldownConfirm = $state<boolean>(initial.skipDrilldownConfirm ?? false);
+	let bridgeCli = $state<BridgeCliId>(initial.bridgeCli ?? 'auto');
 
 	function persist() {
 		if (typeof window !== 'undefined') {
@@ -22,6 +25,7 @@ function createSettingsStore() {
 				JSON.stringify({
 					geminiApiKey,
 					anthropicApiKey,
+					openaiApiKey,
 					aiProvider,
 					aiModel,
 					maxSkeletonKB,
@@ -29,7 +33,8 @@ function createSettingsStore() {
 					cacheEnabled,
 					language,
 					syntaxTheme,
-					skipDrilldownConfirm
+					skipDrilldownConfirm,
+					bridgeCli
 				})
 			);
 		}
@@ -49,6 +54,14 @@ function createSettingsStore() {
 		},
 		set anthropicApiKey(v: string) {
 			anthropicApiKey = v;
+			persist();
+		},
+
+		get openaiApiKey() {
+			return openaiApiKey;
+		},
+		set openaiApiKey(v: string) {
+			openaiApiKey = v;
 			persist();
 		},
 
@@ -116,21 +129,32 @@ function createSettingsStore() {
 			persist();
 		},
 
+		get bridgeCli() {
+			return bridgeCli;
+		},
+		set bridgeCli(v: BridgeCliId) {
+			bridgeCli = v;
+			persist();
+		},
+
 		get hasApiKey() {
 			if (aiProvider === 'google') return geminiApiKey.length > 0;
 			if (aiProvider === 'anthropic') return anthropicApiKey.length > 0;
+			if (aiProvider === 'openai') return openaiApiKey.length > 0;
 			return false;
 		},
 
 		get currentApiKey() {
 			if (aiProvider === 'google') return geminiApiKey;
 			if (aiProvider === 'anthropic') return anthropicApiKey;
+			if (aiProvider === 'openai') return openaiApiKey;
 			return '';
 		},
 
 		clearAll() {
 			geminiApiKey = '';
 			anthropicApiKey = '';
+			openaiApiKey = '';
 			aiProvider = 'google';
 			aiModel = 'gemini-2.5-flash-lite';
 			maxSkeletonKB = 150;
@@ -139,6 +163,7 @@ function createSettingsStore() {
 			language = 'ko';
 			syntaxTheme = 'tomorrow';
 			skipDrilldownConfirm = false;
+			bridgeCli = 'auto';
 			if (typeof window !== 'undefined') {
 				localStorage.removeItem('ropeman-settings');
 			}

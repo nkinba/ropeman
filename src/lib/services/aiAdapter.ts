@@ -22,7 +22,8 @@ export interface AICallOptions {
 // --- Track별 구현 ---
 
 async function callBridge(opts: AICallOptions): Promise<string> {
-	return await sendViaBridge(opts.system + '\n\n' + opts.user);
+	const cli = settingsStore.bridgeCli === 'auto' ? undefined : settingsStore.bridgeCli;
+	return await sendViaBridge(opts.system + '\n\n' + opts.user, cli);
 }
 
 async function callWebGPU(opts: AICallOptions): Promise<string> {
@@ -97,7 +98,7 @@ async function callGeminiDirect(opts: AICallOptions): Promise<string> {
 
 	const body: Record<string, unknown> = {
 		contents,
-		generationConfig: { maxOutputTokens: 4096 },
+		generationConfig: { maxOutputTokens: 16384 },
 		system_instruction: { parts: [{ text: opts.system }] }
 	};
 
@@ -143,6 +144,9 @@ export async function callAI(opts: AICallOptions): Promise<string> {
 					settingsStore.aiModel,
 					opts
 				);
+			}
+			if (settingsStore.aiProvider === 'openai') {
+				return callProxyWorker('openai', settingsStore.openaiApiKey, settingsStore.aiModel, opts);
 			}
 			return callGeminiDirect(opts);
 		default:

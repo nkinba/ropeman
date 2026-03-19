@@ -1,48 +1,47 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { get } from 'svelte/store';
-import { theme, toggleTheme } from './themeStore';
+import { themeStore } from './themeStore.svelte';
 
 describe('themeStore', () => {
 	beforeEach(() => {
-		theme.set('dark');
+		themeStore.current = 'dark';
 	});
 
 	describe('initial state', () => {
 		it('defaults to dark', () => {
-			expect(get(theme)).toBe('dark');
+			expect(themeStore.current).toBe('dark');
 		});
 	});
 
-	describe('toggleTheme', () => {
+	describe('toggle', () => {
 		it('toggles from dark to light', () => {
-			toggleTheme();
-			expect(get(theme)).toBe('light');
+			themeStore.toggle();
+			expect(themeStore.current).toBe('light');
 		});
 
 		it('toggles from light to dark', () => {
-			theme.set('light');
-			toggleTheme();
-			expect(get(theme)).toBe('dark');
+			themeStore.current = 'light';
+			themeStore.toggle();
+			expect(themeStore.current).toBe('dark');
 		});
 
 		it('toggles back and forth', () => {
-			toggleTheme();
-			expect(get(theme)).toBe('light');
-			toggleTheme();
-			expect(get(theme)).toBe('dark');
+			themeStore.toggle();
+			expect(themeStore.current).toBe('light');
+			themeStore.toggle();
+			expect(themeStore.current).toBe('dark');
 		});
 	});
 
 	describe('manual set', () => {
 		it('can be set to light', () => {
-			theme.set('light');
-			expect(get(theme)).toBe('light');
+			themeStore.current = 'light';
+			expect(themeStore.current).toBe('light');
 		});
 
 		it('can be set to dark', () => {
-			theme.set('light');
-			theme.set('dark');
-			expect(get(theme)).toBe('dark');
+			themeStore.current = 'light';
+			themeStore.current = 'dark';
+			expect(themeStore.current).toBe('dark');
 		});
 	});
 });

@@ -31,8 +31,21 @@ export const AI_PROVIDERS: AIProvider[] = [
 		label: 'Anthropic Claude',
 		requiresBridge: true,
 		models: [
-			{ id: 'claude-sonnet-4-5-20250514', label: 'Claude Sonnet 4.5' },
+			{ id: 'claude-sonnet-4-6', label: 'Claude Sonnet 4.6' },
+			{ id: 'claude-opus-4-6', label: 'Claude Opus 4.6' },
 			{ id: 'claude-haiku-4-5-20251001', label: 'Claude Haiku 4.5' }
+		]
+	},
+	{
+		id: 'openai',
+		label: 'OpenAI',
+		models: [
+			{ id: 'gpt-4.1', label: 'GPT-4.1' },
+			{ id: 'gpt-4.1-mini', label: 'GPT-4.1 Mini' },
+			{ id: 'gpt-4.1-nano', label: 'GPT-4.1 Nano' },
+			{ id: 'o4-mini', label: 'o4-mini' },
+			{ id: 'gpt-4o', label: 'GPT-4o' },
+			{ id: 'gpt-4o-mini', label: 'GPT-4o Mini' }
 		]
 	}
 ];

@@ -1,14 +1,22 @@
 #!/usr/bin/env node
 
 import { WebSocketServer, WebSocket } from 'ws';
+import { spawn } from 'child_process';
+import { promisify } from 'util';
+import { exec as execCb } from 'child_process';
+
+const exec = promisify(execCb);
 
 const DEFAULT_PORT = 9800;
+
+type CLIType = 'claude' | 'gemini';
 
 interface BridgeMessage {
 	id?: number;
 	type: 'analyze' | 'chat' | 'status' | 'ping';
 	payload?: unknown;
 	message?: string;
+	cli?: 'claude' | 'gemini';
 }
 
 interface BridgeResponse {
@@ -27,14 +35,95 @@ function parsePort(args: string[]): number {
 	return DEFAULT_PORT;
 }
 
+function parseCLIFlag(args: string[]): CLIType | null {
+	const idx = args.indexOf('--cli');
+	if (idx !== -1 && args[idx + 1]) {
+		const cli = args[idx + 1].toLowerCase();
+		if (cli === 'claude' || cli === 'gemini') return cli;
+		console.error(`Unknown CLI: ${cli}. Use 'claude' or 'gemini'.`);
+		process.exit(1);
+	}
+	return null;
+}
+
 function log(msg: string): void {
 	const ts = new Date().toISOString().slice(11, 19);
 	console.log(`[${ts}] ${msg}`);
 }
 
-function startServer(port: number): void {
+async function detectCLI(): Promise<CLIType | null> {
+	try {
+		await exec('claude --version');
+		return 'claude';
+	} catch {
+		/* not available */
+	}
+	try {
+		await exec('gemini --version');
+		return 'gemini';
+	} catch {
+		/* not available */
+	}
+	return null;
+}
+
+/** CLI별 인자 및 stdin 전략 */
+function buildCLIArgs(cli: CLIType, prompt: string): { args: string[]; stdin: string | null } {
+	switch (cli) {
+		case 'claude':
+			// claude -p: reads prompt from stdin
+			return { args: ['-p'], stdin: prompt };
+		case 'gemini':
+			// gemini -p "prompt": requires value as argument
+			return { args: ['-p', prompt], stdin: null };
+	}
+}
+
+function runCLI(cli: CLIType, prompt: string, timeoutMs = 120000): Promise<string> {
+	return new Promise((resolve, reject) => {
+		const { args, stdin } = buildCLIArgs(cli, prompt);
+		const child = spawn(cli, args, {
+			timeout: timeoutMs,
+			stdio: ['pipe', 'pipe', 'pipe'],
+			env: { ...process.env }
+		});
+
+		child.stdin.on('error', () => {});
+		if (stdin !== null) {
+			child.stdin.write(stdin);
+		}
+		child.stdin.end();
+
+		let stdout = '';
+		let stderr = '';
+
+		child.stdout.on('data', (data: Buffer) => {
+			stdout += data.toString();
+		});
+		child.stderr.on('data', (data: Buffer) => {
+			stderr += data.toString();
+		});
+
+		child.on('close', (code) => {
+			if (code === 0) {
+				resolve(stdout.trim());
+			} else {
+				reject(new Error(stderr.trim() || `CLI exited with code ${code}`));
+			}
+		});
+
+		child.on('error', (err) => {
+			if ((err as NodeJS.ErrnoException).code === 'ENOENT') {
+				reject(new Error(`CLI '${cli}' not found. Please install it first.`));
+			} else {
+				reject(err);
+			}
+		});
+	});
+}
+
+function startServer(port: number, clients: Set<WebSocket>, defaultCli: CLIType | null): void {
 	const wss = new WebSocketServer({ port });
-	const clients = new Set<WebSocket>();
 
 	log(`Ropeman Bridge server starting on ws://localhost:${port}`);
 
@@ -63,14 +152,49 @@ function startServer(port: number): void {
 				case 'status':
 					response.result = JSON.stringify({
 						clients: clients.size,
-						uptime: process.uptime()
+						uptime: process.uptime(),
+						cli: defaultCli
 					});
 					break;
 				case 'analyze':
-				case 'chat':
-					// Relay to other connected clients (future: route to AI provider)
-					response.result = `Bridge received ${msg.type} message`;
-					break;
+				case 'chat': {
+					const prompt =
+						msg.message ||
+						(typeof msg.payload === 'string' ? msg.payload : JSON.stringify(msg.payload));
+					const cliToUse = msg.cli || defaultCli;
+
+					if (!cliToUse) {
+						response.error =
+							'No CLI tool available. Install Claude Code or Gemini CLI, or specify --cli flag.';
+						ws.send(JSON.stringify(response));
+						return;
+					}
+
+					const startTime = Date.now();
+					const promptLen = prompt.length;
+					log(
+						`Running ${cliToUse} CLI for [${msg.type}] id=${msg.id ?? '-'} (prompt: ${promptLen} chars)`
+					);
+
+					runCLI(cliToUse, prompt)
+						.then((result) => {
+							const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+							log(`✓ CLI done id=${msg.id ?? '-'} (${elapsed}s, response: ${result.length} chars)`);
+							response.result = result;
+							if (ws.readyState === WebSocket.OPEN) {
+								ws.send(JSON.stringify(response));
+							}
+						})
+						.catch((err: Error) => {
+							const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+							log(`✗ CLI failed id=${msg.id ?? '-'} (${elapsed}s): ${err.message}`);
+							response.error = err.message;
+							if (ws.readyState === WebSocket.OPEN) {
+								ws.send(JSON.stringify(response));
+							}
+						});
+					return; // Don't send synchronous response
+				}
 				default:
 					response.error = `Unknown message type: ${msg.type}`;
 			}
@@ -119,5 +243,25 @@ function startServer(port: number): void {
 	log(`Bridge server ready on ws://localhost:${port}`);
 }
 
-const port = parsePort(process.argv.slice(2));
-startServer(port);
+async function main() {
+	const argv = process.argv.slice(2);
+	const port = parsePort(argv);
+	const defaultCliArg = parseCLIFlag(argv);
+	let defaultCli: CLIType | null = defaultCliArg;
+
+	if (!defaultCli) {
+		defaultCli = await detectCLI();
+	}
+
+	if (defaultCli) {
+		log(`Using CLI: ${defaultCli}`);
+	} else {
+		log('Warning: No CLI tool detected. Install Claude Code (claude) or Gemini CLI (gemini).');
+		log('You can also specify --cli <claude|gemini> flag.');
+	}
+
+	const clients = new Set<WebSocket>();
+	startServer(port, clients, defaultCli);
+}
+
+main();

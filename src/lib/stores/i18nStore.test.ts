@@ -1,86 +1,77 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { get } from 'svelte/store';
-import { locale, t, toggleLocale } from './i18nStore';
+import { i18nStore } from './i18nStore.svelte';
 
 describe('i18nStore', () => {
 	beforeEach(() => {
-		locale.set('ko');
+		i18nStore.locale = 'ko';
 	});
 
 	describe('locale', () => {
 		it('defaults to ko', () => {
-			expect(get(locale)).toBe('ko');
+			expect(i18nStore.locale).toBe('ko');
 		});
 
 		it('can be set to en', () => {
-			locale.set('en');
-			expect(get(locale)).toBe('en');
+			i18nStore.locale = 'en';
+			expect(i18nStore.locale).toBe('en');
 		});
 	});
 
 	describe('toggleLocale', () => {
 		it('toggles from ko to en', () => {
-			toggleLocale();
-			expect(get(locale)).toBe('en');
+			i18nStore.toggleLocale();
+			expect(i18nStore.locale).toBe('en');
 		});
 
 		it('toggles from en to ko', () => {
-			locale.set('en');
-			toggleLocale();
-			expect(get(locale)).toBe('ko');
+			i18nStore.locale = 'en';
+			i18nStore.toggleLocale();
+			expect(i18nStore.locale).toBe('ko');
 		});
 
 		it('toggles back and forth', () => {
-			toggleLocale();
-			expect(get(locale)).toBe('en');
-			toggleLocale();
-			expect(get(locale)).toBe('ko');
+			i18nStore.toggleLocale();
+			expect(i18nStore.locale).toBe('en');
+			i18nStore.toggleLocale();
+			expect(i18nStore.locale).toBe('ko');
 		});
 	});
 
 	describe('t (translation function)', () => {
 		it('returns Korean translation for top-level key', () => {
-			const translate = get(t);
-			expect(translate('title')).toBe('Ropeman');
+			expect(i18nStore.t('title')).toBe('Ropeman');
 		});
 
 		it('returns English translation when locale is en', () => {
-			locale.set('en');
-			const translate = get(t);
-			expect(translate('subtitle')).toBe('Explore codebases visually');
+			i18nStore.locale = 'en';
+			expect(i18nStore.t('subtitle')).toBe('Explore codebases visually');
 		});
 
 		it('resolves nested keys with dot notation', () => {
-			const translate = get(t);
-			expect(translate('landing.cta')).toBe('폴더 열기');
+			expect(i18nStore.t('landing.cta')).toBe('폴더 열기');
 		});
 
 		it('resolves nested English keys', () => {
-			locale.set('en');
-			const translate = get(t);
-			expect(translate('landing.cta')).toBe('Open a Folder');
+			i18nStore.locale = 'en';
+			expect(i18nStore.t('landing.cta')).toBe('Open a Folder');
 		});
 
 		it('returns key string for unknown keys', () => {
-			const translate = get(t);
-			expect(translate('nonexistent.key')).toBe('nonexistent.key');
+			expect(i18nStore.t('nonexistent.key')).toBe('nonexistent.key');
 		});
 
 		it('returns key for partially valid path', () => {
-			const translate = get(t);
-			expect(translate('landing.nonexistent')).toBe('landing.nonexistent');
+			expect(i18nStore.t('landing.nonexistent')).toBe('landing.nonexistent');
 		});
 
 		it('resolves snippet keys', () => {
-			locale.set('en');
-			const translate = get(t);
-			expect(translate('snippet.analyze')).toBe('Analyze');
+			i18nStore.locale = 'en';
+			expect(i18nStore.t('snippet.analyze')).toBe('Analyze');
 		});
 
 		it('resolves legend keys', () => {
-			locale.set('en');
-			const translate = get(t);
-			expect(translate('legend.title')).toBe('Legend');
+			i18nStore.locale = 'en';
+			expect(i18nStore.t('legend.title')).toBe('Legend');
 		});
 	});
 });

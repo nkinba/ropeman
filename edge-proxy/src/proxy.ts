@@ -2,6 +2,8 @@ import { handleCors, callGemini, jsonResponse } from './shared';
 
 interface Env {
 	ALLOWED_ORIGINS: string;
+	AI_GATEWAY_BASE: string;
+	AI_GATEWAY_TOKEN: string;
 }
 
 type Provider = 'google' | 'anthropic' | 'openai';
@@ -14,7 +16,10 @@ interface ProxyRequest {
 	system?: string;
 }
 
-// --- Provider별 API 호출 ---
+// --- Provider별 API 호출 (AI Gateway 경유) ---
+
+let gatewayBase = '';
+let gatewayToken = '';
 
 async function callAnthropic(
 	apiKey: string,
@@ -32,12 +37,13 @@ async function callAnthropic(
 		body.system = systemPrompt;
 	}
 
-	return fetch('https://api.anthropic.com/v1/messages', {
+	return fetch(gatewayBase + '/anthropic/v1/messages', {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json',
 			'x-api-key': apiKey,
 			'anthropic-version': '2023-06-01',
+			...(gatewayToken ? { 'cf-aig-authorization': `Bearer ${gatewayToken}` } : {}),
 		},
 		body: JSON.stringify(body),
 	});
@@ -56,11 +62,12 @@ async function callOpenAI(
 	}
 	msgs.push(...messages);
 
-	return fetch('https://api.openai.com/v1/chat/completions', {
+	return fetch(gatewayBase + '/openai/v1/chat/completions', {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json',
 			Authorization: `Bearer ${apiKey}`,
+			...(gatewayToken ? { 'cf-aig-authorization': `Bearer ${gatewayToken}` } : {}),
 		},
 		body: JSON.stringify({
 			model,
@@ -99,6 +106,8 @@ export default {
 		const { headers } = corsResult;
 
 		try {
+			gatewayBase = env.AI_GATEWAY_BASE;
+			gatewayToken = env.AI_GATEWAY_TOKEN || '';
 			const body = (await request.json()) as ProxyRequest;
 			const { provider, apiKey, model, messages, system } = body;
 
@@ -106,27 +115,44 @@ export default {
 				return jsonResponse({ error: 'Missing required fields: provider, apiKey, model, messages' }, 400, headers);
 			}
 
-			let response: Response;
+			const MAX_RETRIES = 3;
 
-			switch (provider) {
-				case 'google':
-					response = await callGemini(apiKey, model, messages, system);
-					break;
-				case 'anthropic':
-					response = await callAnthropic(apiKey, model, messages, system);
-					break;
-				case 'openai':
-					response = await callOpenAI(apiKey, model, messages, system);
-					break;
-				default:
-					return jsonResponse({ error: `Unsupported provider: ${provider}` }, 400, headers);
+			function callProvider(): Promise<Response> {
+				switch (provider) {
+					case 'google':
+						return callGemini(apiKey, model, messages, system);
+					case 'anthropic':
+						return callAnthropic(apiKey, model, messages, system);
+					case 'openai':
+						return callOpenAI(apiKey, model, messages, system);
+					default:
+						throw new Error(`Unsupported provider: ${provider}`);
+				}
 			}
 
-			const result = await response.json();
+			let response: Response;
+			let result: any;
 
-			if (!response.ok) {
-				console.error(`${provider} API error (${response.status}):`, JSON.stringify(result));
-				return jsonResponse({ error: `${provider} API error: ${response.status}`, detail: result }, response.status, headers);
+			for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+				response = await callProvider();
+				result = await response.json();
+
+				if (response.status === 429) {
+					// insufficient_quota는 재시도 불필요
+					const code = result?.error?.code || result?.error?.type || '';
+					if (code === 'insufficient_quota') break;
+
+					const retryAfter = response.headers.get('retry-after');
+					const waitMs = retryAfter ? parseInt(retryAfter) * 1000 : Math.pow(2, attempt) * 1000;
+					await new Promise((r) => setTimeout(r, waitMs));
+					continue;
+				}
+				break;
+			}
+
+			if (!response!.ok) {
+				console.error(`${provider} API error (${response!.status}):`, JSON.stringify(result));
+				return jsonResponse({ error: `${provider} API error: ${response!.status}`, detail: result }, response!.status, headers);
 			}
 
 			// 정규화된 텍스트 + 원본 모두 반환

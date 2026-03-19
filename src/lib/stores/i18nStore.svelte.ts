@@ -1,8 +1,4 @@
-import { writable, derived, get } from 'svelte/store';
-
 export type Locale = 'ko' | 'en';
-
-export const locale = writable<Locale>('ko');
 
 interface LandingTranslations {
 	headline: string;
@@ -33,7 +29,7 @@ interface LegendTranslations {
 	uses: string;
 }
 
-interface AnalysisProgressTranslations {
+export interface AnalysisProgressTranslations {
 	waitingParse: string;
 	extractingSkeleton: string;
 	requestingAI: string;
@@ -207,25 +203,35 @@ const translations: Record<Locale, TranslationSet> = {
 	}
 };
 
-export const t = derived(locale, ($locale) => {
-	return (key: string): string => {
-		const keys = key.split('.');
-		let value: unknown = translations[$locale];
-		for (const k of keys) {
-			if (value && typeof value === 'object' && k in value) {
-				value = (value as Record<string, unknown>)[k];
-			} else {
-				return key;
+function createI18nStore() {
+	let locale = $state<Locale>('ko');
+
+	return {
+		get locale() {
+			return locale;
+		},
+		set locale(v: Locale) {
+			locale = v;
+		},
+		t(key: string): string {
+			const keys = key.split('.');
+			let value: unknown = translations[locale];
+			for (const k of keys) {
+				if (value && typeof value === 'object' && k in value) {
+					value = (value as Record<string, unknown>)[k];
+				} else {
+					return key;
+				}
 			}
+			return value as string;
+		},
+		toggleLocale() {
+			locale = locale === 'ko' ? 'en' : 'ko';
+		},
+		getProgressMessage(key: keyof AnalysisProgressTranslations): string {
+			return translations[locale].analysisProgress[key];
 		}
-		return value as string;
 	};
-});
-
-export function toggleLocale(): void {
-	locale.update((l) => (l === 'ko' ? 'en' : 'ko'));
 }
 
-export function getProgressMessage(key: keyof AnalysisProgressTranslations): string {
-	return translations[get(locale)].analysisProgress[key];
-}
+export const i18nStore = createI18nStore();

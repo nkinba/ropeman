@@ -3,6 +3,7 @@ import { authStore } from '$lib/stores/authStore.svelte';
 import { callAI } from '$lib/services/aiAdapter';
 import { buildContext } from '$lib/utils/contextBuilder';
 import type { GraphNode } from '$lib/types/graph';
+import type { AIResult } from '$lib/types/ai';
 import { searchCache, addToCache, initCache } from '$lib/services/cacheService';
 import { getEmbedding } from '$lib/services/embeddingService';
 
@@ -57,13 +58,14 @@ export async function sendMessage(
 	message: string,
 	nodeContext: GraphNode | null,
 	history: { role: string; content: string }[] = []
-): Promise<AIResponse> {
+): Promise<AIResult<AIResponse>> {
 	const track = authStore.activeTrack;
 
 	if (track === 'none') {
 		return {
-			content: 'AI not connected. Please set up an API key or connect the local bridge.',
-			relatedNodes: []
+			ok: false,
+			error: 'AI not connected. Please set up an API key or connect the local bridge.',
+			code: 'NO_TRACK'
 		};
 	}
 
@@ -72,7 +74,8 @@ export async function sendMessage(
 		track === 'webgpu' ||
 		track === 'edge' ||
 		track === 'bridge' ||
-		(track === 'byok' && settingsStore.aiProvider === 'anthropic')
+		(track === 'byok' && settingsStore.aiProvider === 'anthropic') ||
+		(track === 'byok' && settingsStore.aiProvider === 'openai')
 	) {
 		try {
 			const contextPrefix = nodeContext
@@ -83,13 +86,17 @@ export async function sendMessage(
 				user: contextPrefix + message
 			});
 			return {
-				content: content || 'No response received.',
-				relatedNodes: nodeContext ? [nodeContext.id] : []
+				ok: true,
+				data: {
+					content: content || 'No response received.',
+					relatedNodes: nodeContext ? [nodeContext.id] : []
+				}
 			};
 		} catch (error) {
 			return {
-				content: `AI error: ${(error as Error).message}`,
-				relatedNodes: []
+				ok: false,
+				error: (error as Error).message,
+				code: 'AI_ERROR'
 			};
 		}
 	}
@@ -109,9 +116,12 @@ export async function sendMessage(
 				const cached = await searchCache(message, embedding);
 				if (cached) {
 					return {
-						content: cached.response,
-						relatedNodes: cached.nodeId ? [cached.nodeId] : [],
-						fromCache: true
+						ok: true,
+						data: {
+							content: cached.response,
+							relatedNodes: cached.nodeId ? [cached.nodeId] : [],
+							fromCache: true
+						}
 					};
 				}
 			}
@@ -168,19 +178,21 @@ export async function sendMessage(
 				}
 			}
 
-			return { content, relatedNodes };
+			return { ok: true, data: { content, relatedNodes } };
 		} catch (error) {
 			if (attempt === maxRetries - 1) {
 				return {
-					content: `Error: ${(error as Error).message}`,
-					relatedNodes: []
+					ok: false,
+					error: (error as Error).message,
+					code: 'GEMINI_ERROR'
 				};
 			}
 		}
 	}
 
 	return {
-		content: 'Error: Maximum retries exceeded. Please try again later.',
-		relatedNodes: []
+		ok: false,
+		error: 'Rate limit exceeded. Please try again later.',
+		code: 'RATE_LIMIT'
 	};
 }

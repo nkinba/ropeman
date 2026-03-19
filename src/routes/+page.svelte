@@ -14,13 +14,13 @@
 	import { selectionStore } from '$lib/stores/selectionStore.svelte';
 	import { semanticStore } from '$lib/stores/semanticStore.svelte';
 	import { authStore } from '$lib/stores/authStore.svelte';
-	import { toggleTheme } from '$lib/stores/themeStore';
+	import { themeStore } from '$lib/stores/themeStore.svelte';
 	import { tabStore } from '$lib/stores/tabStore.svelte';
 	import { layoutStore } from '$lib/stores/layoutStore.svelte';
 	import TabBar from '$lib/components/TabBar.svelte';
 	import SplitPane from '$lib/components/SplitPane.svelte';
 	import { analyzeTopLevel } from '$lib/services/semanticAnalysisService';
-	import { t } from '$lib/stores/i18nStore';
+	import { i18nStore } from '$lib/stores/i18nStore.svelte';
 	import { loadTestProject } from '$lib/services/testLoader';
 	import { graphStore } from '$lib/stores/graphStore.svelte';
 	import {
@@ -29,7 +29,21 @@
 		handleFallbackInput
 	} from '$lib/services/fileSystemService';
 	import { parseAllFiles } from '$lib/services/parserService';
+	import { setBridgeCallbacks } from '$lib/services/bridgeService';
 	import { onMount } from 'svelte';
+
+	// Wire bridgeService callbacks to authStore (stateless service pattern)
+	setBridgeCallbacks({
+		onStatusChange: (s) => {
+			authStore.bridgeStatus = s;
+		},
+		onError: (e) => {
+			authStore.bridgeError = e;
+		},
+		onPortChange: (p) => {
+			authStore.bridgePort = p;
+		}
+	});
 
 	let showSettings = $state(false);
 	let showAnalyze = $state(false);
@@ -80,7 +94,11 @@
 				projectStore.projectName = dirHandle.name;
 				const tree = await readDirectoryRecursive(dirHandle);
 				projectStore.fileTree = tree;
-				await parseAllFiles(tree);
+				const astMap = await parseAllFiles(tree, projectStore.astMap, (progress) => {
+					projectStore.parsingProgress = progress;
+				});
+				projectStore.astMap = astMap;
+				projectStore.isLoading = false;
 			} catch (err: unknown) {
 				if (err instanceof Error && err.name === 'AbortError') return;
 				console.error('Failed to open project:', err);
@@ -99,7 +117,11 @@
 			projectStore.projectName = tree.name;
 			projectStore.fileTree = tree;
 			projectStore.isLoading = true;
-			await parseAllFiles(tree);
+			const astMap = await parseAllFiles(tree, projectStore.astMap, (progress) => {
+				projectStore.parsingProgress = progress;
+			});
+			projectStore.astMap = astMap;
+			projectStore.isLoading = false;
 		} catch (err) {
 			console.error('Failed to process files:', err);
 			projectStore.isLoading = false;
@@ -300,7 +322,7 @@
 		// Ctrl+Shift+D: Toggle theme
 		if (e.ctrlKey && e.shiftKey && e.key === 'D') {
 			e.preventDefault();
-			toggleTheme();
+			themeStore.toggle();
 			return;
 		}
 
@@ -467,7 +489,7 @@
 			<div class="analysis-progress-pill">
 				<div class="analysis-spinner"></div>
 				<span class="analysis-progress-text">
-					{semanticStore.analysisProgress || $t('analyzing')}
+					{semanticStore.analysisProgress || i18nStore.t('analyzing')}
 				</span>
 			</div>
 		{/if}

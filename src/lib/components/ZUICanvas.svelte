@@ -6,7 +6,7 @@
 	import { semanticStore } from '$lib/stores/semanticStore.svelte';
 	import { tabStore } from '$lib/stores/tabStore.svelte';
 	import { projectStore } from '$lib/stores/projectStore.svelte';
-	import { t } from '$lib/stores/i18nStore';
+	import { i18nStore } from '$lib/stores/i18nStore.svelte';
 	import { toSemanticFlowNodes, toSemanticFlowEdges } from '$lib/services/semanticGraphBuilder';
 	import { analyzeDrilldown } from '$lib/services/semanticAnalysisService';
 	import { settingsStore } from '$lib/stores/settingsStore.svelte';
@@ -420,7 +420,7 @@
 					class="toolbar-btn"
 					class:active={legendOpen}
 					onclick={() => (legendOpen = !legendOpen)}
-					title={$t('legend.title')}
+					title={i18nStore.t('legend.title')}
 				>
 					<svg
 						width="16"
@@ -440,7 +440,7 @@
 				</button>
 				{#if legendOpen}
 					<div class="toolbar-dropdown legend-panel">
-						<div class="legend-header">{$t('legend.title')}</div>
+						<div class="legend-header">{i18nStore.t('legend.title')}</div>
 						{#each EDGE_TYPE_INFO as info}
 							<label class="legend-item">
 								<input
@@ -449,7 +449,7 @@
 									onchange={() => toggleEdgeType(info.type)}
 								/>
 								<span class="legend-color" style="background: {info.color};"></span>
-								<span class="legend-label">{$t(info.i18nKey)}</span>
+								<span class="legend-label">{i18nStore.t(info.i18nKey)}</span>
 							</label>
 						{/each}
 					</div>
@@ -483,7 +483,7 @@
 				<button
 					class="toolbar-btn"
 					onclick={() => (exportMenuOpen = !exportMenuOpen)}
-					title={$t('shortcuts.exportDiagram')}
+					title={i18nStore.t('shortcuts.exportDiagram')}
 				>
 					<svg
 						width="16"
