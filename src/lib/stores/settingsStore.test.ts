@@ -121,6 +121,97 @@ describe('settingsStore', () => {
 		});
 	});
 
+	describe('openaiApiKey getter/setter', () => {
+		it('defaults to empty string', () => {
+			expect(settingsStore.openaiApiKey).toBe('');
+		});
+
+		it('sets and gets openaiApiKey', () => {
+			// Act
+			settingsStore.openaiApiKey = 'sk-openai-test-123';
+
+			// Assert
+			expect(settingsStore.openaiApiKey).toBe('sk-openai-test-123');
+		});
+
+		it('persists openaiApiKey across setter calls', () => {
+			// Act
+			settingsStore.openaiApiKey = 'sk-openai-persist';
+
+			// Assert — value survives a subsequent read
+			expect(settingsStore.openaiApiKey).toBe('sk-openai-persist');
+		});
+	});
+
+	describe('bridgeCli getter/setter', () => {
+		it('defaults to auto', () => {
+			expect(settingsStore.bridgeCli).toBe('auto');
+		});
+
+		it('sets and gets bridgeCli', () => {
+			// Act
+			settingsStore.bridgeCli = 'claude';
+
+			// Assert
+			expect(settingsStore.bridgeCli).toBe('claude');
+		});
+
+		it('persists bridgeCli across setter calls', () => {
+			// Act
+			settingsStore.bridgeCli = 'gemini';
+
+			// Assert — value survives a subsequent read
+			expect(settingsStore.bridgeCli).toBe('gemini');
+		});
+	});
+
+	describe('hasApiKey for openai', () => {
+		it('returns true when openaiApiKey is set and provider is openai', () => {
+			// Arrange
+			settingsStore.aiProvider = 'openai';
+			settingsStore.openaiApiKey = 'sk-openai-key';
+
+			// Assert
+			expect(settingsStore.hasApiKey).toBe(true);
+		});
+
+		it('returns false when openaiApiKey is empty and provider is openai', () => {
+			// Arrange
+			settingsStore.aiProvider = 'openai';
+
+			// Assert
+			expect(settingsStore.hasApiKey).toBe(false);
+		});
+
+		it('returns false when openaiApiKey is set but provider is google', () => {
+			// Arrange
+			settingsStore.aiProvider = 'google';
+			settingsStore.openaiApiKey = 'sk-openai-key';
+
+			// Assert
+			expect(settingsStore.hasApiKey).toBe(false);
+		});
+	});
+
+	describe('currentApiKey for openai', () => {
+		it('returns openaiApiKey when provider is openai', () => {
+			// Arrange
+			settingsStore.aiProvider = 'openai';
+			settingsStore.openaiApiKey = 'sk-openai-current';
+
+			// Assert
+			expect(settingsStore.currentApiKey).toBe('sk-openai-current');
+		});
+
+		it('returns empty string when provider is openai but no key set', () => {
+			// Arrange
+			settingsStore.aiProvider = 'openai';
+
+			// Assert
+			expect(settingsStore.currentApiKey).toBe('');
+		});
+	});
+
 	describe('clearAll', () => {
 		it('resets all values to defaults', () => {
 			settingsStore.geminiApiKey = 'key1';
@@ -140,6 +231,28 @@ describe('settingsStore', () => {
 			expect(settingsStore.cacheEnabled).toBe(true);
 			expect(settingsStore.language).toBe('ko');
 			expect(settingsStore.syntaxTheme).toBe('tomorrow');
+		});
+
+		it('resets openaiApiKey to empty string', () => {
+			// Arrange
+			settingsStore.openaiApiKey = 'sk-openai-to-clear';
+
+			// Act
+			settingsStore.clearAll();
+
+			// Assert
+			expect(settingsStore.openaiApiKey).toBe('');
+		});
+
+		it('resets bridgeCli to auto', () => {
+			// Arrange
+			settingsStore.bridgeCli = 'claude';
+
+			// Act
+			settingsStore.clearAll();
+
+			// Assert
+			expect(settingsStore.bridgeCli).toBe('auto');
 		});
 	});
 });

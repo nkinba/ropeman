@@ -9,7 +9,7 @@
 		handleFallbackInput
 	} from '$lib/services/fileSystemService';
 	import { parseAllFiles } from '$lib/services/parserService';
-	import { t } from '$lib/stores/i18nStore';
+	import { i18nStore } from '$lib/stores/i18nStore.svelte';
 	import HeroIllustration from './HeroIllustration.svelte';
 	import SnippetEditor from './SnippetEditor.svelte';
 
@@ -111,7 +111,11 @@
 			projectStore.projectName = tree.name;
 			projectStore.fileTree = tree;
 			projectStore.isLoading = true;
-			await parseAllFiles(tree);
+			const astMap = await parseAllFiles(tree, projectStore.astMap, (progress) => {
+				projectStore.parsingProgress = progress;
+			});
+			projectStore.astMap = astMap;
+			projectStore.isLoading = false;
 		} catch (err) {
 			error = `Failed to process files: ${err}`;
 			projectStore.isLoading = false;
@@ -127,7 +131,11 @@
 		const tree = await readDirectoryRecursive(dirHandle);
 		projectStore.fileTree = tree;
 
-		await parseAllFiles(tree);
+		const astMap = await parseAllFiles(tree, projectStore.astMap, (progress) => {
+			projectStore.parsingProgress = progress;
+		});
+		projectStore.astMap = astMap;
+		projectStore.isLoading = false;
 	}
 </script>
 
@@ -171,8 +179,8 @@
 			<div class="landing">
 				<section class="landing-hero">
 					<div class="hero-text">
-						<h1>{$t('landing.headline')}</h1>
-						<p class="hero-sub">{$t('landing.subheadline')}</p>
+						<h1>{i18nStore.t('landing.headline')}</h1>
+						<p class="hero-sub">{i18nStore.t('landing.subheadline')}</p>
 						<button class="cta-btn" onclick={handleOpenDirectory}>
 							<svg
 								width="18"
@@ -188,9 +196,9 @@
 									d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"
 								/>
 							</svg>
-							{$t('landing.cta')}
+							{i18nStore.t('landing.cta')}
 						</button>
-						<p class="drag-hint">{$t('landing.dragHint')}</p>
+						<p class="drag-hint">{i18nStore.t('landing.dragHint')}</p>
 						{#if error}
 							<p class="error-msg">{error}</p>
 						{/if}
@@ -218,8 +226,8 @@
 								/>
 							</svg>
 						</div>
-						<h3>{$t('landing.featureAiTitle')}</h3>
-						<p>{$t('landing.featureAiDesc')}</p>
+						<h3>{i18nStore.t('landing.featureAiTitle')}</h3>
+						<p>{i18nStore.t('landing.featureAiDesc')}</p>
 					</div>
 					<div class="feature-card">
 						<div class="feature-icon">
@@ -238,8 +246,8 @@
 								<rect x="10" y="10" width="4" height="4" rx="0.5" />
 							</svg>
 						</div>
-						<h3>{$t('landing.featureDrillTitle')}</h3>
-						<p>{$t('landing.featureDrillDesc')}</p>
+						<h3>{i18nStore.t('landing.featureDrillTitle')}</h3>
+						<p>{i18nStore.t('landing.featureDrillDesc')}</p>
 					</div>
 					<div class="feature-card">
 						<div class="feature-icon">
@@ -257,8 +265,8 @@
 								<polyline points="9 12 11 14 15 10" />
 							</svg>
 						</div>
-						<h3>{$t('landing.featureBrowserTitle')}</h3>
-						<p>{$t('landing.featureBrowserDesc')}</p>
+						<h3>{i18nStore.t('landing.featureBrowserTitle')}</h3>
+						<p>{i18nStore.t('landing.featureBrowserDesc')}</p>
 					</div>
 				</section>
 

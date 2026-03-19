@@ -1,8 +1,6 @@
 import type { ASTSymbol } from '$lib/types/ast';
 import type { FileNode } from '$lib/types/fileTree';
 import { isSupported } from '$lib/utils/languageDetector';
-import { projectStore } from '$lib/stores/projectStore.svelte';
-// readFileContent inlined in parseAllFiles for size-check optimization
 
 interface ParseRequest {
 	filePath: string;
@@ -107,60 +105,53 @@ export async function parseFile(
 }
 
 const MAX_FILE_SIZE = 500_000; // 500KB — skip very large files
-const BATCH_SIZE = 20; // Flush astMap every N files
 
-export async function parseAllFiles(fileTree: FileNode): Promise<void> {
+export interface ParseProgress {
+	done: number;
+	total: number;
+}
+
+export async function parseAllFiles(
+	fileTree: FileNode,
+	existingAstMap: Map<string, ASTSymbol[]>,
+	onProgress?: (progress: ParseProgress) => void
+): Promise<Map<string, ASTSymbol[]>> {
 	const files = collectSupportedFiles(fileTree);
 	const total = files.length;
 
-	projectStore.parsingProgress = { done: 0, total };
+	onProgress?.({ done: 0, total });
 
 	let done = 0;
-	const batchMap = new Map(projectStore.astMap);
-	let batchCount = 0;
+	const resultMap = new Map(existingAstMap);
 
-	try {
-		for (const file of files) {
-			try {
-				let content: string;
+	for (const file of files) {
+		try {
+			let content: string;
 
-				if (file.handle && 'getFile' in file.handle) {
-					const fileObj = await (file.handle as FileSystemFileHandle).getFile();
-					// Skip files that are too large for the parser
-					if (fileObj.size > MAX_FILE_SIZE) {
-						done++;
-						projectStore.parsingProgress = { done, total };
-						continue;
-					}
-					content = await fileObj.text();
-				} else {
+			if (file.handle && 'getFile' in file.handle) {
+				const fileObj = await (file.handle as FileSystemFileHandle).getFile();
+				// Skip files that are too large for the parser
+				if (fileObj.size > MAX_FILE_SIZE) {
+					done++;
+					onProgress?.({ done, total });
 					continue;
 				}
-
-				const symbols = await parseFile(file.path, content, file.language!);
-				batchMap.set(file.path, symbols);
-				batchCount++;
-
-				// Flush batch periodically to avoid creating too many Map copies
-				if (batchCount >= BATCH_SIZE) {
-					projectStore.astMap = new Map(batchMap);
-					batchCount = 0;
-				}
-			} catch (err) {
-				console.warn(`[parserService] Failed to parse ${file.path}:`, err);
+				content = await fileObj.text();
+			} else {
+				continue;
 			}
 
-			done++;
-			projectStore.parsingProgress = { done, total };
+			const symbols = await parseFile(file.path, content, file.language!);
+			resultMap.set(file.path, symbols);
+		} catch (err) {
+			console.warn(`[parserService] Failed to parse ${file.path}:`, err);
 		}
 
-		// Final flush
-		if (batchCount > 0) {
-			projectStore.astMap = new Map(batchMap);
-		}
-	} finally {
-		projectStore.isLoading = false;
+		done++;
+		onProgress?.({ done, total });
 	}
+
+	return resultMap;
 }
 
 function collectSupportedFiles(root: FileNode): FileNode[] {

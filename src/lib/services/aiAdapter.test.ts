@@ -13,7 +13,8 @@ vi.mock('$lib/stores/settingsStore.svelte', () => ({
 		aiProvider: 'google',
 		geminiApiKey: 'test-key',
 		anthropicApiKey: '',
-		aiModel: 'gemini-2.5-flash'
+		aiModel: 'gemini-2.5-flash',
+		bridgeCli: 'auto'
 	}
 }));
 
@@ -55,7 +56,7 @@ describe('aiAdapter', () => {
 
 			const result = await callAI({ system: 'sys', user: 'msg' });
 			expect(result).toBe('bridge response');
-			expect(sendViaBridge).toHaveBeenCalledWith('sys\n\nmsg');
+			expect(sendViaBridge).toHaveBeenCalledWith('sys\n\nmsg', undefined);
 		});
 
 		it('delegates to webllm when track is webgpu', async () => {

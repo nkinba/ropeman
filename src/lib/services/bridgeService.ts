@@ -1,4 +1,16 @@
-import { authStore } from '$lib/stores/authStore.svelte';
+export interface BridgeCallbacks {
+	onStatusChange: (
+		status: 'disconnected' | 'connecting' | 'connected' | 'reconnecting' | 'error'
+	) => void;
+	onError: (error: string) => void;
+	onPortChange: (port: number) => void;
+}
+
+let callbacks: BridgeCallbacks | null = null;
+
+export function setBridgeCallbacks(cb: BridgeCallbacks): void {
+	callbacks = cb;
+}
 
 let ws: WebSocket | null = null;
 let messageId = 0;
@@ -12,6 +24,9 @@ let reconnectAttempts = 0;
 let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
 let lastPort: number = 9800;
 let intentionalClose = false;
+// Internal status tracking (replaces reading from authStore)
+let currentStatus: 'disconnected' | 'connecting' | 'connected' | 'reconnecting' | 'error' =
+	'disconnected';
 
 const MAX_RECONNECT_ATTEMPTS = 5;
 const BASE_DELAY_MS = 1000;
@@ -27,17 +42,28 @@ function clearReconnectTimer(): void {
 	}
 }
 
+function setStatus(
+	status: 'disconnected' | 'connecting' | 'connected' | 'reconnecting' | 'error'
+): void {
+	currentStatus = status;
+	callbacks?.onStatusChange(status);
+}
+
+function setError(error: string): void {
+	callbacks?.onError(error);
+}
+
 function scheduleReconnect(): void {
 	if (intentionalClose || reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
-		authStore.bridgeStatus = 'disconnected';
+		setStatus('disconnected');
 		if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
-			authStore.bridgeError = 'Max reconnect attempts reached';
+			setError('Max reconnect attempts reached');
 		}
 		reconnectAttempts = 0;
 		return;
 	}
 
-	authStore.bridgeStatus = 'reconnecting';
+	setStatus('reconnecting');
 	const delay = getBackoffDelay(reconnectAttempts);
 	reconnectAttempts++;
 
@@ -72,18 +98,18 @@ export function connectBridge(port: number = 9800): Promise<void> {
 		}
 
 		lastPort = port;
-		const isReconnecting = authStore.bridgeStatus === 'reconnecting';
+		const isReconnecting = currentStatus === 'reconnecting';
 		if (!isReconnecting) {
-			authStore.bridgeStatus = 'connecting';
+			setStatus('connecting');
 		}
-		authStore.bridgeError = '';
+		setError('');
 		intentionalClose = false;
 
 		try {
 			ws = new WebSocket(`ws://localhost:${port}`);
 		} catch (err) {
-			authStore.bridgeStatus = 'error';
-			authStore.bridgeError = (err as Error).message;
+			setStatus('error');
+			setError((err as Error).message);
 			reject(err);
 			return;
 		}
@@ -91,8 +117,8 @@ export function connectBridge(port: number = 9800): Promise<void> {
 		const timeout = setTimeout(() => {
 			if (ws && ws.readyState !== WebSocket.OPEN) {
 				ws.close();
-				authStore.bridgeStatus = 'error';
-				authStore.bridgeError = 'Connection timeout';
+				setStatus('error');
+				setError('Connection timeout');
 				reject(new Error('Connection timeout'));
 			}
 		}, 5000);
@@ -100,8 +126,8 @@ export function connectBridge(port: number = 9800): Promise<void> {
 		ws.onopen = () => {
 			clearTimeout(timeout);
 			reconnectAttempts = 0;
-			authStore.bridgeStatus = 'connected';
-			authStore.bridgePort = port;
+			setStatus('connected');
+			callbacks?.onPortChange(port);
 			resolve();
 		};
 
@@ -124,9 +150,9 @@ export function connectBridge(port: number = 9800): Promise<void> {
 
 		ws.onerror = () => {
 			clearTimeout(timeout);
-			if (authStore.bridgeStatus !== 'reconnecting') {
-				authStore.bridgeStatus = 'error';
-				authStore.bridgeError = 'WebSocket connection failed';
+			if (currentStatus !== 'reconnecting') {
+				setStatus('error');
+				setError('WebSocket connection failed');
 			}
 			reject(new Error('WebSocket connection failed'));
 		};
@@ -139,13 +165,13 @@ export function connectBridge(port: number = 9800): Promise<void> {
 			if (!intentionalClose) {
 				scheduleReconnect();
 			} else {
-				authStore.bridgeStatus = 'disconnected';
+				setStatus('disconnected');
 			}
 		};
 	});
 }
 
-export function sendViaBridge(message: string): Promise<string> {
+export function sendViaBridge(message: string, cli?: string): Promise<string> {
 	return new Promise((resolve, reject) => {
 		if (!ws || ws.readyState !== WebSocket.OPEN) {
 			reject(new Error('Bridge not connected'));
@@ -155,15 +181,15 @@ export function sendViaBridge(message: string): Promise<string> {
 		const id = ++messageId;
 		pendingRequests.set(id, { resolve, reject });
 
-		ws.send(JSON.stringify({ id, type: 'chat', message }));
+		ws.send(JSON.stringify({ id, type: 'chat', message, cli }));
 
-		// Timeout after 30s
+		// Timeout after 2 minutes (CLI subprocess can be slow for large projects)
 		setTimeout(() => {
 			if (pendingRequests.has(id)) {
 				pendingRequests.delete(id);
 				reject(new Error('Bridge request timeout'));
 			}
-		}, 30000);
+		}, 120000);
 	});
 }
 
@@ -176,7 +202,7 @@ export function disconnectBridge(): void {
 		ws = null;
 	}
 	rejectAllPending();
-	authStore.bridgeStatus = 'disconnected';
+	setStatus('disconnected');
 }
 
 export function getBridgeReconnectInfo(): { attempts: number; maxAttempts: number } {

@@ -1,21 +1,11 @@
 <script lang="ts">
 	import { settingsStore } from '$lib/stores/settingsStore.svelte';
-	import { locale, t } from '$lib/stores/i18nStore';
+	import { i18nStore } from '$lib/stores/i18nStore.svelte';
 	import { clearCache, getCacheSize } from '$lib/services/cacheService';
 	import { SYNTAX_THEMES } from '$lib/services/syntaxThemeService';
 
 	let { open, onclose, onconnect }: { open: boolean; onclose: () => void; onconnect?: () => void } =
 		$props();
-
-	let tFunc = $state<(key: string) => string>((key: string) => key);
-	$effect(() => {
-		const unsub = t.subscribe((fn) => {
-			tFunc = fn;
-		});
-		return () => {
-			unsub();
-		};
-	});
 
 	let cacheEnabled = $state(settingsStore.cacheEnabled);
 	let maxSkeletonKB = $state(settingsStore.maxSkeletonKB);
@@ -56,7 +46,7 @@
 	function handleLangChange(e: Event) {
 		lang = (e.target as HTMLSelectElement).value as 'ko' | 'en';
 		settingsStore.language = lang;
-		locale.set(lang);
+		i18nStore.locale = lang;
 	}
 
 	function handleThemeChange(e: Event) {
@@ -73,7 +63,7 @@
 		lang = 'ko';
 		syntaxTheme = 'tomorrow';
 		cacheSize = 0;
-		locale.set('ko');
+		i18nStore.locale = 'ko';
 	}
 
 	function handleBackdropClick(e: MouseEvent) {
@@ -92,7 +82,7 @@
 	<div class="settings-backdrop" onclick={handleBackdropClick} onkeydown={handleKeydown}>
 		<div class="settings-card" role="dialog" aria-modal="true">
 			<div class="settings-header">
-				<h2>{tFunc('settings')}</h2>
+				<h2>{i18nStore.t('settings')}</h2>
 				<button class="settings-close" onclick={onclose}>&#10005;</button>
 			</div>
 
@@ -143,7 +133,7 @@
 				</section>
 
 				<section class="settings-section">
-					<label class="settings-label">{tFunc('cacheEnabled')}</label>
+					<label class="settings-label">{i18nStore.t('cacheEnabled')}</label>
 					<div class="settings-row">
 						<button
 							class="settings-toggle"
@@ -167,7 +157,7 @@
 				</section>
 
 				<section class="settings-section">
-					<label class="settings-label">{tFunc('codeTheme')}</label>
+					<label class="settings-label">{i18nStore.t('codeTheme')}</label>
 					<select class="settings-select" value={syntaxTheme} onchange={handleThemeChange}>
 						{#each SYNTAX_THEMES as theme}
 							<option value={theme.id}
@@ -179,39 +169,39 @@
 
 				<section class="settings-section">
 					<button class="settings-btn danger" onclick={handleClearAll}>
-						{tFunc('clearCache')} & Reset
+						{i18nStore.t('clearCache')} & Reset
 					</button>
 				</section>
 
 				<section class="settings-section shortcuts-section">
-					<label class="settings-label">{tFunc('shortcuts.title')}</label>
+					<label class="settings-label">{i18nStore.t('shortcuts.title')}</label>
 					<div class="shortcut-list">
 						<div class="shortcut-row">
-							<span class="shortcut-desc">{tFunc('shortcuts.search')}</span>
+							<span class="shortcut-desc">{i18nStore.t('shortcuts.search')}</span>
 							<span class="shortcut-keys"><kbd>Ctrl</kbd>+<kbd>K</kbd></span>
 						</div>
 						<div class="shortcut-row">
-							<span class="shortcut-desc">{tFunc('shortcuts.toggleTheme')}</span>
+							<span class="shortcut-desc">{i18nStore.t('shortcuts.toggleTheme')}</span>
 							<span class="shortcut-keys"><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>D</kbd></span>
 						</div>
 						<div class="shortcut-row">
-							<span class="shortcut-desc">{tFunc('shortcuts.toggleView')}</span>
+							<span class="shortcut-desc">{i18nStore.t('shortcuts.toggleView')}</span>
 							<span class="shortcut-keys"><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>V</kbd></span>
 						</div>
 						<div class="shortcut-row">
-							<span class="shortcut-desc">{tFunc('shortcuts.toggleSidebar')}</span>
+							<span class="shortcut-desc">{i18nStore.t('shortcuts.toggleSidebar')}</span>
 							<span class="shortcut-keys"><kbd>Ctrl</kbd>+<kbd>B</kbd></span>
 						</div>
 						<div class="shortcut-row">
-							<span class="shortcut-desc">{tFunc('shortcuts.exportDiagram')}</span>
+							<span class="shortcut-desc">{i18nStore.t('shortcuts.exportDiagram')}</span>
 							<span class="shortcut-keys"><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>E</kbd></span>
 						</div>
 						<div class="shortcut-row">
-							<span class="shortcut-desc">{tFunc('shortcuts.showHelp')}</span>
+							<span class="shortcut-desc">{i18nStore.t('shortcuts.showHelp')}</span>
 							<span class="shortcut-keys"><kbd>?</kbd></span>
 						</div>
 						<div class="shortcut-row">
-							<span class="shortcut-desc">{tFunc('shortcuts.closeModal')}</span>
+							<span class="shortcut-desc">{i18nStore.t('shortcuts.closeModal')}</span>
 							<span class="shortcut-keys"><kbd>Esc</kbd></span>
 						</div>
 					</div>

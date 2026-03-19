@@ -6,7 +6,7 @@
 	import { parseAllFiles } from '$lib/services/parserService';
 	import { analyzeTopLevel } from '$lib/services/semanticAnalysisService';
 	import { detectLanguage } from '$lib/utils/languageDetector';
-	import { t } from '$lib/stores/i18nStore';
+	import { i18nStore } from '$lib/stores/i18nStore.svelte';
 	import {
 		SNIPPET_PRESETS,
 		LANGUAGE_COLORS,
@@ -40,7 +40,7 @@
 
 	async function handleAnalyze() {
 		if (!code.trim()) {
-			error = $t('snippet.emptyError');
+			error = i18nStore.t('snippet.emptyError');
 			return;
 		}
 		error = '';
@@ -75,7 +75,11 @@
 			projectStore.fileTree = tree;
 			projectStore.isLoading = true;
 			projectStore.isSnippetMode = true;
-			await parseAllFiles(tree);
+			const astMap = await parseAllFiles(tree, projectStore.astMap, (progress) => {
+				projectStore.parsingProgress = progress;
+			});
+			projectStore.astMap = astMap;
+			projectStore.isLoading = false;
 			// Auto-trigger semantic analysis if AI is connected
 			if (authStore.isReady) {
 				analyzeTopLevel();
@@ -92,7 +96,7 @@
 <section class="snippet-section">
 	<div class="snippet-divider">
 		<span class="divider-line"></span>
-		<span class="divider-text">{$t('snippet.divider')}</span>
+		<span class="divider-text">{i18nStore.t('snippet.divider')}</span>
 		<span class="divider-line"></span>
 	</div>
 
@@ -120,7 +124,7 @@
 					<option value={lang.id}>{lang.label}</option>
 				{/each}
 			</select>
-			<span class="line-info">{lineCount} {$t('snippet.lines')}</span>
+			<span class="line-info">{lineCount} {i18nStore.t('snippet.lines')}</span>
 		</div>
 		<div class="editor-wrapper">
 			<div class="line-numbers" aria-hidden="true">
@@ -131,7 +135,7 @@
 			<textarea
 				class="code-textarea"
 				bind:value={code}
-				placeholder={$t('snippet.placeholder')}
+				placeholder={i18nStore.t('snippet.placeholder')}
 				spellcheck="false"
 				autocomplete="off"
 				autocapitalize="off"
@@ -156,7 +160,7 @@
 		>
 			<polygon points="5 3 19 12 5 21 5 3" />
 		</svg>
-		{$t('snippet.analyze')}
+		{i18nStore.t('snippet.analyze')}
 	</button>
 </section>
 

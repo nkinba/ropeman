@@ -1,22 +1,11 @@
 <script lang="ts">
-	import { t } from '$lib/stores/i18nStore';
+	import { i18nStore } from '$lib/stores/i18nStore.svelte';
 	import { selectionStore } from '$lib/stores/selectionStore.svelte';
 	import { projectStore } from '$lib/stores/projectStore.svelte';
-	import type { ChatMessage } from '$lib/stores/chatStore';
+	import type { ChatMessage } from '$lib/stores/chatStore.svelte';
 	import { marked } from 'marked';
 
 	let { message }: { message: ChatMessage } = $props();
-
-	let tFunc = $state<(key: string) => string>((key: string) => key);
-
-	$effect(() => {
-		const unsub = t.subscribe((fn) => {
-			tFunc = fn;
-		});
-		return () => {
-			unsub();
-		};
-	});
 
 	// Configure marked for safe rendering
 	marked.setOptions({
@@ -59,7 +48,7 @@
 		<div class="chat-related-nodes">
 			{#each message.relatedNodes as nodeId}
 				<button class="chat-related-link" onclick={() => handleNodeClick(nodeId)}>
-					{tFunc('relatedNodes')}: {nodeId}
+					{i18nStore.t('relatedNodes')}: {nodeId}
 				</button>
 			{/each}
 		</div>

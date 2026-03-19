@@ -92,6 +92,7 @@
 - 외부 의존성(fetch, Worker, 스토어)은 `vi.mock()`으로 모킹.
 - 실제 발생했던 버그 케이스를 테스트에 포함 (regression test).
 - `npm run test:unit` 전체 통과 확인 후 커밋.
+- `npm run build` 성공 확인 후 커밋. (빌드 에러는 테스트에서 잡히지 않는 경우가 많음 — import 경로, 타입 에러, 번들링 문제 등)
 
 ## 코드 리뷰 규칙
 

@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { theme, toggleTheme } from '$lib/stores/themeStore';
-	import { locale, toggleLocale, t } from '$lib/stores/i18nStore';
+	import { themeStore } from '$lib/stores/themeStore.svelte';
+	import { i18nStore } from '$lib/stores/i18nStore.svelte';
 	import { projectStore } from '$lib/stores/projectStore.svelte';
 	import { authStore } from '$lib/stores/authStore.svelte';
 	import Breadcrumb from '$lib/components/Breadcrumb.svelte';
@@ -39,11 +39,11 @@
 
 <header class="header">
 	<div class="header-left">
-		<h1 class="header-title">{$t('title')}</h1>
+		<h1 class="header-title">{i18nStore.t('title')}</h1>
 		{#if projectStore.projectName}
 			<span class="header-project">{projectStore.projectName}</span>
 		{:else}
-			<span class="header-subtitle">{$t('subtitle')}</span>
+			<span class="header-subtitle">{i18nStore.t('subtitle')}</span>
 		{/if}
 	</div>
 	<div class="header-right">
@@ -85,17 +85,17 @@
 				Analyze
 			</button>
 		{/if}
-		<button class="header-btn" onclick={toggleLocale} title="Toggle Language">
-			{$locale === 'ko' ? 'EN' : '\uD55C'}
+		<button class="header-btn" onclick={() => i18nStore.toggleLocale()} title="Toggle Language">
+			{i18nStore.locale === 'ko' ? 'EN' : '\uD55C'}
 		</button>
 		<button
 			class="header-btn"
-			onclick={toggleTheme}
-			title="{$t($theme === 'dark' ? 'lightMode' : 'darkMode')} (Ctrl+Shift+D)"
+			onclick={() => themeStore.toggle()}
+			title="{i18nStore.t(themeStore.current === 'dark' ? 'lightMode' : 'darkMode')} (Ctrl+Shift+D)"
 		>
-			{$theme === 'dark' ? '\u2600' : '\u263D'}
+			{themeStore.current === 'dark' ? '\u2600' : '\u263D'}
 		</button>
-		<button class="header-btn" onclick={onsettings} title="{$t('settings')} (?)">
+		<button class="header-btn" onclick={onsettings} title="{i18nStore.t('settings')} (?)">
 			<svg
 				width="18"
 				height="18"

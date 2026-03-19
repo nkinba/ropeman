@@ -1,59 +1,51 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { get } from 'svelte/store';
-import {
-	chatMessages,
-	chatOpen,
-	chatLoading,
-	toggleChat,
-	addMessage,
-	clearChat
-} from './chatStore';
+import { chatStore } from './chatStore.svelte';
 
 describe('chatStore', () => {
 	beforeEach(() => {
-		clearChat();
-		chatOpen.set(false);
-		chatLoading.set(false);
+		chatStore.clear();
+		chatStore.open = false;
+		chatStore.loading = false;
 	});
 
 	describe('initial state', () => {
-		it('chatMessages starts as empty array', () => {
-			expect(get(chatMessages)).toEqual([]);
+		it('messages starts as empty array', () => {
+			expect(chatStore.messages).toEqual([]);
 		});
 
-		it('chatOpen starts as false', () => {
-			expect(get(chatOpen)).toBe(false);
+		it('open starts as false', () => {
+			expect(chatStore.open).toBe(false);
 		});
 
-		it('chatLoading starts as false', () => {
-			expect(get(chatLoading)).toBe(false);
+		it('loading starts as false', () => {
+			expect(chatStore.loading).toBe(false);
 		});
 	});
 
-	describe('toggleChat', () => {
-		it('toggles chatOpen from false to true', () => {
-			toggleChat();
-			expect(get(chatOpen)).toBe(true);
+	describe('toggle', () => {
+		it('toggles open from false to true', () => {
+			chatStore.toggle();
+			expect(chatStore.open).toBe(true);
 		});
 
-		it('toggles chatOpen from true to false', () => {
-			chatOpen.set(true);
-			toggleChat();
-			expect(get(chatOpen)).toBe(false);
+		it('toggles open from true to false', () => {
+			chatStore.open = true;
+			chatStore.toggle();
+			expect(chatStore.open).toBe(false);
 		});
 
 		it('toggles back and forth', () => {
-			toggleChat();
-			expect(get(chatOpen)).toBe(true);
-			toggleChat();
-			expect(get(chatOpen)).toBe(false);
+			chatStore.toggle();
+			expect(chatStore.open).toBe(true);
+			chatStore.toggle();
+			expect(chatStore.open).toBe(false);
 		});
 	});
 
 	describe('addMessage', () => {
 		it('adds a user message', () => {
-			addMessage('user', 'Hello');
-			const msgs = get(chatMessages);
+			chatStore.addMessage('user', 'Hello');
+			const msgs = chatStore.messages;
 			expect(msgs).toHaveLength(1);
 			expect(msgs[0].role).toBe('user');
 			expect(msgs[0].content).toBe('Hello');
@@ -61,32 +53,32 @@ describe('chatStore', () => {
 		});
 
 		it('adds an assistant message', () => {
-			addMessage('assistant', 'Hi there');
-			const msgs = get(chatMessages);
+			chatStore.addMessage('assistant', 'Hi there');
+			const msgs = chatStore.messages;
 			expect(msgs).toHaveLength(1);
 			expect(msgs[0].role).toBe('assistant');
 		});
 
 		it('adds message with related nodes', () => {
-			addMessage('user', 'About this file', ['node1', 'node2']);
-			const msgs = get(chatMessages);
+			chatStore.addMessage('user', 'About this file', ['node1', 'node2']);
+			const msgs = chatStore.messages;
 			expect(msgs[0].relatedNodes).toEqual(['node1', 'node2']);
 		});
 
 		it('includes timestamp', () => {
 			const before = Date.now();
-			addMessage('user', 'test');
+			chatStore.addMessage('user', 'test');
 			const after = Date.now();
-			const msgs = get(chatMessages);
+			const msgs = chatStore.messages;
 			expect(msgs[0].timestamp).toBeGreaterThanOrEqual(before);
 			expect(msgs[0].timestamp).toBeLessThanOrEqual(after);
 		});
 
 		it('appends messages in order', () => {
-			addMessage('user', 'first');
-			addMessage('assistant', 'second');
-			addMessage('user', 'third');
-			const msgs = get(chatMessages);
+			chatStore.addMessage('user', 'first');
+			chatStore.addMessage('assistant', 'second');
+			chatStore.addMessage('user', 'third');
+			const msgs = chatStore.messages;
 			expect(msgs).toHaveLength(3);
 			expect(msgs[0].content).toBe('first');
 			expect(msgs[1].content).toBe('second');
@@ -94,17 +86,17 @@ describe('chatStore', () => {
 		});
 	});
 
-	describe('clearChat', () => {
+	describe('clear', () => {
 		it('removes all messages', () => {
-			addMessage('user', 'msg1');
-			addMessage('assistant', 'msg2');
-			clearChat();
-			expect(get(chatMessages)).toEqual([]);
+			chatStore.addMessage('user', 'msg1');
+			chatStore.addMessage('assistant', 'msg2');
+			chatStore.clear();
+			expect(chatStore.messages).toEqual([]);
 		});
 
 		it('is safe to call when already empty', () => {
-			clearChat();
-			expect(get(chatMessages)).toEqual([]);
+			chatStore.clear();
+			expect(chatStore.messages).toEqual([]);
 		});
 	});
 });

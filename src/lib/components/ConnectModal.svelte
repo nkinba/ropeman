@@ -4,6 +4,7 @@
 	import { webgpuStore } from '$lib/stores/webgpuStore.svelte';
 	import { connectBridge, disconnectBridge } from '$lib/services/bridgeService';
 	import { AI_PROVIDERS, getProvider, getDefaultModel } from '$lib/data/aiProviders';
+	import { testApiKey } from '$lib/services/apiKeyValidator';
 	import type { AIProviderId } from '$lib/stores/settingsStore.svelte';
 	import WebGPUSetupModal from './WebGPUSetupModal.svelte';
 
@@ -27,11 +28,13 @@
 	const apiKeyValue = $derived.by(() => {
 		if (selectedProvider === 'google') return settingsStore.geminiApiKey;
 		if (selectedProvider === 'anthropic') return settingsStore.anthropicApiKey;
+		if (selectedProvider === 'openai') return settingsStore.openaiApiKey;
 		return '';
 	});
 
+	let prevOpen = $state(false);
 	$effect(() => {
-		if (open) {
+		if (open && !prevOpen) {
 			selectedProvider = settingsStore.aiProvider;
 			selectedModel = settingsStore.aiModel;
 			testStatus = 'idle';
@@ -43,6 +46,7 @@
 			else if (track === 'edge') activeTab = 'edge';
 			else activeTab = 'byok';
 		}
+		prevOpen = open;
 	});
 
 	function handleProviderChange(e: Event) {
@@ -57,8 +61,14 @@
 	}
 
 	function handleModelChange(e: Event) {
-		selectedModel = (e.target as HTMLSelectElement).value;
-		settingsStore.aiModel = selectedModel;
+		const value = (e.target as HTMLSelectElement).value;
+		if (value === '__custom__') {
+			selectedModel = '';
+			settingsStore.aiModel = '';
+		} else {
+			selectedModel = value;
+			settingsStore.aiModel = value;
+		}
 	}
 
 	function handleApiKeyInput(e: Event) {
@@ -67,6 +77,8 @@
 			settingsStore.geminiApiKey = value;
 		} else if (selectedProvider === 'anthropic') {
 			settingsStore.anthropicApiKey = value;
+		} else if (selectedProvider === 'openai') {
+			settingsStore.openaiApiKey = value;
 		}
 	}
 
@@ -75,50 +87,9 @@
 		if (!key) return;
 		testStatus = 'testing';
 		testError = '';
-
-		try {
-			if (selectedProvider === 'google') {
-				const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${selectedModel}:generateContent`;
-				const res = await fetch(`${endpoint}?key=${key}`, {
-					method: 'POST',
-					headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify({
-						contents: [{ parts: [{ text: 'Say "ok"' }] }],
-						generationConfig: { maxOutputTokens: 8 }
-					})
-				});
-				if (res.ok) {
-					testStatus = 'success';
-				} else {
-					const data = await res.json().catch(() => ({}));
-					testError =
-						(data as { error?: { message?: string } })?.error?.message || `HTTP ${res.status}`;
-					testStatus = 'error';
-				}
-			} else if (selectedProvider === 'anthropic') {
-				const { PROXY_URL } = await import('$lib/config');
-				const res = await fetch(PROXY_URL, {
-					method: 'POST',
-					headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify({
-						provider: 'anthropic',
-						apiKey: key,
-						model: selectedModel,
-						messages: [{ role: 'user', content: 'Say "ok"' }]
-					})
-				});
-				if (res.ok) {
-					testStatus = 'success';
-				} else {
-					const data = await res.json().catch(() => ({}));
-					testError = (data as { error?: string })?.error || `HTTP ${res.status}`;
-					testStatus = 'error';
-				}
-			}
-		} catch (err) {
-			testError = (err as Error).message;
-			testStatus = 'error';
-		}
+		const result = await testApiKey(selectedProvider, key, selectedModel);
+		testStatus = result.valid ? 'success' : 'error';
+		testError = result.error ?? '';
 	}
 
 	async function handleConnect() {
@@ -157,8 +128,13 @@
 		if (e.key === 'Escape') onclose();
 	}
 
+	function handleCliChange(e: Event) {
+		settingsStore.bridgeCli = (e.target as HTMLSelectElement).value as 'claude' | 'gemini' | 'auto';
+	}
+
 	function copyCommand() {
-		navigator.clipboard.writeText(`npx @ropeman/bridge --port ${bridgePort}`);
+		const cmd = `npx @ropeman/bridge --port ${bridgePort}${settingsStore.bridgeCli !== 'auto' ? ` --cli ${settingsStore.bridgeCli}` : ''}`;
+		navigator.clipboard.writeText(cmd);
 	}
 </script>
 
@@ -233,11 +209,31 @@
 
 						<!-- Model Selection -->
 						<label class="connect-label">Model</label>
-						<select class="connect-select" value={selectedModel} onchange={handleModelChange}>
+						<select
+							class="connect-select"
+							value={providerModels.some((m) => m.id === selectedModel)
+								? selectedModel
+								: '__custom__'}
+							onchange={handleModelChange}
+						>
 							{#each providerModels as model}
 								<option value={model.id}>{model.label}</option>
 							{/each}
+							<option value="__custom__">Custom...</option>
 						</select>
+						{#if !providerModels.some((m) => m.id === selectedModel)}
+							<input
+								class="connect-input"
+								type="text"
+								placeholder="e.g. claude-sonnet-4-6"
+								value={selectedModel}
+								oninput={(e) => {
+									const v = (e.target as HTMLInputElement).value;
+									selectedModel = v;
+									settingsStore.aiModel = v;
+								}}
+							/>
+						{/if}
 
 						<!-- API Key Input -->
 						<label class="connect-label">{currentProvider?.label ?? ''} API Key</label>
@@ -273,6 +269,17 @@
 					</section>
 				{:else if activeTab === 'bridge'}
 					<section class="connect-section">
+						<label class="connect-label">CLI Tool</label>
+						<select
+							class="connect-select"
+							value={settingsStore.bridgeCli}
+							onchange={handleCliChange}
+						>
+							<option value="auto">Auto-detect</option>
+							<option value="claude">Claude Code</option>
+							<option value="gemini">Gemini CLI</option>
+						</select>
+
 						<label class="connect-label">Bridge Port</label>
 						<div class="connect-row">
 							<input
@@ -314,7 +321,11 @@
 						</div>
 
 						<div class="command-block">
-							<code>npx @ropeman/bridge --port {bridgePort}</code>
+							<code
+								>npx @ropeman/bridge --port {bridgePort}{settingsStore.bridgeCli !== 'auto'
+									? ' --cli ' + settingsStore.bridgeCli
+									: ''}</code
+							>
 							<button class="copy-btn" onclick={copyCommand} title="Copy">
 								<svg
 									width="14"
@@ -330,7 +341,14 @@
 							</button>
 						</div>
 						<p class="connect-hint">
-							Run this command in your terminal to start the local bridge server.
+							{#if settingsStore.bridgeCli === 'auto'}
+								Run this command in your terminal. The bridge will auto-detect Claude Code or Gemini
+								CLI.
+							{:else if settingsStore.bridgeCli === 'claude'}
+								Requires Claude Code CLI installed. Run: npm install -g @anthropic-ai/claude-code
+							{:else}
+								Requires Gemini CLI installed.
+							{/if}
 						</p>
 					</section>
 				{:else if activeTab === 'webgpu'}

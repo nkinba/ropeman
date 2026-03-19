@@ -128,22 +128,23 @@ const content = await fileObj.text();
 
 ---
 
-## AP-6: Map 복사 빈도
+## AP-6: Map 복사 — 주의: analysisRequests는 복사 필수
 
 **문제**: `semanticStore`에서 분석 요청 추가/제거 시 매번 `new Map(...)` 복사
-**영향**: 분석 요청이 빈번하면 GC 부담
-**해결**: Svelte 5의 `$state`가 Map mutation을 추적하므로, 직접 mutation 후 재할당 가능
+**현실**: `analysisRequests` Map은 `.size` 기반 derived(`isAnalyzing`)와 `.values()` 이터레이션(`analysisProgress`)에 의존하므로, **Svelte 5의 Map proxy가 이를 제대로 추적하지 못함**. 직접 mutation으로 변경하면 프로그레스 pill이 표시되지 않는 버그 발생.
+**결론**: `analysisRequests`는 반드시 `new Map()` 복사 + 재할당 패턴 유지. `cache` Map은 UI 바인딩이 없으므로 직접 mutation 가능.
 
 ```typescript
-// Bad: 매번 복사
+// analysisRequests: 복사 필수 (UI 바인딩 있음)
 const next = new Map(analysisRequests);
 next.set(nodeId, request);
 analysisRequests = next;
 
-// Better: mutation 후 재할당 트리거
-analysisRequests.set(nodeId, request);
-analysisRequests = analysisRequests; // 반응성 트리거
+// cache: 직접 mutation 가능 (UI 바인딩 없음)
+cache.set(key, level);
 ```
+
+**⚠️ 코드 리뷰 시 "불필요한 Map 복사" 지적 금지** — analysisRequests의 복사는 의도적임.
 
 ---
 
