@@ -13,6 +13,15 @@
 	} from '$lib/services/skeletonExtractor';
 	import type { AIProviderId } from '$lib/stores/settingsStore.svelte';
 	import WebGPUSetupModal from './WebGPUSetupModal.svelte';
+	import { isModelCached } from '$lib/services/webllmService';
+	import { onMount } from 'svelte';
+
+	// Check if the selected model is cached on mount
+	onMount(async () => {
+		if (webgpuStore.isSupported && webgpuStore.status === 'idle') {
+			webgpuStore.isCached = await isModelCached(webgpuStore.selectedModelId);
+		}
+	});
 
 	let {
 		open,
@@ -213,14 +222,15 @@
 					</div>
 					{#if expandedCard === 'byok'}
 						<div class="track-config">
-							<label class="cfg-label">Provider</label>
-							<select class="cfg-select" value={selectedProvider} onchange={handleProviderChange}>
+							<label class="cfg-label" for="analyze-provider-select">Provider</label>
+							<select id="analyze-provider-select" class="cfg-select" value={selectedProvider} onchange={handleProviderChange}>
 								{#each AI_PROVIDERS as provider}
 									<option value={provider.id}>{provider.label}</option>
 								{/each}
 							</select>
-							<label class="cfg-label">Model</label>
+							<label class="cfg-label" for="analyze-model-select">Model</label>
 							<select
+								id="analyze-model-select"
 								class="cfg-select"
 								value={providerModels.some((m) => m.id === selectedModel)
 									? selectedModel
@@ -245,9 +255,10 @@
 									}}
 								/>
 							{/if}
-							<label class="cfg-label">{currentProvider?.label ?? ''} API Key</label>
+							<label class="cfg-label" for="analyze-api-key">{currentProvider?.label ?? ''} API Key</label>
 							<div class="cfg-row">
 								<input
+									id="analyze-api-key"
 									type="password"
 									class="cfg-input"
 									placeholder="Enter API key"
@@ -298,8 +309,9 @@
 					</div>
 					{#if expandedCard === 'bridge'}
 						<div class="track-config">
-							<label class="cfg-label">CLI Tool</label>
+							<label class="cfg-label" for="analyze-cli-select">CLI Tool</label>
 							<select
+								id="analyze-cli-select"
 								class="cfg-select"
 								value={settingsStore.bridgeCli}
 								onchange={(e) =>
@@ -312,9 +324,10 @@
 								<option value="claude">Claude Code</option>
 								<option value="gemini">Gemini CLI</option>
 							</select>
-							<label class="cfg-label">Port</label>
+							<label class="cfg-label" for="analyze-bridge-port">Port</label>
 							<div class="cfg-row">
 								<input
+									id="analyze-bridge-port"
 									type="number"
 									class="cfg-input"
 									value={bridgePort}
@@ -365,8 +378,12 @@
 									WebGPU not supported
 								{:else if webgpuStore.isReady}
 									Model loaded
+								{:else if webgpuStore.status === 'downloading'}
+									Downloading... {webgpuStore.downloadProgress}%
+								{:else if webgpuStore.isCached}
+									Cached (needs loading)
 								{:else}
-									Not initialized (~900MB download)
+									Not initialized (~{webgpuStore.selectedModel.downloadSizeMB >= 1000 ? (webgpuStore.selectedModel.downloadSizeMB / 1000).toFixed(1) + 'GB' : webgpuStore.selectedModel.downloadSizeMB + 'MB'} download)
 								{/if}
 							</span>
 						</div>

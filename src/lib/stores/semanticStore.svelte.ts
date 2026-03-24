@@ -164,6 +164,16 @@ function createSemanticStore() {
 			return cache.get(key);
 		},
 
+		hasCachedLevel(key: string): boolean {
+			return cache.has(key);
+		},
+
+		invalidateCache(key: string) {
+			const next = new Map(cache);
+			next.delete(key);
+			cache = next;
+		},
+
 		drillDown(node: SemanticNode) {
 			// Cache current level before drilling down
 			const cacheKey = currentLevel?.parentId ?? '__root__';

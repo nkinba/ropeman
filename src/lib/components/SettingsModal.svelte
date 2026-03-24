@@ -88,7 +88,7 @@
 
 			<div class="settings-body">
 				<section class="settings-section">
-					<label class="settings-label">AI Connection</label>
+					<span class="settings-label">AI Connection</span>
 					<button
 						class="settings-btn"
 						onclick={() => {
@@ -101,7 +101,7 @@
 				</section>
 
 				<section class="settings-section">
-					<label class="settings-label">Skeleton Size Limit</label>
+					<span class="settings-label">Skeleton Size Limit</span>
 					<div class="settings-row">
 						<label class="checkbox-label">
 							<input
@@ -133,7 +133,7 @@
 				</section>
 
 				<section class="settings-section">
-					<label class="settings-label">{i18nStore.t('cacheEnabled')}</label>
+					<span class="settings-label" id="cache-toggle-label">{i18nStore.t('cacheEnabled')}</span>
 					<div class="settings-row">
 						<button
 							class="settings-toggle"
@@ -141,6 +141,7 @@
 							onclick={handleCacheToggle}
 							role="switch"
 							aria-checked={cacheEnabled}
+						aria-labelledby="cache-toggle-label"
 						>
 							<span class="toggle-knob"></span>
 						</button>
@@ -149,16 +150,16 @@
 				</section>
 
 				<section class="settings-section">
-					<label class="settings-label">Language</label>
-					<select class="settings-select" value={lang} onchange={handleLangChange}>
+					<label class="settings-label" for="lang-select">Language</label>
+					<select id="lang-select" class="settings-select" value={lang} onchange={handleLangChange}>
 						<option value="ko">한국어</option>
 						<option value="en">English</option>
 					</select>
 				</section>
 
 				<section class="settings-section">
-					<label class="settings-label">{i18nStore.t('codeTheme')}</label>
-					<select class="settings-select" value={syntaxTheme} onchange={handleThemeChange}>
+					<label class="settings-label" for="theme-select">{i18nStore.t('codeTheme')}</label>
+					<select id="theme-select" class="settings-select" value={syntaxTheme} onchange={handleThemeChange}>
 						{#each SYNTAX_THEMES as theme}
 							<option value={theme.id}
 								>{theme.label} ({theme.mode === 'dark' ? 'Dark' : 'Light'})</option
@@ -174,7 +175,7 @@
 				</section>
 
 				<section class="settings-section shortcuts-section">
-					<label class="settings-label">{i18nStore.t('shortcuts.title')}</label>
+					<span class="settings-label">{i18nStore.t('shortcuts.title')}</span>
 					<div class="shortcut-list">
 						<div class="shortcut-row">
 							<span class="shortcut-desc">{i18nStore.t('shortcuts.search')}</span>

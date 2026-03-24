@@ -71,13 +71,13 @@ function sendRequest(type: string, payload?: unknown): Promise<string> {
 	});
 }
 
-export async function initModel(): Promise<void> {
+export async function initModel(modelId?: string): Promise<void> {
 	webgpuStore.status = 'downloading';
 	webgpuStore.downloadProgress = 0;
 	webgpuStore.downloadStage = 'Starting model download...';
 
 	try {
-		await sendRequest('init');
+		await sendRequest('init', { modelId: modelId ?? webgpuStore.selectedModelId });
 	} catch (err) {
 		webgpuStore.status = 'error';
 		webgpuStore.errorMessage = err instanceof Error ? err.message : String(err);
@@ -99,4 +99,20 @@ export function cancelDownload(): void {
 
 export function checkWebGPUSupport(): boolean {
 	return typeof navigator !== 'undefined' && 'gpu' in navigator;
+}
+
+/**
+ * Check if a specific model is already cached in the browser (Cache API).
+ * web-llm stores model weights in 'webllm/model' cache with HuggingFace URLs containing the model ID.
+ */
+export async function isModelCached(modelId: string): Promise<boolean> {
+	if (typeof caches === 'undefined') return false;
+	try {
+		const cache = await caches.open('webllm/model');
+		const keys = await cache.keys();
+		// Model ID appears in the HuggingFace URL path, e.g. "mlc-ai/Qwen2.5-Coder-1.5B-Instruct-q4f16_1-MLC"
+		return keys.some((req) => req.url.includes(modelId));
+	} catch {
+		return false;
+	}
 }

@@ -19,7 +19,8 @@
 	let pendingDrilldownNode = $state<SemanticNode | null>(null);
 
 	function requestDrilldown(semNode: SemanticNode) {
-		if (settingsStore.skipDrilldownConfirm) {
+		// U5-1: Cached nodes drill down immediately without confirmation
+		if (semanticStore.hasCachedLevel(semNode.id) || settingsStore.skipDrilldownConfirm) {
 			executeDrilldown(semNode);
 		} else {
 			pendingDrilldownNode = semNode;
@@ -41,6 +42,18 @@
 			executeDrilldown(pendingDrilldownNode);
 			pendingDrilldownNode = null;
 		}
+	}
+
+	// U5-3/U5-4: Re-analyze a node by invalidating cache and triggering new AI call
+	function handleReanalyze(nodeId: string) {
+		const semNode = semanticStore.currentLevel?.nodes.find((n) => n.id === nodeId);
+		if (!semNode) return;
+		if (semanticStore.isNodeAnalyzing(semNode.id)) {
+			pulseElement('.analysis-progress-pill');
+			return;
+		}
+		semanticStore.invalidateCache(nodeId);
+		analyzeDrilldown(semNode);
 	}
 
 	function cancelDrilldown() {
@@ -220,14 +233,17 @@
 				n.position = { x: userPos.x, y: userPos.y };
 			}
 
+			// U5: Add cache status and reanalyze callback
+			const isCached = semanticStore.hasCachedLevel(n.id);
+
 			if (highlightedNodeId) {
 				if (n.id === highlightedNodeId) {
-					n.data = { ...n.data, highlighted: true, dimmed: false };
+					n.data = { ...n.data, highlighted: true, dimmed: false, isCached, nodeId: n.id, onReanalyze: handleReanalyze };
 				} else {
-					n.data = { ...n.data, highlighted: false, dimmed: true };
+					n.data = { ...n.data, highlighted: false, dimmed: true, isCached, nodeId: n.id, onReanalyze: handleReanalyze };
 				}
 			} else {
-				n.data = { ...n.data, highlighted: false, dimmed: false };
+				n.data = { ...n.data, highlighted: false, dimmed: false, isCached, nodeId: n.id, onReanalyze: handleReanalyze };
 			}
 		}
 

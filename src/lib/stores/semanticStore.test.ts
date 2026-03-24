@@ -137,6 +137,46 @@ describe('semanticStore', () => {
 		});
 	});
 
+	describe('hasCachedLevel', () => {
+		it('returns true when level is cached', () => {
+			const level = makeSemanticLevel([makeSemanticNode('n1', 'UI')]);
+			semanticStore.cacheLevel('key1', level);
+			expect(semanticStore.hasCachedLevel('key1')).toBe(true);
+		});
+
+		it('returns false when level is not cached', () => {
+			expect(semanticStore.hasCachedLevel('nonexistent')).toBe(false);
+		});
+	});
+
+	describe('invalidateCache', () => {
+		it('removes a cached level', () => {
+			const level = makeSemanticLevel([makeSemanticNode('n1', 'UI')]);
+			semanticStore.cacheLevel('key1', level);
+			expect(semanticStore.hasCachedLevel('key1')).toBe(true);
+
+			semanticStore.invalidateCache('key1');
+			expect(semanticStore.hasCachedLevel('key1')).toBe(false);
+			expect(semanticStore.getCachedLevel('key1')).toBeUndefined();
+		});
+
+		it('does nothing when key does not exist', () => {
+			semanticStore.invalidateCache('nonexistent');
+			expect(semanticStore.cache.size).toBe(0);
+		});
+
+		it('does not affect other cached levels', () => {
+			const level1 = makeSemanticLevel([makeSemanticNode('n1', 'UI')]);
+			const level2 = makeSemanticLevel([makeSemanticNode('n2', 'API')]);
+			semanticStore.cacheLevel('key1', level1);
+			semanticStore.cacheLevel('key2', level2);
+
+			semanticStore.invalidateCache('key1');
+			expect(semanticStore.hasCachedLevel('key1')).toBe(false);
+			expect(semanticStore.hasCachedLevel('key2')).toBe(true);
+		});
+	});
+
 	describe('drillDown', () => {
 		it('adds node to drilldownPath', () => {
 			const node = makeSemanticNode('n1', 'UI');

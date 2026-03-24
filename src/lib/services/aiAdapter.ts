@@ -19,6 +19,19 @@ export interface AICallOptions {
 	signal?: AbortSignal;
 }
 
+/**
+ * HTTP 상태 코드를 포함하는 에러.
+ * 에러 유형 분류 시 classifyAIError에 httpStatus를 전달할 수 있도록 함.
+ */
+export class AIHttpError extends Error {
+	httpStatus: number;
+	constructor(message: string, httpStatus: number) {
+		super(message);
+		this.name = 'AIHttpError';
+		this.httpStatus = httpStatus;
+	}
+}
+
 // --- Track별 구현 ---
 
 async function callBridge(opts: AICallOptions): Promise<string> {
@@ -43,8 +56,9 @@ async function callEdgeProxy(opts: AICallOptions): Promise<string> {
 
 	if (!response.ok) {
 		const errData = await response.json().catch(() => ({}));
-		throw new Error(
-			(errData as { error?: string }).error || `Edge proxy error: HTTP ${response.status}`
+		throw new AIHttpError(
+			(errData as { error?: string }).error || `Edge proxy error: HTTP ${response.status}`,
+			response.status
 		);
 	}
 
@@ -75,8 +89,9 @@ async function callProxyWorker(
 
 	if (!response.ok) {
 		const errData = await response.json().catch(() => ({}));
-		throw new Error(
-			(errData as { error?: string }).error || `Proxy error: HTTP ${response.status}`
+		throw new AIHttpError(
+			(errData as { error?: string }).error || `Proxy error: HTTP ${response.status}`,
+			response.status
 		);
 	}
 
@@ -113,7 +128,7 @@ async function callGeminiDirect(opts: AICallOptions): Promise<string> {
 		const errData = await response.json().catch(() => ({}));
 		const msg =
 			(errData as { error?: { message?: string } })?.error?.message || `HTTP ${response.status}`;
-		throw new Error(`Gemini API error: ${msg}`);
+		throw new AIHttpError(`Gemini API error: ${msg}`, response.status);
 	}
 
 	const data = await response.json();

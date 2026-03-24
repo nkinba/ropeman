@@ -7,9 +7,15 @@
 	const displaySymbols = data.keySymbols?.slice(0, maxSymbols) ?? [];
 	const moreCount = (data.keySymbols?.length ?? 0) - maxSymbols;
 	const isLeaf = data.fileCount === 1;
+	const isCached: boolean = data.isCached ?? false;
 
 	const targetHandleCount: number = data.targetHandleCount ?? 1;
 	const sourceHandleCount: number = data.sourceHandleCount ?? 1;
+
+	function handleReanalyze(e: MouseEvent) {
+		e.stopPropagation();
+		data.onReanalyze?.(data.nodeId);
+	}
 </script>
 
 {#each Array(targetHandleCount) as _, i}
@@ -56,6 +62,15 @@
 
 	{#if !isLeaf}
 		<div class="drilldown-hint">
+			{#if isCached}
+				<button
+					class="reanalyze-btn"
+					title="Re-analyze"
+					onclick={handleReanalyze}
+				>
+					&#x21BB;
+				</button>
+			{/if}
 			<span class="drilldown-icon">&#x25B6;</span>
 		</div>
 	{/if}
@@ -203,5 +218,31 @@
 	.drilldown-icon {
 		font-size: 12px;
 		color: var(--text-secondary);
+	}
+
+	.reanalyze-btn {
+		display: none;
+		width: 20px;
+		height: 20px;
+		border: none;
+		border-radius: 4px;
+		background: var(--bg-tertiary, rgba(255, 255, 255, 0.08));
+		color: var(--text-secondary);
+		font-size: 14px;
+		cursor: pointer;
+		padding: 0;
+		line-height: 1;
+		transition: background-color 0.15s ease, color 0.15s ease;
+	}
+
+	.semantic-node:hover .reanalyze-btn {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.reanalyze-btn:hover {
+		background: var(--accent-bg, rgba(59, 130, 246, 0.15));
+		color: var(--accent, #3b82f6);
 	}
 </style>

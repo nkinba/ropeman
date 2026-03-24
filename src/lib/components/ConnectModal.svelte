@@ -200,16 +200,17 @@
 				{:else if activeTab === 'byok'}
 					<section class="connect-section">
 						<!-- Provider Selection -->
-						<label class="connect-label">Provider</label>
-						<select class="connect-select" value={selectedProvider} onchange={handleProviderChange}>
+						<label class="connect-label" for="connect-provider-select">Provider</label>
+						<select id="connect-provider-select" class="connect-select" value={selectedProvider} onchange={handleProviderChange}>
 							{#each AI_PROVIDERS as provider}
 								<option value={provider.id}>{provider.label}</option>
 							{/each}
 						</select>
 
 						<!-- Model Selection -->
-						<label class="connect-label">Model</label>
+						<label class="connect-label" for="connect-model-select">Model</label>
 						<select
+							id="connect-model-select"
 							class="connect-select"
 							value={providerModels.some((m) => m.id === selectedModel)
 								? selectedModel
@@ -236,7 +237,7 @@
 						{/if}
 
 						<!-- API Key Input -->
-						<label class="connect-label">{currentProvider?.label ?? ''} API Key</label>
+						<label class="connect-label" for="connect-api-key">{currentProvider?.label ?? ''} API Key</label>
 						<div class="connect-row">
 							<input
 								type="password"
@@ -269,8 +270,9 @@
 					</section>
 				{:else if activeTab === 'bridge'}
 					<section class="connect-section">
-						<label class="connect-label">CLI Tool</label>
+						<label class="connect-label" for="connect-cli-select">CLI Tool</label>
 						<select
+							id="connect-cli-select"
 							class="connect-select"
 							value={settingsStore.bridgeCli}
 							onchange={handleCliChange}
@@ -280,7 +282,7 @@
 							<option value="gemini">Gemini CLI</option>
 						</select>
 
-						<label class="connect-label">Bridge Port</label>
+						<label class="connect-label" for="connect-bridge-port">Bridge Port</label>
 						<div class="connect-row">
 							<input
 								type="number"
