@@ -23,6 +23,7 @@
 	import { i18nStore } from '$lib/stores/i18nStore.svelte';
 	import { loadTestProject } from '$lib/services/testLoader';
 	import { graphStore } from '$lib/stores/graphStore.svelte';
+	import { classifyAIError, getAIErrorInfo, type AIErrorInfo } from '$lib/types/ai';
 	import {
 		openDirectory,
 		readDirectoryRecursive,
@@ -128,17 +129,26 @@
 		}
 	}
 
-	// U1-1: Analysis progress/error UI state
+	// U1-1 / U4: Analysis progress/error UI state
 	let errorDismissed = $state(false);
 	let errorDismissTimer: ReturnType<typeof setTimeout> | null = null;
+	let currentErrorInfo = $state<AIErrorInfo | null>(null);
 
 	$effect(() => {
-		if (semanticStore.analysisError) {
+		const rawMsg = semanticStore.analysisError;
+		if (rawMsg) {
+			// U4: 에러 유형 분류 및 사용자 친화적 메시지 생성
+			const errorType = classifyAIError(rawMsg);
+			const info = getAIErrorInfo(errorType, rawMsg);
+			currentErrorInfo = info;
+
 			errorDismissed = false;
 			if (errorDismissTimer) clearTimeout(errorDismissTimer);
+			// 액션 버튼이 있는 경우 자동 dismiss 시간을 더 길게 설정
+			const dismissDelay = info.actions.length > 0 ? 15000 : 5000;
 			errorDismissTimer = setTimeout(() => {
 				errorDismissed = true;
-			}, 5000);
+			}, dismissDelay);
 		}
 		return () => {
 			if (errorDismissTimer) clearTimeout(errorDismissTimer);
@@ -148,6 +158,16 @@
 	function dismissError() {
 		errorDismissed = true;
 		semanticStore.analysisError = null;
+		currentErrorInfo = null;
+	}
+
+	function handleErrorAction(target: 'analyze' | 'settings') {
+		dismissError();
+		if (target === 'analyze') {
+			showAnalyze = true;
+		} else {
+			showSettings = true;
+		}
 	}
 
 	const hasProject = $derived(projectStore.fileTree !== null);
@@ -494,10 +514,24 @@
 			</div>
 		{/if}
 
-		<!-- U1-1: Analysis error toast -->
-		{#if semanticStore.analysisError && !errorDismissed}
+		<!-- U1-1 / U4: Analysis error toast with typed messages and actions -->
+		{#if semanticStore.analysisError && !errorDismissed && currentErrorInfo}
 			<div class="analysis-error-toast">
-				<span class="analysis-error-text">{semanticStore.analysisError}</span>
+				<div class="analysis-error-content">
+					<span class="analysis-error-text">{currentErrorInfo.message}</span>
+					{#if currentErrorInfo.actions.length > 0}
+						<div class="analysis-error-actions">
+							{#each currentErrorInfo.actions as action}
+								<button
+									class="analysis-error-action-btn"
+									onclick={() => handleErrorAction(action.target)}
+								>
+									{action.label}
+								</button>
+							{/each}
+						</div>
+					{/if}
+				</div>
 				<button class="analysis-error-dismiss" onclick={dismissError}>&#10005;</button>
 			</div>
 		{/if}
@@ -697,12 +731,42 @@
 		max-width: 360px;
 	}
 
+	.analysis-error-content {
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+		gap: 6px;
+		min-width: 0;
+	}
+
 	.analysis-error-text {
 		font-size: 12px;
 		color: #fff;
 		font-weight: 500;
-		flex: 1;
 		word-break: break-word;
+	}
+
+	.analysis-error-actions {
+		display: flex;
+		gap: 6px;
+		flex-wrap: wrap;
+	}
+
+	.analysis-error-action-btn {
+		background: rgba(255, 255, 255, 0.2);
+		border: 1px solid rgba(255, 255, 255, 0.4);
+		color: #fff;
+		font-size: 11px;
+		font-weight: 600;
+		padding: 3px 10px;
+		border-radius: 4px;
+		cursor: pointer;
+		white-space: nowrap;
+		transition: background 0.15s ease;
+	}
+
+	.analysis-error-action-btn:hover {
+		background: rgba(255, 255, 255, 0.35);
 	}
 
 	.analysis-error-dismiss {

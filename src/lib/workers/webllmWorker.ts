@@ -2,14 +2,12 @@ import { CreateMLCEngine, type MLCEngine, type InitProgressReport } from '@mlc-a
 
 let engine: MLCEngine | null = null;
 
-const MODEL_ID = 'Qwen2.5-Coder-1.5B-Instruct-q4f16_1-MLC';
-
 self.onmessage = async (e: MessageEvent) => {
 	const { type, id, payload } = e.data;
 
 	switch (type) {
 		case 'init':
-			await handleInit(id);
+			await handleInit(id, payload?.modelId);
 			break;
 		case 'generate':
 			await handleGenerate(id, payload);
@@ -22,9 +20,10 @@ self.onmessage = async (e: MessageEvent) => {
 	}
 };
 
-async function handleInit(id: string) {
+async function handleInit(id: string, modelId?: string) {
+	const resolvedModelId = modelId || 'Qwen2.5-Coder-1.5B-Instruct-q4f16_1-MLC';
 	try {
-		engine = await CreateMLCEngine(MODEL_ID, {
+		engine = await CreateMLCEngine(resolvedModelId, {
 			initProgressCallback: (progress: InitProgressReport) => {
 				self.postMessage({
 					type: 'init-progress',

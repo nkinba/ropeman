@@ -147,9 +147,9 @@
 			return;
 		}
 
-		// Request drilldown (with or without confirm)
+		// U5-1: Cached nodes drill down immediately without confirmation
 		pendingDrilldownContext = { semNode, node, level, pathWithoutLast };
-		if (settingsStore.skipDrilldownConfirm) {
+		if (semanticStore.hasCachedLevel(semNode.id) || settingsStore.skipDrilldownConfirm) {
 			executePendingDrilldown();
 		} else {
 			drilldownConfirmOpen = true;
@@ -172,6 +172,23 @@
 		autoExpand(tree);
 		if (changed) expandedNodes = next;
 	});
+
+	// U5-3/U5-4: Re-analyze a tree node by invalidating cache and triggering new AI call
+	function handleReanalyze(e: MouseEvent, node: TreeNode) {
+		e.stopPropagation();
+		const pathWithoutLast = node.drilldownPath.slice(0, -1);
+		const parentKey =
+			pathWithoutLast.length > 0 ? pathWithoutLast[pathWithoutLast.length - 1].nodeId : '__root__';
+		const level = semanticStore.getCachedLevel(parentKey);
+		const semNode = level?.nodes.find((n) => n.id === node.id);
+		if (!semNode) return;
+		if (semanticStore.isNodeAnalyzing(semNode.id)) {
+			pulseElement('.analysis-progress-pill');
+			return;
+		}
+		semanticStore.invalidateCache(node.id);
+		analyzeDrilldown(semNode);
+	}
 
 	const statusIcons: Record<string, string> = {
 		cached: '\u2713',
@@ -213,6 +230,15 @@
 		>
 			<span class="node-color" style="background: {node.color};"></span>
 			<span class="node-label">{node.label}</span>
+			{#if node.status === 'cached' && node.fileCount > 1}
+				<button
+					class="tree-reanalyze-btn"
+					title="Re-analyze"
+					onclick={(e) => handleReanalyze(e, node)}
+				>
+					&#x21BB;
+				</button>
+			{/if}
 			<span
 				class="node-status"
 				class:cached={node.status === 'cached'}
@@ -367,5 +393,31 @@
 		font-size: 10px;
 		color: var(--text-muted);
 		flex-shrink: 0;
+	}
+
+	.tree-reanalyze-btn {
+		display: none;
+		width: 16px;
+		height: 16px;
+		border: none;
+		border-radius: 3px;
+		background: transparent;
+		color: var(--text-muted);
+		font-size: 12px;
+		cursor: pointer;
+		padding: 0;
+		flex-shrink: 0;
+		align-items: center;
+		justify-content: center;
+		transition: background-color 0.1s ease, color 0.1s ease;
+	}
+
+	.tree-node:hover .tree-reanalyze-btn {
+		display: flex;
+	}
+
+	.tree-reanalyze-btn:hover {
+		background: var(--accent-bg, rgba(59, 130, 246, 0.15));
+		color: var(--accent, #3b82f6);
 	}
 </style>
