@@ -39,7 +39,18 @@ async function callBridge(opts: AICallOptions): Promise<string> {
 	return await sendViaBridge(opts.system + '\n\n' + opts.user, cli);
 }
 
+/** WebGPU 소형 모델의 대략적 토큰 한계 (char 기준, ~4 chars/token) */
+const WEBGPU_MAX_INPUT_CHARS = 12000; // ~3000 tokens, 4096 context - 1024 output reserve
+
 async function callWebGPU(opts: AICallOptions): Promise<string> {
+	const inputLen = (opts.system?.length ?? 0) + (opts.user?.length ?? 0);
+	if (inputLen > WEBGPU_MAX_INPUT_CHARS) {
+		throw new Error(
+			`Input too large for local model (${Math.round(inputLen / 1000)}KB). ` +
+				`Browser AI supports ~${Math.round(WEBGPU_MAX_INPUT_CHARS / 1000)}KB max. ` +
+				`Reduce skeleton size in Settings or use a cloud API (Demo/API Key).`
+		);
+	}
 	return await webllmGenerate(opts.system, opts.user);
 }
 

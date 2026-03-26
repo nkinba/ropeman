@@ -29,20 +29,22 @@ function handleMessage(e: MessageEvent) {
 		case 'init-done':
 			webgpuStore.status = 'ready';
 			webgpuStore.downloadProgress = 100;
-			resolvePending(id, 'ok');
+			// Defer promise resolution to break synchronous Svelte reactive chain
+			queueMicrotask(() => resolvePending(id, 'ok'));
 			break;
 
 		case 'generate-result':
-			resolvePending(id, payload.text);
+			// Defer to prevent stack overflow from synchronous Svelte effect cascades
+			queueMicrotask(() => resolvePending(id, payload.text));
 			break;
 
 		case 'error':
-			rejectPending(id, new Error(payload.message));
+			queueMicrotask(() => rejectPending(id, new Error(payload.message)));
 			break;
 
 		case 'cancel-ack':
 			webgpuStore.reset();
-			resolvePending(id, 'cancelled');
+			queueMicrotask(() => resolvePending(id, 'cancelled'));
 			break;
 	}
 }
