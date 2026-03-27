@@ -216,15 +216,15 @@
 	.settings-backdrop {
 		position: fixed;
 		inset: 0;
-		background: rgba(0, 0, 0, 0.5);
+		background: var(--modal-backdrop);
 		display: flex;
 		align-items: center;
 		justify-content: center;
 		z-index: 1000;
 	}
 	.settings-card {
-		background: var(--bg-primary, #1e1e2e);
-		border: 1px solid var(--border-color, #333);
+		background: var(--bg-primary);
+		border: 1px solid var(--border);
 		border-radius: 12px;
 		width: 420px;
 		max-width: 90vw;
@@ -237,17 +237,17 @@
 		align-items: center;
 		justify-content: space-between;
 		padding: 16px 20px;
-		border-bottom: 1px solid var(--border-color, #333);
+		border-bottom: 1px solid var(--border);
 	}
 	.settings-header h2 {
 		margin: 0;
 		font-size: 16px;
-		color: var(--text-primary, #cdd6f4);
+		color: var(--text-primary);
 	}
 	.settings-close {
 		background: none;
 		border: none;
-		color: var(--text-secondary, #a6adc8);
+		color: var(--text-secondary);
 		font-size: 18px;
 		cursor: pointer;
 		padding: 4px;
@@ -266,7 +266,7 @@
 	.settings-label {
 		font-size: 13px;
 		font-weight: 500;
-		color: var(--text-secondary, #a6adc8);
+		color: var(--text-secondary);
 	}
 	.settings-row {
 		display: flex;
@@ -275,17 +275,17 @@
 	}
 	.settings-select {
 		padding: 8px 12px;
-		background: var(--bg-secondary, #181825);
-		border: 1px solid var(--border-color, #333);
+		background: var(--bg-secondary);
+		border: 1px solid var(--border);
 		border-radius: 6px;
-		color: var(--text-primary, #cdd6f4);
+		color: var(--text-primary);
 		font-size: 13px;
 		outline: none;
 	}
 	.settings-btn {
 		padding: 8px 14px;
-		background: var(--accent-color, #89b4fa);
-		color: var(--bg-primary, #1e1e2e);
+		background: var(--accent);
+		color: var(--bg-primary);
 		border: none;
 		border-radius: 6px;
 		font-size: 13px;
@@ -298,21 +298,21 @@
 		cursor: not-allowed;
 	}
 	.settings-btn.danger {
-		background: #f38ba8;
+		background: var(--color-error);
 	}
 	.settings-toggle {
 		width: 44px;
 		height: 24px;
 		border-radius: 12px;
 		border: none;
-		background: var(--bg-tertiary, #313244);
+		background: var(--bg-tertiary);
 		position: relative;
 		cursor: pointer;
 		transition: background 0.2s;
 		padding: 0;
 	}
 	.settings-toggle.active {
-		background: var(--accent-color, #89b4fa);
+		background: var(--accent);
 	}
 	.toggle-knob {
 		position: absolute;
@@ -329,38 +329,38 @@
 	}
 	.cache-size {
 		font-size: 12px;
-		color: var(--text-secondary, #a6adc8);
+		color: var(--text-secondary);
 	}
 	.checkbox-label {
 		display: flex;
 		align-items: center;
 		gap: 6px;
 		font-size: 13px;
-		color: var(--text-primary, #cdd6f4);
+		color: var(--text-primary);
 		cursor: pointer;
 	}
 	.checkbox-label input[type='checkbox'] {
-		accent-color: var(--accent-color, #89b4fa);
+		accent-color: var(--accent);
 	}
 	.settings-range {
 		flex: 1;
-		accent-color: var(--accent-color, #89b4fa);
+		accent-color: var(--accent);
 	}
 	.range-value {
 		font-size: 13px;
-		color: var(--text-primary, #cdd6f4);
+		color: var(--text-primary);
 		min-width: 60px;
 		text-align: right;
 	}
 	.settings-hint {
 		font-size: 11px;
-		color: var(--text-secondary, #a6adc8);
+		color: var(--text-secondary);
 		margin: 0;
 		opacity: 0.7;
 		line-height: 1.5;
 	}
 	.shortcuts-section {
-		border-top: 1px solid var(--border-color, #333);
+		border-top: 1px solid var(--border);
 		padding-top: 16px;
 	}
 	.shortcut-list {
@@ -376,23 +376,23 @@
 	}
 	.shortcut-desc {
 		font-size: 13px;
-		color: var(--text-primary, #cdd6f4);
+		color: var(--text-primary);
 	}
 	.shortcut-keys {
 		display: flex;
 		align-items: center;
 		gap: 2px;
 		font-size: 12px;
-		color: var(--text-secondary, #a6adc8);
+		color: var(--text-secondary);
 	}
 	.shortcut-keys :global(kbd) {
 		display: inline-block;
 		padding: 2px 6px;
 		font-size: 11px;
 		font-family: inherit;
-		color: var(--text-primary, #cdd6f4);
-		background: var(--bg-secondary, #181825);
-		border: 1px solid var(--border-color, #333);
+		color: var(--text-primary);
+		background: var(--bg-secondary);
+		border: 1px solid var(--border);
 		border-radius: 4px;
 		min-width: 20px;
 		text-align: center;

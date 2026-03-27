@@ -137,15 +137,15 @@
 		align-items: center;
 		gap: 8px;
 		padding: 8px 12px;
-		background: rgba(243, 139, 168, 0.15);
-		border-bottom: 1px solid rgba(243, 139, 168, 0.3);
+		background: color-mix(in srgb, var(--color-error) 15%, transparent);
+		border-bottom: 1px solid color-mix(in srgb, var(--color-error) 30%, transparent);
 		font-size: 12px;
-		color: #f38ba8;
+		color: var(--color-error);
 	}
 	.chat-warning-link {
 		background: none;
 		border: none;
-		color: var(--accent-color, #89b4fa);
+		color: var(--accent);
 		cursor: pointer;
 		font-size: 12px;
 		text-decoration: underline;
@@ -156,8 +156,8 @@
 		margin: 0 0 8px 12px;
 		padding: 2px 8px;
 		border-radius: 10px;
-		background: rgba(166, 227, 161, 0.15);
-		color: #a6e3a1;
+		background: color-mix(in srgb, var(--color-success) 15%, transparent);
+		color: var(--color-success);
 		font-size: 10px;
 		font-weight: 500;
 	}

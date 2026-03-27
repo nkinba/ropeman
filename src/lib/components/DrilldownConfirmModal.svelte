@@ -19,15 +19,15 @@
 	const trackInfo = $derived.by(() => {
 		switch (authStore.activeTrack) {
 			case 'bridge':
-				return { label: 'Local Bridge', color: '#a6e3a1' };
+				return { label: 'Local Bridge', color: 'var(--track-bridge)' };
 			case 'edge':
-				return { label: 'Demo', color: '#89b4fa' };
+				return { label: 'Demo', color: 'var(--track-demo)' };
 			case 'webgpu':
-				return { label: 'WebGPU', color: '#cba6f7' };
+				return { label: 'WebGPU', color: 'var(--track-webgpu)' };
 			case 'byok':
-				return { label: 'API Key', color: '#f9e2af' };
+				return { label: 'API Key', color: 'var(--track-byok)' };
 			default:
-				return { label: 'Not connected', color: '#585b70' };
+				return { label: 'Not connected', color: 'var(--text-muted)' };
 		}
 	});
 
@@ -85,15 +85,15 @@
 	.drilldown-backdrop {
 		position: fixed;
 		inset: 0;
-		background: rgba(0, 0, 0, 0.4);
+		background: var(--modal-backdrop);
 		display: flex;
 		align-items: center;
 		justify-content: center;
 		z-index: 1200;
 	}
 	.drilldown-card {
-		background: var(--bg-primary, #1e1e2e);
-		border: 1px solid var(--border-color, #333);
+		background: var(--bg-primary);
+		border: 1px solid var(--border);
 		border-radius: 12px;
 		padding: 20px 24px;
 		width: 360px;
@@ -103,12 +103,12 @@
 	.drilldown-title {
 		font-size: 15px;
 		font-weight: 700;
-		color: var(--text-primary, #cdd6f4);
+		color: var(--text-primary);
 		margin-bottom: 8px;
 	}
 	.drilldown-desc {
 		font-size: 13px;
-		color: var(--text-secondary, #a6adc8);
+		color: var(--text-secondary);
 		margin: 0 0 14px;
 		line-height: 1.5;
 	}
@@ -117,7 +117,7 @@
 		align-items: center;
 		gap: 6px;
 		padding: 8px 12px;
-		background: var(--bg-secondary, #181825);
+		background: var(--bg-secondary);
 		border-radius: 8px;
 		margin-bottom: 14px;
 	}
@@ -133,19 +133,19 @@
 	}
 	.track-suffix {
 		font-size: 13px;
-		color: var(--text-secondary, #a6adc8);
+		color: var(--text-secondary);
 	}
 	.dont-ask {
 		display: flex;
 		align-items: center;
 		gap: 6px;
 		font-size: 12px;
-		color: var(--text-secondary, #a6adc8);
+		color: var(--text-secondary);
 		cursor: pointer;
 		margin-bottom: 16px;
 	}
 	.dont-ask input {
-		accent-color: var(--accent-color, #89b4fa);
+		accent-color: var(--accent);
 	}
 	.drilldown-actions {
 		display: flex;
@@ -161,11 +161,11 @@
 		cursor: pointer;
 	}
 	.drilldown-btn.primary {
-		background: var(--accent-color, #89b4fa);
-		color: var(--bg-primary, #1e1e2e);
+		background: var(--accent);
+		color: var(--bg-primary);
 	}
 	.drilldown-btn.secondary {
-		background: var(--bg-tertiary, #313244);
-		color: var(--text-secondary, #a6adc8);
+		background: var(--bg-tertiary);
+		color: var(--text-secondary);
 	}
 </style>

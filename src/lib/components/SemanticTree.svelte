@@ -382,11 +382,11 @@
 	}
 
 	.node-status.cached {
-		color: #a6e3a1;
+		color: var(--color-success);
 	}
 
 	.node-status.analyzing {
-		color: #f9e2af;
+		color: var(--color-warning);
 	}
 
 	.node-count {

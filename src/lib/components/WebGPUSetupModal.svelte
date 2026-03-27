@@ -151,15 +151,15 @@
 	.webgpu-backdrop {
 		position: fixed;
 		inset: 0;
-		background: rgba(0, 0, 0, 0.5);
+		background: var(--modal-backdrop);
 		display: flex;
 		align-items: center;
 		justify-content: center;
 		z-index: 1100;
 	}
 	.webgpu-card {
-		background: var(--bg-primary, #1e1e2e);
-		border: 1px solid var(--border-color, #333);
+		background: var(--bg-primary);
+		border: 1px solid var(--border);
 		border-radius: 12px;
 		width: 420px;
 		max-width: 90vw;
@@ -170,17 +170,17 @@
 		align-items: center;
 		justify-content: space-between;
 		padding: 16px 20px;
-		border-bottom: 1px solid var(--border-color, #333);
+		border-bottom: 1px solid var(--border);
 	}
 	.webgpu-header h2 {
 		margin: 0;
 		font-size: 16px;
-		color: var(--text-primary, #cdd6f4);
+		color: var(--text-primary);
 	}
 	.webgpu-close {
 		background: none;
 		border: none;
-		color: var(--text-secondary, #a6adc8);
+		color: var(--text-secondary);
 		font-size: 18px;
 		cursor: pointer;
 		padding: 4px;
@@ -202,36 +202,36 @@
 	}
 	.selector-label {
 		font-size: 12px;
-		color: var(--text-secondary, #a6adc8);
+		color: var(--text-secondary);
 		font-weight: 500;
 	}
 	.model-select {
 		padding: 8px 12px;
-		border: 1px solid var(--border-color, #333);
+		border: 1px solid var(--border);
 		border-radius: 6px;
-		background: var(--bg-secondary, #181825);
-		color: var(--text-primary, #cdd6f4);
+		background: var(--bg-secondary);
+		color: var(--text-primary);
 		font-size: 13px;
 		cursor: pointer;
 	}
 	.model-select:focus {
-		outline: 1px solid var(--accent-color, #89b4fa);
+		outline: 1px solid var(--accent);
 	}
 	.vram-warning {
 		font-size: 12px;
-		color: #fab387;
+		color: var(--color-warning);
 		margin: 0;
 		padding: 8px 12px;
-		background: rgba(250, 179, 135, 0.1);
+		background: color-mix(in srgb, var(--color-warning) 10%, transparent);
 		border-radius: 6px;
-		border-left: 3px solid #fab387;
+		border-left: 3px solid var(--color-warning);
 	}
 	.model-info {
 		display: flex;
 		flex-direction: column;
 		gap: 8px;
 		padding: 12px;
-		background: var(--bg-secondary, #181825);
+		background: var(--bg-secondary);
 		border-radius: 8px;
 	}
 	.info-row {
@@ -240,24 +240,24 @@
 		font-size: 13px;
 	}
 	.info-label {
-		color: var(--text-secondary, #a6adc8);
+		color: var(--text-secondary);
 	}
 	.info-value {
-		color: var(--text-primary, #cdd6f4);
+		color: var(--text-primary);
 		font-weight: 500;
 	}
 	.confirm-desc {
 		font-size: 12px;
-		color: var(--text-secondary, #a6adc8);
+		color: var(--text-secondary);
 		line-height: 1.6;
 		margin: 0;
 	}
 	.cached-hint {
-		color: #a6e3a1;
+		color: var(--color-success);
 		padding: 8px 12px;
-		background: rgba(166, 227, 161, 0.1);
+		background: color-mix(in srgb, var(--color-success) 10%, transparent);
 		border-radius: 6px;
-		border-left: 3px solid #a6e3a1;
+		border-left: 3px solid var(--color-success);
 	}
 	.confirm-actions {
 		display: flex;
@@ -275,11 +275,11 @@
 	}
 	.error-icon {
 		font-size: 32px;
-		color: #f38ba8;
+		color: var(--color-error);
 	}
 	.error-text {
 		font-size: 13px;
-		color: #f38ba8;
+		color: var(--color-error);
 		margin: 0;
 	}
 
@@ -291,16 +291,16 @@
 		font-size: 13px;
 		font-weight: 500;
 		cursor: pointer;
-		background: var(--bg-tertiary, #313244);
-		color: var(--text-primary, #cdd6f4);
+		background: var(--bg-tertiary);
+		color: var(--text-primary);
 	}
 	.webgpu-btn.primary {
-		background: var(--accent-color, #89b4fa);
-		color: var(--bg-primary, #1e1e2e);
+		background: var(--accent);
+		color: var(--bg-primary);
 	}
 	.webgpu-btn.secondary {
-		background: var(--bg-tertiary, #313244);
-		color: var(--text-secondary, #a6adc8);
+		background: var(--bg-tertiary);
+		color: var(--text-secondary);
 	}
 
 	/* Floating download indicator */
@@ -309,8 +309,8 @@
 		bottom: 20px;
 		right: 20px;
 		width: 320px;
-		background: var(--bg-primary, #1e1e2e);
-		border: 1px solid var(--border-color, #333);
+		background: var(--bg-primary);
+		border: 1px solid var(--border);
 		border-radius: 10px;
 		padding: 12px 14px;
 		box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
@@ -332,7 +332,7 @@
 		flex: 1;
 		font-size: 13px;
 		font-weight: 600;
-		color: var(--text-primary, #cdd6f4);
+		color: var(--text-primary);
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
@@ -340,25 +340,25 @@
 	.di-cancel {
 		background: none;
 		border: none;
-		color: var(--text-secondary, #a6adc8);
+		color: var(--text-secondary);
 		font-size: 14px;
 		cursor: pointer;
 		padding: 2px;
 		flex-shrink: 0;
 	}
 	.di-cancel:hover {
-		color: #f38ba8;
+		color: var(--color-error);
 	}
 	.di-progress-track {
 		width: 100%;
 		height: 6px;
-		background: var(--bg-secondary, #181825);
+		background: var(--bg-secondary);
 		border-radius: 3px;
 		overflow: hidden;
 	}
 	.di-progress-fill {
 		height: 100%;
-		background: var(--accent-color, #89b4fa);
+		background: var(--accent);
 		border-radius: 3px;
 		transition: width 0.3s ease;
 	}
@@ -366,11 +366,11 @@
 		display: flex;
 		justify-content: space-between;
 		font-size: 11px;
-		color: var(--text-secondary, #a6adc8);
+		color: var(--text-secondary);
 	}
 	.di-percent {
 		font-weight: 600;
-		color: var(--accent-color, #89b4fa);
+		color: var(--accent);
 	}
 	.di-stage {
 		overflow: hidden;
@@ -384,8 +384,8 @@
 		position: fixed;
 		bottom: 20px;
 		right: 20px;
-		background: #a6e3a1;
-		color: #1e1e2e;
+		background: var(--color-success);
+		color: var(--bg-primary);
 		border-radius: 10px;
 		padding: 12px 16px;
 		display: flex;
@@ -407,7 +407,7 @@
 	.dc-dismiss {
 		background: none;
 		border: none;
-		color: #1e1e2e;
+		color: var(--bg-primary);
 		font-size: 14px;
 		cursor: pointer;
 		padding: 2px;

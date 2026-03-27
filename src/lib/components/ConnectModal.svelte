@@ -400,15 +400,15 @@
 	.connect-backdrop {
 		position: fixed;
 		inset: 0;
-		background: rgba(0, 0, 0, 0.5);
+		background: var(--modal-backdrop);
 		display: flex;
 		align-items: center;
 		justify-content: center;
 		z-index: 1000;
 	}
 	.connect-card {
-		background: var(--bg-primary, #1e1e2e);
-		border: 1px solid var(--border-color, #333);
+		background: var(--bg-primary);
+		border: 1px solid var(--border);
 		border-radius: 12px;
 		width: 440px;
 		max-width: 90vw;
@@ -421,24 +421,24 @@
 		align-items: center;
 		justify-content: space-between;
 		padding: 16px 20px;
-		border-bottom: 1px solid var(--border-color, #333);
+		border-bottom: 1px solid var(--border);
 	}
 	.connect-header h2 {
 		margin: 0;
 		font-size: 16px;
-		color: var(--text-primary, #cdd6f4);
+		color: var(--text-primary);
 	}
 	.connect-close {
 		background: none;
 		border: none;
-		color: var(--text-secondary, #a6adc8);
+		color: var(--text-secondary);
 		font-size: 18px;
 		cursor: pointer;
 		padding: 4px;
 	}
 	.connect-tabs {
 		display: flex;
-		border-bottom: 1px solid var(--border-color, #333);
+		border-bottom: 1px solid var(--border);
 	}
 	.connect-tab {
 		flex: 1;
@@ -446,22 +446,22 @@
 		background: none;
 		border: none;
 		border-bottom: 2px solid transparent;
-		color: var(--text-secondary, #a6adc8);
+		color: var(--text-secondary);
 		font-size: 13px;
 		font-weight: 500;
 		cursor: pointer;
 		transition: all 0.2s;
 	}
 	.connect-tab.active {
-		color: var(--accent-color, #89b4fa);
-		border-bottom-color: var(--accent-color, #89b4fa);
+		color: var(--accent);
+		border-bottom-color: var(--accent);
 	}
 	.tab-badge {
 		font-size: 9px;
 		padding: 1px 5px;
 		border-radius: 8px;
-		background: var(--bg-secondary, #181825);
-		color: var(--text-secondary, #a6adc8);
+		background: var(--bg-secondary);
+		color: var(--text-secondary);
 		vertical-align: super;
 	}
 	.webgpu-status-row {
@@ -480,7 +480,7 @@
 	.connect-label {
 		font-size: 13px;
 		font-weight: 500;
-		color: var(--text-secondary, #a6adc8);
+		color: var(--text-secondary);
 	}
 	.connect-row {
 		display: flex;
@@ -490,33 +490,33 @@
 	.connect-input {
 		flex: 1;
 		padding: 8px 12px;
-		background: var(--bg-secondary, #181825);
-		border: 1px solid var(--border-color, #333);
+		background: var(--bg-secondary);
+		border: 1px solid var(--border);
 		border-radius: 6px;
-		color: var(--text-primary, #cdd6f4);
+		color: var(--text-primary);
 		font-size: 13px;
 		outline: none;
 	}
 	.connect-input:focus {
-		border-color: var(--accent-color, #89b4fa);
+		border-color: var(--accent);
 	}
 	.connect-select {
 		padding: 8px 12px;
-		background: var(--bg-secondary, #181825);
-		border: 1px solid var(--border-color, #333);
+		background: var(--bg-secondary);
+		border: 1px solid var(--border);
 		border-radius: 6px;
-		color: var(--text-primary, #cdd6f4);
+		color: var(--text-primary);
 		font-size: 13px;
 		outline: none;
 		cursor: pointer;
 	}
 	.connect-select:focus {
-		border-color: var(--accent-color, #89b4fa);
+		border-color: var(--accent);
 	}
 	.connect-btn {
 		padding: 8px 14px;
-		background: var(--accent-color, #89b4fa);
-		color: var(--bg-primary, #1e1e2e);
+		background: var(--accent);
+		color: var(--bg-primary);
 		border: none;
 		border-radius: 6px;
 		font-size: 13px;
@@ -529,20 +529,20 @@
 		cursor: not-allowed;
 	}
 	.connect-btn.danger {
-		background: #f38ba8;
+		background: var(--color-error);
 	}
 	.connect-status {
 		font-size: 12px;
 	}
 	.connect-status.success {
-		color: #a6e3a1;
+		color: var(--color-success);
 	}
 	.connect-status.error {
-		color: #f38ba8;
+		color: var(--color-error);
 	}
 	.connect-hint {
 		font-size: 11px;
-		color: var(--text-secondary, #a6adc8);
+		color: var(--text-secondary);
 		margin: 0;
 		opacity: 0.7;
 	}
@@ -551,24 +551,24 @@
 		align-items: flex-start;
 		gap: 8px;
 		padding: 10px 12px;
-		background: rgba(249, 226, 175, 0.08);
-		border: 1px solid rgba(249, 226, 175, 0.2);
+		background: color-mix(in srgb, var(--color-warning) 8%, transparent);
+		border: 1px solid color-mix(in srgb, var(--color-warning) 20%, transparent);
 		border-radius: 6px;
 	}
 	.notice-icon {
 		font-size: 16px;
 		flex-shrink: 0;
-		color: #f9e2af;
+		color: var(--color-warning);
 	}
 	.notice-text {
 		font-size: 12px;
-		color: var(--text-secondary, #a6adc8);
+		color: var(--text-secondary);
 		line-height: 1.5;
 	}
 	.notice-link {
 		background: none;
 		border: none;
-		color: var(--accent-color, #89b4fa);
+		color: var(--accent);
 		cursor: pointer;
 		padding: 0;
 		font-size: 12px;
@@ -584,49 +584,49 @@
 		width: 8px;
 		height: 8px;
 		border-radius: 50%;
-		background: #585b70;
+		background: var(--text-muted);
 		flex-shrink: 0;
 	}
 	.status-dot.connected {
-		background: #a6e3a1;
+		background: var(--color-success);
 	}
 	.status-dot.connecting {
-		background: #f9e2af;
+		background: var(--color-warning);
 		animation: pulse 1s infinite;
 	}
 	.status-dot.error {
-		background: #f38ba8;
+		background: var(--color-error);
 	}
 	.status-text {
 		font-size: 12px;
-		color: var(--text-secondary, #a6adc8);
+		color: var(--text-secondary);
 	}
 	.command-block {
 		display: flex;
 		align-items: center;
 		gap: 8px;
 		padding: 8px 12px;
-		background: var(--bg-secondary, #181825);
-		border: 1px solid var(--border-color, #333);
+		background: var(--bg-secondary);
+		border: 1px solid var(--border);
 		border-radius: 6px;
 	}
 	.command-block code {
 		flex: 1;
 		font-size: 12px;
-		color: #a6e3a1;
+		color: var(--color-success);
 		font-family: 'SF Mono', 'Fira Code', monospace;
 	}
 	.copy-btn {
 		background: none;
 		border: none;
-		color: var(--text-secondary, #a6adc8);
+		color: var(--text-secondary);
 		cursor: pointer;
 		padding: 4px;
 		display: flex;
 		align-items: center;
 	}
 	.copy-btn:hover {
-		color: var(--text-primary, #cdd6f4);
+		color: var(--text-primary);
 	}
 	@keyframes pulse {
 		0%,
