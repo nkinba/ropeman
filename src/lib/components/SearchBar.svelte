@@ -222,7 +222,7 @@
 	.search-overlay {
 		position: fixed;
 		inset: 0;
-		background: rgba(0, 0, 0, 0.5);
+		background: var(--modal-backdrop);
 		display: flex;
 		justify-content: center;
 		padding-top: 20vh;

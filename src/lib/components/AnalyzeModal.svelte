@@ -68,13 +68,13 @@
 		const t = authStore.activeTrack;
 		switch (t) {
 			case 'bridge':
-				return { label: 'Local Bridge', color: '#a6e3a1' };
+				return { label: 'Local Bridge', color: 'var(--track-bridge)' };
 			case 'edge':
-				return { label: 'Demo', color: '#89b4fa' };
+				return { label: 'Demo', color: 'var(--track-demo)' };
 			case 'webgpu':
-				return { label: 'WebGPU', color: '#cba6f7' };
+				return { label: 'WebGPU', color: 'var(--track-webgpu)' };
 			case 'byok':
-				return { label: 'API Key', color: '#f9e2af' };
+				return { label: 'API Key', color: 'var(--track-byok)' };
 			default:
 				return null;
 		}
@@ -447,15 +447,15 @@
 	.analyze-backdrop {
 		position: fixed;
 		inset: 0;
-		background: rgba(0, 0, 0, 0.5);
+		background: var(--modal-backdrop);
 		display: flex;
 		align-items: center;
 		justify-content: center;
 		z-index: 1000;
 	}
 	.analyze-card {
-		background: var(--bg-primary, #1e1e2e);
-		border: 1px solid var(--border-color, #333);
+		background: var(--bg-primary);
+		border: 1px solid var(--border);
 		border-radius: 12px;
 		width: 520px;
 		max-width: 90vw;
@@ -468,13 +468,13 @@
 		align-items: flex-start;
 		justify-content: space-between;
 		padding: 16px 20px;
-		border-bottom: 1px solid var(--border-color, #333);
+		border-bottom: 1px solid var(--border);
 	}
 	.analyze-header h2 {
 		margin: 0;
 		font-size: 16px;
 		font-weight: 700;
-		color: var(--text-primary, #cdd6f4);
+		color: var(--text-primary);
 	}
 	.current-track {
 		display: flex;
@@ -489,12 +489,12 @@
 	}
 	.ct-label {
 		font-size: 11px;
-		color: var(--text-secondary, #a6adc8);
+		color: var(--text-secondary);
 	}
 	.analyze-close {
 		background: none;
 		border: none;
-		color: var(--text-secondary, #a6adc8);
+		color: var(--text-secondary);
 		font-size: 18px;
 		cursor: pointer;
 		padding: 4px;
@@ -508,16 +508,16 @@
 
 	/* Track cards */
 	.track-card {
-		border: 1px solid var(--border-color, #333);
+		border: 1px solid var(--border);
 		border-radius: 10px;
 		overflow: hidden;
 		transition: border-color 0.2s;
 	}
 	.track-card:hover:not(.disabled) {
-		border-color: var(--text-secondary, #a6adc8);
+		border-color: var(--text-secondary);
 	}
 	.track-card.active {
-		border-color: var(--accent-color, #89b4fa);
+		border-color: var(--accent);
 	}
 	.track-card.disabled {
 		opacity: 0.5;
@@ -549,11 +549,11 @@
 	.track-name {
 		font-size: 14px;
 		font-weight: 600;
-		color: var(--text-primary, #cdd6f4);
+		color: var(--text-primary);
 	}
 	.track-sub {
 		font-size: 11px;
-		color: var(--text-secondary, #a6adc8);
+		color: var(--text-secondary);
 		margin-top: 1px;
 	}
 	.active-badge {
@@ -561,8 +561,8 @@
 		font-weight: 600;
 		padding: 2px 7px;
 		border-radius: 8px;
-		background: rgba(137, 180, 250, 0.15);
-		color: var(--accent-color, #89b4fa);
+		background: var(--accent-muted);
+		color: var(--accent);
 		flex-shrink: 0;
 	}
 	.beta-tag {
@@ -570,13 +570,13 @@
 		font-weight: 500;
 		padding: 1px 5px;
 		border-radius: 6px;
-		background: var(--bg-secondary, #181825);
-		color: var(--text-secondary, #a6adc8);
+		background: var(--bg-secondary);
+		color: var(--text-secondary);
 		vertical-align: middle;
 	}
 	.expand-arrow {
 		font-size: 12px;
-		color: var(--text-secondary, #a6adc8);
+		color: var(--text-secondary);
 		transition: transform 0.2s;
 		flex-shrink: 0;
 	}
@@ -586,8 +586,8 @@
 	.start-btn {
 		flex-shrink: 0;
 		padding: 6px 14px;
-		background: var(--accent-color, #89b4fa);
-		color: var(--bg-primary, #1e1e2e);
+		background: var(--accent);
+		color: var(--bg-primary);
 		border: none;
 		border-radius: 6px;
 		font-size: 12px;
@@ -607,30 +607,30 @@
 	/* Config sections */
 	.track-config {
 		padding: 10px 14px 14px;
-		border-top: 1px solid var(--border-color, #333);
+		border-top: 1px solid var(--border);
 		display: flex;
 		flex-direction: column;
 		gap: 8px;
-		background: var(--bg-secondary, #181825);
+		background: var(--bg-secondary);
 	}
 	.cfg-label {
 		font-size: 12px;
 		font-weight: 500;
-		color: var(--text-secondary, #a6adc8);
+		color: var(--text-secondary);
 	}
 	.cfg-select,
 	.cfg-input {
 		padding: 7px 10px;
-		background: var(--bg-primary, #1e1e2e);
-		border: 1px solid var(--border-color, #333);
+		background: var(--bg-primary);
+		border: 1px solid var(--border);
 		border-radius: 6px;
-		color: var(--text-primary, #cdd6f4);
+		color: var(--text-primary);
 		font-size: 12px;
 		outline: none;
 	}
 	.cfg-select:focus,
 	.cfg-input:focus {
-		border-color: var(--accent-color, #89b4fa);
+		border-color: var(--accent);
 	}
 	.cfg-row {
 		display: flex;
@@ -641,8 +641,8 @@
 	}
 	.cfg-btn {
 		padding: 7px 12px;
-		background: var(--accent-color, #89b4fa);
-		color: var(--bg-primary, #1e1e2e);
+		background: var(--accent);
+		color: var(--bg-primary);
 		border: none;
 		border-radius: 6px;
 		font-size: 12px;
@@ -655,33 +655,33 @@
 		cursor: not-allowed;
 	}
 	.cfg-btn.danger {
-		background: #f38ba8;
+		background: var(--color-error);
 	}
 	.cfg-status {
 		font-size: 11px;
 	}
 	.cfg-status.success {
-		color: #a6e3a1;
+		color: var(--color-success);
 	}
 	.cfg-status.error {
-		color: #f38ba8;
+		color: var(--color-error);
 	}
 	.cfg-command {
 		padding: 6px 10px;
-		background: var(--bg-primary, #1e1e2e);
-		border: 1px solid var(--border-color, #333);
+		background: var(--bg-primary);
+		border: 1px solid var(--border);
 		border-radius: 6px;
 	}
 	.cfg-command code {
 		font-size: 11px;
-		color: #a6e3a1;
+		color: var(--color-success);
 		font-family: 'SF Mono', 'Fira Code', monospace;
 	}
 
 	/* Preview */
 	.preview-section {
 		margin-top: 4px;
-		border-top: 1px solid var(--border-color, #333);
+		border-top: 1px solid var(--border);
 		padding-top: 10px;
 	}
 	.preview-toggle {
@@ -689,14 +689,14 @@
 		align-items: center;
 		gap: 6px;
 		font-size: 12px;
-		color: var(--text-secondary, #a6adc8);
+		color: var(--text-secondary);
 		cursor: pointer;
 		background: none;
 		border: none;
 		padding: 0;
 	}
 	.preview-toggle:hover {
-		color: var(--text-primary, #cdd6f4);
+		color: var(--text-primary);
 	}
 	.toggle-arrow {
 		font-size: 10px;
@@ -714,15 +714,15 @@
 	}
 	.meta-item {
 		font-size: 11px;
-		color: var(--text-secondary, #a6adc8);
+		color: var(--text-secondary);
 	}
 	.meta-sep {
 		font-size: 11px;
-		color: var(--text-secondary, #a6adc8);
+		color: var(--text-secondary);
 		opacity: 0.4;
 	}
 	.preview-json {
-		background: var(--bg-secondary, #181825);
+		background: var(--bg-secondary);
 		font-family: 'SF Mono', 'Fira Code', monospace;
 		font-size: 10px;
 		line-height: 1.5;
@@ -733,6 +733,6 @@
 		white-space: pre-wrap;
 		word-break: break-all;
 		margin-top: 8px;
-		color: var(--text-secondary, #a6adc8);
+		color: var(--text-secondary);
 	}
 </style>

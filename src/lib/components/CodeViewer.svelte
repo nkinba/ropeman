@@ -286,7 +286,7 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		color: #f38ba8;
+		color: var(--color-error);
 		font-size: 13px;
 	}
 
@@ -316,8 +316,8 @@
 		font-size: 10px;
 		font-weight: 600;
 		text-transform: uppercase;
-		color: var(--accent, #89b4fa);
-		background: rgba(137, 180, 250, 0.12);
+		color: var(--accent);
+		background: var(--accent-subtle);
 		padding: 2px 6px;
 		border-radius: 4px;
 		flex-shrink: 0;
@@ -389,20 +389,20 @@
 	}
 
 	.symbol-kind-icon.fn {
-		color: #89b4fa;
-		background: rgba(137, 180, 250, 0.1);
+		color: var(--color-info);
+		background: color-mix(in srgb, var(--color-info) 10%, transparent);
 	}
 	.symbol-kind-icon.cls {
-		color: #f9e2af;
-		background: rgba(249, 226, 175, 0.1);
+		color: var(--color-warning);
+		background: color-mix(in srgb, var(--color-warning) 10%, transparent);
 	}
 	.symbol-kind-icon.var {
-		color: #a6e3a1;
-		background: rgba(166, 227, 161, 0.1);
+		color: var(--color-success);
+		background: color-mix(in srgb, var(--color-success) 10%, transparent);
 	}
 	.symbol-kind-icon.type {
-		color: #cba6f7;
-		background: rgba(203, 166, 247, 0.1);
+		color: var(--color-class);
+		background: color-mix(in srgb, var(--color-class) 10%, transparent);
 	}
 
 	.symbol-name {

@@ -24,13 +24,13 @@
 		const track = authStore.activeTrack;
 		switch (track) {
 			case 'bridge':
-				return { label: 'Bridge', color: '#a6e3a1', icon: '🔗' };
+				return { label: 'Bridge', color: 'var(--track-bridge)', icon: '🔗' };
 			case 'edge':
-				return { label: 'Demo', color: '#89b4fa', icon: '⚡' };
+				return { label: 'Demo', color: 'var(--track-demo)', icon: '⚡' };
 			case 'webgpu':
-				return { label: 'WebGPU', color: '#cba6f7', icon: '🧠' };
+				return { label: 'WebGPU', color: 'var(--track-webgpu)', icon: '🧠' };
 			case 'byok':
-				return { label: 'API Key', color: '#f9e2af', icon: '🔑' };
+				return { label: 'API Key', color: 'var(--track-byok)', icon: '🔑' };
 			default:
 				return null;
 		}
@@ -208,8 +208,8 @@
 		align-items: center;
 		gap: 6px;
 		padding: 6px 14px;
-		background: var(--accent, #89b4fa);
-		color: var(--bg-primary, #1e1e2e);
+		background: var(--accent);
+		color: var(--bg-primary);
 		border: none;
 		border-radius: 8px;
 		font-size: 13px;

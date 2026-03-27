@@ -33,6 +33,26 @@
   --color-method: #06b6d4;
   --color-import: #64748b;
 
+  /* Semantic colors */
+  --color-error: #ef4444;
+  --color-warning: #f59e0b;
+  --color-success: #22c55e;
+  --color-info: #3b82f6;
+
+  /* Track colors (AI connection tracks) */
+  --track-demo: #3b82f6;
+  --track-byok: #f59e0b;
+  --track-bridge: #22c55e;
+  --track-webgpu: #a855f7;
+
+  /* Surface & overlay */
+  --modal-backdrop: rgba(0, 0, 0, 0.5);
+  --surface-elevated: var(--bg-tertiary);
+
+  /* Accent variants */
+  --accent-muted: color-mix(in srgb, var(--accent) 15%, transparent);
+  --accent-subtle: color-mix(in srgb, var(--accent) 8%, transparent);
+
   --header-height: 56px;
   --diagram-height: 220px;
   --transition: 0.2s ease;
@@ -65,6 +85,26 @@
   --color-class: #c084fc;
   --color-method: #22d3ee;
   --color-import: #94a3b8;
+
+  /* Semantic colors */
+  --color-error: #f27983;
+  --color-warning: #f2c478;
+  --color-success: #7ad4a0;
+  --color-info: #6c8eef;
+
+  /* Track colors */
+  --track-demo: #60a5fa;
+  --track-byok: #fbbf24;
+  --track-bridge: #4ade80;
+  --track-webgpu: #c084fc;
+
+  /* Surface & overlay */
+  --modal-backdrop: rgba(0, 0, 0, 0.5);
+  --surface-elevated: var(--bg-tertiary);
+
+  /* Accent variants */
+  --accent-muted: color-mix(in srgb, var(--accent) 15%, transparent);
+  --accent-subtle: color-mix(in srgb, var(--accent) 8%, transparent);
 
   --landing-card-bg: rgba(255, 255, 255, 0.05);
   --landing-card-border: rgba(255, 255, 255, 0.08);
