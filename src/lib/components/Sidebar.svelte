@@ -136,7 +136,7 @@
 <style>
 	.sidebar {
 		display: flex;
-		background: var(--bg-primary);
+		background: var(--sidebar-content-bg, var(--bg-primary));
 		border-right: 1px solid var(--border);
 		overflow: hidden;
 		flex-shrink: 0;
@@ -149,7 +149,7 @@
 		gap: 2px;
 		padding: 8px 4px;
 		border-right: 1px solid var(--border);
-		background: var(--bg-secondary);
+		background: var(--sidebar-icon-bg, var(--bg-secondary));
 	}
 
 	.sidebar.content-closed .sidebar-icons {
@@ -210,10 +210,11 @@
 	}
 
 	.panel-title {
+		font-family: var(--font-display, inherit);
 		font-size: 11px;
-		font-weight: 700;
+		font-weight: 600;
 		text-transform: uppercase;
-		letter-spacing: 0.5px;
+		letter-spacing: 0.05em;
 		color: var(--text-secondary);
 	}
 

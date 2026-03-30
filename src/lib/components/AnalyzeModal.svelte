@@ -454,27 +454,37 @@
 		z-index: 1000;
 	}
 	.analyze-card {
-		background: var(--bg-primary);
-		border: 1px solid var(--border);
+		background: rgba(21, 26, 33, 0.85);
+		backdrop-filter: blur(20px);
+		-webkit-backdrop-filter: blur(20px);
+		border: 1px solid rgba(68, 72, 79, 0.15);
 		border-radius: 12px;
 		width: 520px;
 		max-width: 90vw;
 		max-height: 85vh;
 		overflow-y: auto;
-		box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+		box-shadow: 0 24px 48px rgba(0, 0, 0, 0.5);
+	}
+	:root .analyze-card {
+		background: var(--bg-primary);
+		backdrop-filter: none;
+		-webkit-backdrop-filter: none;
+		border: 1px solid var(--border);
+		box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
 	}
 	.analyze-header {
 		display: flex;
 		align-items: flex-start;
 		justify-content: space-between;
 		padding: 16px 20px;
-		border-bottom: 1px solid var(--border);
+		background: var(--bg-secondary);
 	}
 	.analyze-header h2 {
 		margin: 0;
 		font-size: 16px;
 		font-weight: 700;
 		color: var(--text-primary);
+		font-family: var(--font-display, 'Space Grotesk', sans-serif);
 	}
 	.current-track {
 		display: flex;
@@ -508,16 +518,17 @@
 
 	/* Track cards */
 	.track-card {
-		border: 1px solid var(--border);
+		border: none;
 		border-radius: 10px;
 		overflow: hidden;
-		transition: border-color 0.2s;
+		background: var(--bg-secondary);
+		transition: background-color 0.2s;
 	}
 	.track-card:hover:not(.disabled) {
-		border-color: var(--text-secondary);
+		background: var(--bg-tertiary);
 	}
 	.track-card.active {
-		border-color: var(--accent);
+		background: var(--surface-elevated, var(--bg-tertiary));
 	}
 	.track-card.disabled {
 		opacity: 0.5;
@@ -607,11 +618,10 @@
 	/* Config sections */
 	.track-config {
 		padding: 10px 14px 14px;
-		border-top: 1px solid var(--border);
 		display: flex;
 		flex-direction: column;
 		gap: 8px;
-		background: var(--bg-secondary);
+		background: var(--bg-tertiary);
 	}
 	.cfg-label {
 		font-size: 12px;
@@ -622,15 +632,16 @@
 	.cfg-input {
 		padding: 7px 10px;
 		background: var(--bg-primary);
-		border: 1px solid var(--border);
+		border: 1px solid transparent;
 		border-radius: 6px;
 		color: var(--text-primary);
 		font-size: 12px;
 		outline: none;
+		transition: border-color 0.15s ease;
 	}
 	.cfg-select:focus,
 	.cfg-input:focus {
-		border-color: var(--accent);
+		border-color: rgba(68, 72, 79, 0.4);
 	}
 	.cfg-row {
 		display: flex;
@@ -669,7 +680,7 @@
 	.cfg-command {
 		padding: 6px 10px;
 		background: var(--bg-primary);
-		border: 1px solid var(--border);
+		border: none;
 		border-radius: 6px;
 	}
 	.cfg-command code {
@@ -681,7 +692,6 @@
 	/* Preview */
 	.preview-section {
 		margin-top: 4px;
-		border-top: 1px solid var(--border);
 		padding-top: 10px;
 	}
 	.preview-toggle {

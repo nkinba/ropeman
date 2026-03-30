@@ -296,7 +296,6 @@
 		justify-content: space-between;
 		padding: 8px 16px;
 		background: var(--bg-secondary);
-		border-bottom: 1px solid var(--border);
 		flex-shrink: 0;
 		gap: 8px;
 	}
@@ -338,7 +337,6 @@
 	.symbol-sidebar {
 		width: 200px;
 		flex-shrink: 0;
-		border-right: 1px solid var(--border);
 		overflow-y: auto;
 		background: var(--bg-secondary);
 	}
@@ -350,7 +348,7 @@
 		letter-spacing: 0.5px;
 		color: var(--text-muted);
 		padding: 8px 12px;
-		border-bottom: 1px solid var(--border);
+		background: var(--bg-tertiary);
 	}
 
 	.symbol-item {

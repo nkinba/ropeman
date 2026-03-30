@@ -223,26 +223,36 @@
 		z-index: 1000;
 	}
 	.settings-card {
-		background: var(--bg-primary);
-		border: 1px solid var(--border);
+		background: rgba(21, 26, 33, 0.85);
+		backdrop-filter: blur(20px);
+		-webkit-backdrop-filter: blur(20px);
+		border: 1px solid rgba(68, 72, 79, 0.15);
 		border-radius: 12px;
 		width: 420px;
 		max-width: 90vw;
 		max-height: 80vh;
 		overflow-y: auto;
-		box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+		box-shadow: 0 24px 48px rgba(0, 0, 0, 0.5);
+	}
+	:root .settings-card {
+		background: var(--bg-primary);
+		backdrop-filter: none;
+		-webkit-backdrop-filter: none;
+		border: 1px solid var(--border);
+		box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
 	}
 	.settings-header {
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
 		padding: 16px 20px;
-		border-bottom: 1px solid var(--border);
+		background: var(--bg-secondary);
 	}
 	.settings-header h2 {
 		margin: 0;
 		font-size: 16px;
 		color: var(--text-primary);
+		font-family: var(--font-display, 'Space Grotesk', sans-serif);
 	}
 	.settings-close {
 		background: none;
@@ -276,11 +286,15 @@
 	.settings-select {
 		padding: 8px 12px;
 		background: var(--bg-secondary);
-		border: 1px solid var(--border);
+		border: 1px solid transparent;
 		border-radius: 6px;
 		color: var(--text-primary);
 		font-size: 13px;
 		outline: none;
+		transition: border-color 0.15s ease;
+	}
+	.settings-select:focus {
+		border-color: rgba(68, 72, 79, 0.4);
 	}
 	.settings-btn {
 		padding: 8px 14px;
@@ -360,7 +374,6 @@
 		line-height: 1.5;
 	}
 	.shortcuts-section {
-		border-top: 1px solid var(--border);
 		padding-top: 16px;
 	}
 	.shortcut-list {
@@ -391,8 +404,8 @@
 		font-size: 11px;
 		font-family: inherit;
 		color: var(--text-primary);
-		background: var(--bg-secondary);
-		border: 1px solid var(--border);
+		background: var(--bg-tertiary);
+		border: none;
 		border-radius: 4px;
 		min-width: 20px;
 		text-align: center;

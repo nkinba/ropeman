@@ -368,6 +368,7 @@
 	}
 
 	.node-label {
+		font-family: var(--font-display, inherit);
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;

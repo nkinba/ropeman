@@ -14,6 +14,11 @@
   --tooltip-bg: #333333;
   --tooltip-text: #ffffff;
 
+  /* Typography */
+  --font-display: 'Space Grotesk', sans-serif;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-code: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
+
   /* Module colors */
   --color-autograd: #ef4444;
   --color-embedding: #22c55e;
@@ -49,9 +54,17 @@
   --modal-backdrop: rgba(0, 0, 0, 0.5);
   --surface-elevated: var(--bg-tertiary);
 
+  /* Glassmorphism (light — subtle) */
+  --glass-bg: rgba(245, 245, 245, 0.85);
+  --glass-blur: 20px;
+
   /* Accent variants */
   --accent-muted: color-mix(in srgb, var(--accent) 15%, transparent);
   --accent-subtle: color-mix(in srgb, var(--accent) 8%, transparent);
+
+  /* Sidebar */
+  --sidebar-icon-bg: var(--bg-secondary);
+  --sidebar-content-bg: var(--bg-primary);
 
   --header-height: 56px;
   --diagram-height: 220px;
@@ -64,47 +77,66 @@
 }
 
 [data-theme="dark"] {
-  --bg-primary: #1a1a1a;
-  --bg-secondary: #2d2d2d;
-  --bg-tertiary: #3d3d3d;
-  --text-primary: #ffffff;
-  --text-secondary: #a0a0a0;
-  --text-muted: #666666;
-  --accent: #60a5fa;
-  --accent-hover: #3b82f6;
-  --border: #404040;
-  --code-bg: #0d1117;
+  /* Stitch "Obsidian Architect" surface hierarchy */
+  --bg-primary: #0a0e14;           /* surface — app shell */
+  --bg-secondary: #151a21;         /* surface-container — panels */
+  --bg-tertiary: #1b2028;          /* surface-container-high — hover/active */
+  --bg-lowest: #000000;            /* surface-container-lowest — editor/canvas bg */
+  --bg-highest: #20262f;           /* surface-container-highest — popover */
+  --bg-bright: #262c36;            /* surface-bright — secondary btn */
+
+  --text-primary: #f1f3fc;         /* on-surface */
+  --text-secondary: #a8abb3;       /* on-surface-variant */
+  --text-muted: #72757d;           /* outline */
+
+  --accent: #a3a6ff;               /* primary — indigo */
+  --accent-hover: #8b8eff;
+  --accent-secondary: #53ddfc;     /* secondary — cyan */
+  --accent-tertiary: #ac8aff;      /* tertiary — violet */
+  --accent-secondary-dim: #40ceed; /* secondary-dim — node glow */
+
+  --border: #1b2028;
+  --code-bg: #000000;
   --code-text: #e6edf3;
-  --shadow: rgba(0, 0, 0, 0.3);
-  --tooltip-bg: #444444;
-  --tooltip-text: #ffffff;
+  --shadow: rgba(0, 0, 0, 0.4);
+  --tooltip-bg: #20262f;
+  --tooltip-text: #f1f3fc;
 
   --color-directory: #fbbf24;
-  --color-file: #60a5fa;
+  --color-file: #a3a6ff;
   --color-function: #4ade80;
-  --color-class: #c084fc;
-  --color-method: #22d3ee;
-  --color-import: #94a3b8;
+  --color-class: #ac8aff;
+  --color-method: #53ddfc;
+  --color-import: #72757d;
 
   /* Semantic colors */
-  --color-error: #f27983;
+  --color-error: #ff6e84;
   --color-warning: #f2c478;
   --color-success: #7ad4a0;
-  --color-info: #6c8eef;
+  --color-info: #a3a6ff;
 
   /* Track colors */
-  --track-demo: #60a5fa;
+  --track-demo: #a3a6ff;
   --track-byok: #fbbf24;
   --track-bridge: #4ade80;
-  --track-webgpu: #c084fc;
+  --track-webgpu: #ac8aff;
 
   /* Surface & overlay */
-  --modal-backdrop: rgba(0, 0, 0, 0.5);
-  --surface-elevated: var(--bg-tertiary);
+  --modal-backdrop: rgba(0, 0, 0, 0.6);
+  --surface-elevated: var(--bg-highest);
+
+  /* Glassmorphism */
+  --glass-bg: rgba(32, 38, 47, 0.85);
+  --glass-blur: 20px;
 
   /* Accent variants */
   --accent-muted: color-mix(in srgb, var(--accent) 15%, transparent);
   --accent-subtle: color-mix(in srgb, var(--accent) 8%, transparent);
+  --accent-bg: rgba(163, 166, 255, 0.12);
+
+  /* Sidebar */
+  --sidebar-icon-bg: #0f141a;     /* surface-container-low — darkest */
+  --sidebar-content-bg: #151a21;  /* surface-container */
 
   --landing-card-bg: rgba(255, 255, 255, 0.05);
   --landing-card-border: rgba(255, 255, 255, 0.08);
@@ -118,11 +150,19 @@
 
 html, body {
   height: 100%;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-family: var(--font-body);
   background-color: var(--bg-primary);
   color: var(--text-primary);
   transition: background-color var(--transition), color var(--transition);
   overflow: hidden;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+}
+
+code, pre, .code-font {
+  font-family: var(--font-code);
 }
 
 #app {

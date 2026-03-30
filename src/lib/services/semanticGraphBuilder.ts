@@ -7,9 +7,9 @@ const SEMANTIC_NODE_HEIGHT = 160;
 
 const EDGE_TYPE_COLORS: Record<string, string> = {
 	depends_on: '#94a3b8',
-	calls: '#3b82f6',
-	extends: '#a855f7',
-	uses: '#22c55e'
+	calls: '#53ddfc',
+	extends: '#ac8aff',
+	uses: '#7ad4a0'
 };
 
 export function toSemanticFlowNodes(level: SemanticLevel): Node[] {
@@ -95,7 +95,7 @@ export function toSemanticFlowEdges(level: SemanticLevel): Edge[] {
 			type: 'smoothstep',
 			animated: true,
 			...(edge.label ? { label: edge.label } : {}),
-			style: `stroke: ${color}; stroke-width: 2px;`,
+			style: `stroke: ${color}; stroke-width: 2px; filter: drop-shadow(0 0 3px ${color});`,
 			markerEnd: {
 				type: 'arrowclosed' as MarkerType,
 				color
