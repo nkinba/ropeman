@@ -92,19 +92,29 @@
 		z-index: 1200;
 	}
 	.drilldown-card {
-		background: var(--bg-primary);
-		border: 1px solid var(--border);
+		background: rgba(21, 26, 33, 0.85);
+		backdrop-filter: blur(20px);
+		-webkit-backdrop-filter: blur(20px);
+		border: 1px solid rgba(68, 72, 79, 0.15);
 		border-radius: 12px;
 		padding: 20px 24px;
 		width: 360px;
 		max-width: 90vw;
-		box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+		box-shadow: 0 24px 48px rgba(0, 0, 0, 0.5);
+	}
+	:root .drilldown-card {
+		background: var(--bg-primary);
+		backdrop-filter: none;
+		-webkit-backdrop-filter: none;
+		border: 1px solid var(--border);
+		box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
 	}
 	.drilldown-title {
 		font-size: 15px;
 		font-weight: 700;
 		color: var(--text-primary);
 		margin-bottom: 8px;
+		font-family: var(--font-display, 'Space Grotesk', sans-serif);
 	}
 	.drilldown-desc {
 		font-size: 13px;

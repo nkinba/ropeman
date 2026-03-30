@@ -67,9 +67,9 @@
 
 	const EDGE_TYPE_INFO: { type: string; i18nKey: string; color: string }[] = [
 		{ type: 'depends_on', i18nKey: 'legend.depends_on', color: '#94a3b8' },
-		{ type: 'calls', i18nKey: 'legend.calls', color: '#3b82f6' },
-		{ type: 'extends', i18nKey: 'legend.extends', color: '#a855f7' },
-		{ type: 'uses', i18nKey: 'legend.uses', color: '#22c55e' }
+		{ type: 'calls', i18nKey: 'legend.calls', color: '#53ddfc' },
+		{ type: 'extends', i18nKey: 'legend.extends', color: '#ac8aff' },
+		{ type: 'uses', i18nKey: 'legend.uses', color: '#7ad4a0' }
 	];
 
 	// Use $state.raw to prevent SvelteFlow's internal mutations (fitView, drag)
@@ -653,10 +653,10 @@
 		position: absolute;
 		z-index: 20;
 		max-width: 320px;
-		background: var(--bg-secondary);
-		border: 1px solid var(--border);
+		background: var(--surface-elevated, var(--bg-secondary));
+		border: 1px solid rgba(68, 72, 79, 0.15);
 		border-radius: 8px;
-		box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+		box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
 		padding: 10px 12px;
 		pointer-events: none;
 		animation: relationFadeIn 0.15s ease;
@@ -761,10 +761,11 @@
 		display: flex;
 		align-items: center;
 		gap: 4px;
-		background: var(--bg-secondary);
-		border: 1px solid var(--border);
+		background: var(--surface-elevated, var(--bg-secondary));
+		border: 1px solid rgba(68, 72, 79, 0.15);
 		border-radius: 8px;
 		padding: 4px;
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 	}
 
 	.toolbar-item {
@@ -801,10 +802,10 @@
 		position: absolute;
 		top: 40px;
 		right: 0;
-		background: var(--bg-secondary);
-		border: 1px solid var(--border);
+		background: var(--surface-elevated, var(--bg-secondary));
+		border: 1px solid rgba(68, 72, 79, 0.15);
 		border-radius: 8px;
-		box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+		box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
 		animation: toolbarDropdown 0.15s ease;
 	}
 

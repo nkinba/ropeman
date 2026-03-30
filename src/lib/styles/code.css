@@ -71,7 +71,7 @@
 .code-block {
   background: var(--code-bg);
   color: var(--code-text);
-  font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
+  font-family: var(--font-code);
   font-size: 12px;
   line-height: 1.6;
   overflow-x: auto;

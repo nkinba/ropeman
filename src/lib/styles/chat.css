@@ -27,8 +27,10 @@
   right: 24px;
   width: 380px;
   height: 520px;
-  background: var(--bg-primary);
-  border: 1px solid var(--border);
+  background: var(--glass-bg, var(--bg-primary));
+  backdrop-filter: blur(var(--glass-blur, 0px));
+  -webkit-backdrop-filter: blur(var(--glass-blur, 0px));
+  border: none;
   border-radius: 12px;
   box-shadow: 0 8px 32px var(--shadow);
   z-index: 999;
@@ -42,13 +44,17 @@
   align-items: center;
   justify-content: space-between;
   padding: 12px 16px;
-  border-bottom: 1px solid var(--border);
-  background: var(--bg-secondary);
+  border-bottom: none;
+  background: transparent;
 }
 
 .chat-header-title {
-  font-size: 14px;
+  font-family: var(--font-display, inherit);
+  font-size: 12px;
   font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
 }
 
 .chat-close-btn {
@@ -68,6 +74,7 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
+  background: var(--bg-lowest, var(--bg-primary));
 }
 
 .chat-message {
@@ -80,14 +87,14 @@
 
 .chat-message.user {
   align-self: flex-end;
-  background: var(--accent);
-  color: white;
+  background: var(--bg-tertiary, #1b2028);
+  color: var(--text-primary);
   border-bottom-right-radius: 4px;
 }
 
 .chat-message.assistant {
   align-self: flex-start;
-  background: var(--bg-secondary);
+  background: var(--bg-secondary, #151a21);
   color: var(--text-primary);
   border-bottom-left-radius: 4px;
 }
@@ -108,24 +115,28 @@
   display: flex;
   gap: 8px;
   padding: 12px 16px;
-  border-top: 1px solid var(--border);
-  background: var(--bg-secondary);
+  border-top: none;
+  background: transparent;
 }
 
 .chat-input {
   flex: 1;
   padding: 8px 12px;
-  border: 1px solid var(--border);
+  border: none;
   border-radius: 8px;
-  background: var(--bg-primary);
+  background: var(--bg-lowest, var(--bg-primary));
   color: var(--text-primary);
   font-size: 13px;
   outline: none;
   font-family: inherit;
 }
 
+.chat-input::placeholder {
+  color: var(--text-muted);
+}
+
 .chat-input:focus {
-  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
 }
 
 .chat-send-btn {

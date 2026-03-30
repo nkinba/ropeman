@@ -140,7 +140,6 @@
 		justify-content: space-between;
 		padding: 0 20px;
 		background: var(--bg-secondary);
-		border-bottom: 1px solid var(--border);
 		flex-shrink: 0;
 	}
 
@@ -154,6 +153,7 @@
 		font-size: 18px;
 		font-weight: 700;
 		color: var(--text-primary);
+		font-family: var(--font-display, 'Space Grotesk', sans-serif);
 	}
 
 	.header-subtitle {

@@ -157,7 +157,9 @@ function createSemanticStore() {
 		},
 
 		cacheLevel(key: string, level: SemanticLevel) {
-			cache.set(key, level);
+			const next = new Map(cache);
+			next.set(key, level);
+			cache = next;
 		},
 
 		getCachedLevel(key: string): SemanticLevel | undefined {
@@ -178,7 +180,9 @@ function createSemanticStore() {
 			// Cache current level before drilling down
 			const cacheKey = currentLevel?.parentId ?? '__root__';
 			if (currentLevel) {
-				cache.set(cacheKey, currentLevel);
+				const next = new Map(cache);
+				next.set(cacheKey, currentLevel);
+				cache = next;
 			}
 
 			drilldownPath = [...drilldownPath, { nodeId: node.id, label: node.label }];

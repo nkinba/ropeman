@@ -32,8 +32,8 @@
 	class:highlighted={data.highlighted}
 	class:dimmed={data.dimmed}
 	style="
-		background: {data.color}15;
-		border-color: {data.color}60;
+		--node-color: {data.color};
+		border-left-color: {data.color};
 	"
 >
 	<div class="node-header">
@@ -89,8 +89,10 @@
 	.semantic-node {
 		width: 280px;
 		min-height: 120px;
-		border: 2px solid;
-		border-radius: 12px;
+		background: var(--surface-elevated, #1b2028);
+		border: none;
+		border-left: 2px solid var(--node-accent, #53ddfc);
+		border-radius: 8px;
 		padding: 16px;
 		cursor: pointer;
 		position: relative;
@@ -109,8 +111,8 @@
 
 	.semantic-node.highlighted {
 		box-shadow:
-			0 0 0 3px rgba(59, 130, 246, 0.5),
-			0 0 16px rgba(59, 130, 246, 0.3),
+			0 0 0 2px color-mix(in srgb, var(--node-color, var(--accent)) 50%, transparent),
+			0 0 16px color-mix(in srgb, var(--node-color, var(--accent)) 30%, transparent),
 			0 4px 20px rgba(0, 0, 0, 0.3);
 		opacity: 0.95;
 		transform: scale(1.03);
@@ -129,14 +131,14 @@
 		0%,
 		100% {
 			box-shadow:
-				0 0 0 3px rgba(59, 130, 246, 0.5),
-				0 0 16px rgba(59, 130, 246, 0.3),
+				0 0 0 2px color-mix(in srgb, var(--node-color, var(--accent)) 50%, transparent),
+				0 0 16px color-mix(in srgb, var(--node-color, var(--accent)) 30%, transparent),
 				0 4px 20px rgba(0, 0, 0, 0.3);
 		}
 		50% {
 			box-shadow:
-				0 0 0 4px rgba(59, 130, 246, 0.6),
-				0 0 24px rgba(59, 130, 246, 0.4),
+				0 0 0 3px color-mix(in srgb, var(--node-color, var(--accent)) 60%, transparent),
+				0 0 24px color-mix(in srgb, var(--node-color, var(--accent)) 40%, transparent),
 				0 4px 20px rgba(0, 0, 0, 0.3);
 		}
 	}
@@ -157,6 +159,7 @@
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
+		font-family: var(--font-display, 'Space Grotesk', sans-serif);
 	}
 
 	.node-badge {

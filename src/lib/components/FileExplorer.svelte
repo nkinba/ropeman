@@ -329,7 +329,7 @@
 		width: 260px;
 		display: flex;
 		flex-direction: column;
-		background: var(--bg-primary);
+		background: var(--sidebar-content-bg, var(--bg-primary));
 		border-right: 1px solid var(--border);
 		overflow: hidden;
 		flex-shrink: 0;
@@ -344,10 +344,11 @@
 	}
 
 	.explorer-title {
+		font-family: var(--font-display, inherit);
 		font-size: 11px;
-		font-weight: 700;
+		font-weight: 600;
 		text-transform: uppercase;
-		letter-spacing: 0.5px;
+		letter-spacing: 0.05em;
 		color: var(--text-secondary);
 	}
 
@@ -403,14 +404,14 @@
 		align-items: center;
 		gap: 6px;
 		padding: 4px 8px;
-		border: 1px solid var(--border);
+		border: none;
 		border-radius: 4px;
-		background: var(--bg-secondary);
-		transition: border-color 0.15s ease;
+		background: var(--bg-lowest, var(--bg-secondary));
+		transition: box-shadow 0.15s ease;
 	}
 
 	.search-wrapper:focus-within {
-		border-color: var(--accent, #3b82f6);
+		box-shadow: 0 0 0 1px var(--accent);
 	}
 
 	.search-icon {
@@ -477,13 +478,20 @@
 		width: 100%;
 		padding: 3px 12px;
 		font-size: 12px;
-		color: var(--text-secondary);
 		cursor: pointer;
 		border: none;
 		background: none;
 		text-align: left;
 		white-space: nowrap;
 		transition: background-color 0.1s ease;
+	}
+
+	.dir-item {
+		color: var(--text-primary);
+	}
+
+	.file-item {
+		color: var(--text-secondary);
 	}
 
 	.tree-item:hover {
@@ -494,6 +502,7 @@
 	.tree-item.selected {
 		background: var(--accent-bg, rgba(59, 130, 246, 0.12));
 		color: var(--accent, #3b82f6);
+		border-left: 2px solid var(--accent);
 	}
 
 	.tree-item.highlighted {
@@ -537,6 +546,7 @@
 		border-radius: 50%;
 		flex-shrink: 0;
 		margin-left: 14px;
+		opacity: 0.7;
 	}
 
 	/* Mobile overlay mode */
