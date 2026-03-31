@@ -89,7 +89,7 @@ const translations: Record<Locale, TranslationSet> = {
 		dropHere: '프로젝트 폴더를 여기에 드롭하세요',
 		dropHint: 'Python, JavaScript, TypeScript 프로젝트 지원',
 		noApiKey: 'Settings에서 Gemini API 키를 입력하세요',
-		cacheEnabled: '캐시 활성화',
+		cacheEnabled: '분석 캐시',
 		clearCache: '캐시 초기화',
 		showSymbols: '심볼 사이드바',
 		codeTheme: '코드 테마',
@@ -102,17 +102,19 @@ const translations: Record<Locale, TranslationSet> = {
 			generatingDiagram: '다이어그램 생성 중...'
 		},
 		landing: {
-			headline: '코드를 읽기 전에, 먼저 구조를 보세요',
+			headline: 'AI로 코드 구조를<br/><span class="headline-accent">시각화하세요</span>',
 			subheadline:
-				'AI가 코드베이스를 분석하여 의미 기반 다이어그램을 자동 생성합니다. 폴더를 열면 바로 시작됩니다.',
+				'AI가 코드베이스를 의미론적으로 분석하여, 역할과 의존 관계를 다이어그램으로 즉시 시각화합니다.',
 			cta: '폴더 열기',
-			dragHint: '또는 프로젝트 폴더를 여기에 드래그하세요',
-			featureAiTitle: 'AI 의미 분석',
-			featureAiDesc: '파일 트리가 아닌, 역할과 도메인 기반의 구조를 AI가 자동 파악',
-			featureDrillTitle: '재귀적 탐색',
-			featureDrillDesc: '영역 클릭 시 AI가 하위 구조를 점진적으로 분석',
-			featureBrowserTitle: '100% 브라우저',
-			featureBrowserDesc: '코드가 브라우저를 떠나지 않음. WASM 파싱 + 로컬 분석'
+			dragHint: 'or drag & drop a folder here',
+			featureAiTitle: 'AI 의미론적 분석',
+			featureAiDesc: 'LLM이 리포지토리를 시맨틱 모듈과 핵심 추상화로 자동 매핑합니다.',
+			featureDrillTitle: '드릴다운 탐색',
+			featureDrillDesc:
+				'고수준 아키텍처 다이어그램에서 특정 코드 라인까지, 맥락을 잃지 않고 탐색합니다.',
+			featureBrowserTitle: 'Multi-Track AI',
+			featureBrowserDesc:
+				'Demo · API Key · Local Bridge · Browser AI — 4가지 분석 방식을 제공합니다. 소스 코드 원문은 어떤 모드에서도 외부로 전송되지 않습니다.'
 		},
 		snippet: {
 			divider: '또는 코드 스니펫으로 체험하기',
@@ -154,7 +156,7 @@ const translations: Record<Locale, TranslationSet> = {
 		dropHere: 'Drop a project folder here',
 		dropHint: 'Supports Python, JavaScript, and TypeScript projects',
 		noApiKey: 'Enter your Gemini API key in Settings',
-		cacheEnabled: 'Cache Enabled',
+		cacheEnabled: 'Analysis Cache',
 		clearCache: 'Clear Cache',
 		showSymbols: 'Symbol Sidebar',
 		codeTheme: 'Code Theme',
@@ -167,17 +169,20 @@ const translations: Record<Locale, TranslationSet> = {
 			generatingDiagram: 'Generating diagram...'
 		},
 		landing: {
-			headline: 'See the structure before reading the code',
+			headline: 'Visualize code<br/><span class="headline-accent">architecture with AI</span>',
 			subheadline:
-				'AI analyzes your codebase and generates semantic architecture diagrams. Just open a folder to start.',
-			cta: 'Open a Folder',
-			dragHint: 'or drag & drop a project folder anywhere',
+				'AI semantically analyzes your codebase, instantly visualizing roles and dependencies as diagrams.',
+			cta: '폴더 열기',
+			dragHint: 'or drag & drop a folder here',
 			featureAiTitle: 'AI Semantic Analysis',
-			featureAiDesc: 'AI identifies roles and domains, not just the file tree',
-			featureDrillTitle: 'Recursive Drill-down',
-			featureDrillDesc: 'Click any area and AI progressively analyzes deeper structures',
-			featureBrowserTitle: '100% Browser-based',
-			featureBrowserDesc: 'Your code never leaves the browser. WASM parsing + local analysis'
+			featureAiDesc:
+				'LLMs automatically map your repository into semantic modules and key abstractions.',
+			featureDrillTitle: 'Drill-down Navigation',
+			featureDrillDesc:
+				'Navigate from high-level architecture diagrams down to specific lines of code without losing context.',
+			featureBrowserTitle: 'Multi-Track AI',
+			featureBrowserDesc:
+				'Demo · API Key · Local Bridge · Browser AI — choose from 4 analysis modes. Source code is never sent externally in any mode.'
 		},
 		snippet: {
 			divider: 'or try a code snippet',

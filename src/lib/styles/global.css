@@ -57,10 +57,21 @@
 	/* Glassmorphism (light — subtle) */
 	--glass-bg: rgba(245, 245, 245, 0.85);
 	--glass-blur: 20px;
+	--glass-border: rgba(0, 0, 0, 0.08);
+	--ghost-border: rgba(0, 0, 0, 0.06);
 
 	/* Accent variants */
 	--accent-muted: color-mix(in srgb, var(--accent) 15%, transparent);
 	--accent-subtle: color-mix(in srgb, var(--accent) 8%, transparent);
+	--accent-bg: rgba(59, 130, 246, 0.08);
+	--accent-secondary: #2563eb;
+	--accent-tertiary: #7c3aed;
+	--accent-secondary-dim: #1d4ed8;
+
+	/* Surface extras (light) */
+	--bg-lowest: #f0f0f0;
+	--bg-highest: #e0e0e0;
+	--bg-bright: #e8e8e8;
 
 	/* Sidebar */
 	--sidebar-icon-bg: var(--bg-secondary);
@@ -75,7 +86,6 @@
 	--landing-card-bg: rgba(0, 0, 0, 0.03);
 	--landing-card-border: rgba(0, 0, 0, 0.06);
 	--landing-dropzone-border: rgba(59, 130, 246, 0.3);
-	--glass-border: rgba(0, 0, 0, 0.08);
 }
 
 [data-theme='dark'] {

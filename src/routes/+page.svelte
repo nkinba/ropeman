@@ -7,12 +7,13 @@
 	import SemanticDetailPanel from '$lib/components/SemanticDetailPanel.svelte';
 	import Sidebar from '$lib/components/Sidebar.svelte';
 	import ChatPopup from '$lib/components/ChatPopup.svelte';
+	import StatusBar from '$lib/components/StatusBar.svelte';
 	import LoadingOverlay from '$lib/components/LoadingOverlay.svelte';
 	import SettingsModal from '$lib/components/SettingsModal.svelte';
 	import AnalyzeModal from '$lib/components/AnalyzeModal.svelte';
 	import { projectStore } from '$lib/stores/projectStore.svelte';
 	import { selectionStore } from '$lib/stores/selectionStore.svelte';
-	import { semanticStore } from '$lib/stores/semanticStore.svelte';
+	import { semanticStore, setSemanticCacheDeps } from '$lib/stores/semanticStore.svelte';
 	import { authStore } from '$lib/stores/authStore.svelte';
 	import { themeStore } from '$lib/stores/themeStore.svelte';
 	import { tabStore } from '$lib/stores/tabStore.svelte';
@@ -31,7 +32,14 @@
 	} from '$lib/services/fileSystemService';
 	import { parseAllFiles } from '$lib/services/parserService';
 	import { setBridgeCallbacks } from '$lib/services/bridgeService';
+	import { settingsStore } from '$lib/stores/settingsStore.svelte';
 	import { onMount } from 'svelte';
+
+	// Wire semantic cache deps (avoids circular import in semanticStore)
+	setSemanticCacheDeps(() => ({
+		cacheEnabled: settingsStore.cacheEnabled,
+		projectName: projectStore.projectName
+	}));
 
 	// Wire bridgeService callbacks to authStore (stateless service pattern)
 	setBridgeCallbacks({
@@ -179,6 +187,13 @@
 			!semanticStore.panelDismissed
 	);
 	const isSnippetMode = $derived(projectStore.isSnippetMode);
+
+	// Restore semantic cache from IndexedDB when project loads
+	$effect(() => {
+		if (projectStore.fileTree && !projectStore.isLoading && projectStore.projectName) {
+			semanticStore.restoreCache(projectStore.projectName);
+		}
+	});
 
 	// Auto-trigger semantic analysis when snippet mode is active and AI becomes ready
 	$effect(() => {
@@ -469,6 +484,9 @@
 						<div class="split-drop-hint">Drop to split</div>
 					</div>
 				{/if}
+				{#if semanticStore.isAnalyzing}
+					<div class="canvas-dimming"></div>
+				{/if}
 				{#if layoutStore.isSplit && !isMobile}
 					<SplitPane
 						zuiCanvasBindPrimary={(ref) => {
@@ -504,13 +522,17 @@
 				</div>
 			{/if}
 		</div>
+		<StatusBar />
 		<!-- U1-1: Analysis progress indicator (bottom-right, always visible) -->
 		{#if semanticStore.isAnalyzing}
 			<div class="analysis-progress-pill">
-				<div class="analysis-spinner"></div>
-				<span class="analysis-progress-text">
-					{semanticStore.analysisProgress || i18nStore.t('analyzing')}
-				</span>
+				<span class="material-symbols-outlined analysis-pill-icon">auto_awesome</span>
+				<div class="analysis-pill-content">
+					<span class="analysis-pill-title">AI Analysis in Progress</span>
+					<span class="analysis-pill-subtitle">
+						{semanticStore.analysisProgress || i18nStore.t('analyzing')}
+					</span>
+				</div>
 			</div>
 		{/if}
 
@@ -614,6 +636,14 @@
 		pointer-events: none;
 	}
 
+	.canvas-dimming {
+		position: absolute;
+		inset: 0;
+		background: rgba(10, 14, 20, 0.4);
+		z-index: 5;
+		pointer-events: none;
+	}
+
 	.split-drop-hint {
 		font-size: 14px;
 		font-weight: 600;
@@ -694,30 +724,45 @@
 		}
 	}
 
-	.analysis-spinner {
-		width: 18px;
-		height: 18px;
-		border: 2px solid var(--accent-tertiary, #ac8aff);
-		border-top-color: transparent;
-		border-radius: 50%;
-		animation: spin 1.2s linear infinite;
+	.analysis-pill-icon {
+		font-size: 18px;
+		color: var(--accent-tertiary, #ac8aff);
+		animation: spin-slow 2s linear infinite;
 		flex-shrink: 0;
 	}
 
-	@keyframes spin {
+	@keyframes spin-slow {
+		from {
+			transform: rotate(0deg);
+		}
 		to {
 			transform: rotate(360deg);
 		}
 	}
 
-	.analysis-progress-text {
-		font-size: 10px;
+	.analysis-pill-content {
+		display: flex;
+		flex-direction: column;
+	}
+
+	.analysis-pill-title {
 		font-family: var(--font-display);
+		font-size: 10px;
 		font-weight: 700;
 		text-transform: uppercase;
 		letter-spacing: 0.05em;
 		color: var(--text-primary);
 		white-space: nowrap;
+	}
+
+	.analysis-pill-subtitle {
+		font-family: var(--font-code);
+		font-size: 9px;
+		color: var(--text-secondary);
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		max-width: 200px;
 	}
 
 	/* U1-1: Analysis error toast */

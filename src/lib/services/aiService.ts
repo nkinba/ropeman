@@ -108,7 +108,8 @@ export async function sendMessage(
 	const endpoint = getGeminiEndpoint(model);
 
 	// Cache lookup (only for first messages without history for simplicity)
-	if (settingsStore.cacheEnabled && history.length === 0) {
+	// Chat cache is always-on (independent of settingsStore.cacheEnabled which controls semantic cache)
+	if (history.length === 0) {
 		try {
 			await initCache();
 			const embedding = await getEmbedding(message);
@@ -160,8 +161,8 @@ export async function sendMessage(
 			const content = data?.candidates?.[0]?.content?.parts?.[0]?.text || 'No response received.';
 			const relatedNodes = nodeContext ? [nodeContext.id] : [];
 
-			// Store in cache
-			if (settingsStore.cacheEnabled && history.length === 0) {
+			// Store in chat cache (always-on)
+			if (history.length === 0) {
 				try {
 					const embedding = await getEmbedding(message);
 					if (embedding) {

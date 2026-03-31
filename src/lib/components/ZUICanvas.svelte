@@ -12,6 +12,7 @@
 	import { settingsStore } from '$lib/stores/settingsStore.svelte';
 	import ExportController from './ExportController.svelte';
 	import SemanticNodeComponent from './nodes/SemanticNode.svelte';
+	import SecondarySemanticNodeComponent from './nodes/SecondarySemanticNode.svelte';
 	import DrilldownConfirmModal from './DrilldownConfirmModal.svelte';
 	import type { SemanticNode } from '$lib/types/semantic';
 
@@ -62,7 +63,8 @@
 	}
 
 	const nodeTypes = {
-		semanticNode: SemanticNodeComponent
+		semanticNode: SemanticNodeComponent,
+		secondarySemanticNode: SecondarySemanticNodeComponent
 	};
 
 	const EDGE_TYPE_INFO: { type: string; i18nKey: string; color: string }[] = [
@@ -238,15 +240,18 @@
 
 			if (highlightedNodeId) {
 				if (n.id === highlightedNodeId) {
+					n.type = 'semanticNode';
 					n.data = {
 						...n.data,
 						highlighted: true,
 						dimmed: false,
+						selected: true,
 						isCached,
 						nodeId: n.id,
 						onReanalyze: handleReanalyze
 					};
 				} else {
+					n.type = 'secondarySemanticNode';
 					n.data = {
 						...n.data,
 						highlighted: false,
@@ -257,6 +262,7 @@
 					};
 				}
 			} else {
+				n.type = 'semanticNode';
 				n.data = {
 					...n.data,
 					highlighted: false,
@@ -310,7 +316,7 @@
 		lastClickTime = now;
 
 		// Semantic node click → select in semanticStore, clear direct file selection (S7)
-		if (node.type === 'semanticNode') {
+		if (node.type === 'semanticNode' || node.type === 'secondarySemanticNode') {
 			const semNode = semanticStore.currentLevel?.nodes.find((n) => n.id === node.id) ?? null;
 			semanticStore.selectedSemanticNode = semNode;
 			selectionStore.selectedNode = null;
@@ -331,7 +337,7 @@
 
 	function handleNodeDblClick(node: Node) {
 		// Semantic node double-click → drill-down (or switch to code view for leaf nodes)
-		if (node.type === 'semanticNode') {
+		if (node.type === 'semanticNode' || node.type === 'secondarySemanticNode') {
 			const semNode = semanticStore.currentLevel?.nodes.find((n) => n.id === node.id);
 			if (!semNode) return;
 
@@ -648,7 +654,8 @@
 	}
 
 	/* Hide connection handles on semantic nodes */
-	.zui-canvas :global(.svelte-flow__node-semanticNode .svelte-flow__handle) {
+	.zui-canvas :global(.svelte-flow__node-semanticNode .svelte-flow__handle),
+	.zui-canvas :global(.svelte-flow__node-secondarySemanticNode .svelte-flow__handle) {
 		width: 0;
 		height: 0;
 		min-width: 0;

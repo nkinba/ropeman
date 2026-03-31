@@ -231,7 +231,7 @@
 		right: 20px;
 		width: 256px;
 		background: var(--bg-tertiary, #1b2028);
-		border: 1px solid rgba(255, 255, 255, 0.05);
+		border: 1px solid var(--ghost-border);
 		border-radius: 8px;
 		padding: 16px;
 		box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);

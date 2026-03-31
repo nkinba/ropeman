@@ -5,7 +5,12 @@
 	import 'prismjs/components/prism-javascript';
 	import 'prismjs/components/prism-typescript';
 
-	let { code = '', language = 'javascript', lineStart, lineEnd }: {
+	let {
+		code = '',
+		language = 'javascript',
+		lineStart,
+		lineEnd
+	}: {
 		code: string;
 		language?: string;
 		lineStart?: number;
@@ -14,13 +19,9 @@
 
 	let codeEl: HTMLElement | undefined = $state();
 
-	const grammar = $derived(
-		Prism.languages[language] ?? Prism.languages['javascript']
-	);
+	const grammar = $derived(Prism.languages[language] ?? Prism.languages['javascript']);
 
-	const highlighted = $derived(
-		code ? Prism.highlight(code, grammar, language) : ''
-	);
+	const highlighted = $derived(code ? Prism.highlight(code, grammar, language) : '');
 
 	const lines = $derived(highlighted.split('\n'));
 
@@ -45,12 +46,16 @@
 		{/if}
 	</div>
 	<div class="code-body">
-		<pre><code>{#each lines as line, i}{@const lineNum = (lineStart ?? 1) + i}<span
-				class="code-line"
-				class:highlighted={isHighlighted(lineNum)}
-				data-line={lineNum}
-			><span class="line-number">{lineNum}</span><span class="line-content">{@html line}</span></span>
-{/each}</code></pre>
+		<pre><code
+				>{#each lines as line, i}{@const lineNum = (lineStart ?? 1) + i}<span
+						class="code-line"
+						class:highlighted={isHighlighted(lineNum)}
+						data-line={lineNum}
+						><span class="line-number">{lineNum}</span><span class="line-content">{@html line}</span
+						></span
+					>
+				{/each}</code
+			></pre>
 	</div>
 </div>
 
@@ -71,8 +76,8 @@
 		align-items: center;
 		gap: 8px;
 		padding: 8px 12px;
-		background: rgba(255, 255, 255, 0.05);
-		border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+		background: var(--bg-tertiary);
+		border-bottom: 1px solid var(--ghost-border);
 	}
 
 	.lang-badge {
@@ -113,7 +118,7 @@
 	}
 
 	.code-line:hover {
-		background: rgba(255, 255, 255, 0.04);
+		background: var(--bg-secondary);
 	}
 
 	.code-line.highlighted {
@@ -128,7 +133,7 @@
 		min-width: 40px;
 		text-align: right;
 		padding-right: 16px;
-		color: rgba(255, 255, 255, 0.2);
+		color: var(--text-muted);
 		user-select: none;
 		flex-shrink: 0;
 	}
