@@ -16,11 +16,10 @@ test.describe('Landing Page', () => {
 		await expect(ctaButton).toBeVisible();
 	});
 
-	test('should display language pills for supported languages', async ({ page }) => {
+	test('should display language icons for supported languages', async ({ page }) => {
 		await page.goto('/');
-		const pills = page.locator('.lang-pill');
-		await expect(pills).toHaveCount(8);
-		await expect(pills.first()).toContainText('Python');
+		const icons = page.locator('.hero-lang');
+		await expect(icons).toHaveCount(8);
 	});
 
 	test('should display three feature cards', async ({ page }) => {
