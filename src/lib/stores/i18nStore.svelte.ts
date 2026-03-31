@@ -53,6 +53,7 @@ interface TranslationSet {
 	noApiKey: string;
 	cacheEnabled: string;
 	clearCache: string;
+	showSymbols: string;
 	codeTheme: string;
 	apiKeyPlaceholder: string;
 	analyzing: string;
@@ -90,6 +91,7 @@ const translations: Record<Locale, TranslationSet> = {
 		noApiKey: 'Settings에서 Gemini API 키를 입력하세요',
 		cacheEnabled: '캐시 활성화',
 		clearCache: '캐시 초기화',
+		showSymbols: '심볼 사이드바',
 		codeTheme: '코드 테마',
 		apiKeyPlaceholder: 'Gemini API 키 입력',
 		analyzing: '분석 중...',
@@ -154,6 +156,7 @@ const translations: Record<Locale, TranslationSet> = {
 		noApiKey: 'Enter your Gemini API key in Settings',
 		cacheEnabled: 'Cache Enabled',
 		clearCache: 'Clear Cache',
+		showSymbols: 'Symbol Sidebar',
 		codeTheme: 'Code Theme',
 		apiKeyPlaceholder: 'Enter Gemini API key',
 		analyzing: 'Analyzing...',

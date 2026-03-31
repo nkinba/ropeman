@@ -21,19 +21,6 @@
 	let expandedDirs = $state<Set<string>>(new Set());
 	let treeContainer: HTMLElement | undefined = $state();
 
-	const langColors: Record<string, string> = {
-		python: '#22c55e',
-		javascript: '#eab308',
-		typescript: '#3b82f6',
-		svelte: '#ff3e00',
-		css: '#a855f7',
-		html: '#f97316',
-		json: '#6b7280',
-		markdown: '#6b7280',
-		jsx: '#61dafb',
-		tsx: '#3b82f6'
-	};
-
 	const highlightedPaths = $derived(semanticStore.highlightedFilePaths);
 	const highlightedDirPaths = $derived(semanticStore.highlightedDirPaths);
 
@@ -292,8 +279,16 @@
 				style="padding-left: {12 + depth * 16}px;"
 				onclick={() => toggleDir(node.path)}
 			>
-				<span class="tree-chevron" class:expanded={expandedDirs.has(node.path)}> &#9656; </span>
-				<span class="tree-icon">&#128193;</span>
+				<span class="tree-chevron" class:expanded={expandedDirs.has(node.path)}>
+					<span class="material-symbols-outlined"
+						>{expandedDirs.has(node.path) ? 'expand_more' : 'chevron_right'}</span
+					>
+				</span>
+				<span class="tree-icon" class:expanded={expandedDirs.has(node.path)}>
+					<span class="material-symbols-outlined"
+						>{expandedDirs.has(node.path) ? 'folder_open' : 'folder'}</span
+					>
+				</span>
 				<span class="tree-label">{node.name}</span>
 				{#if node.children}
 					<span class="tree-count">{node.children.length}</span>
@@ -308,8 +303,6 @@
 				{/each}
 			{/if}
 		{:else}
-			{@const lang = inferLang(node.path)}
-			{@const color = langColors[lang ?? ''] ?? '#6b7280'}
 			<button
 				class="tree-item file-item"
 				class:highlighted={isHighlighted(node.path)}
@@ -317,7 +310,12 @@
 				style="padding-left: {12 + depth * 16}px;"
 				onclick={() => handleFileClick(node)}
 			>
-				<span class="tree-color-dot" style="background: {color};"></span>
+				<span
+					class="tree-file-icon"
+					class:selected={selectionStore.selectedNode?.filePath === node.path}
+				>
+					<span class="material-symbols-outlined">description</span>
+				</span>
 				<span class="tree-label">{node.name}</span>
 			</button>
 		{/if}
@@ -459,7 +457,7 @@
 	}
 
 	.explorer-tree::-webkit-scrollbar {
-		width: 6px;
+		width: 4px;
 	}
 
 	.explorer-tree::-webkit-scrollbar-track {
@@ -467,17 +465,17 @@
 	}
 
 	.explorer-tree::-webkit-scrollbar-thumb {
-		background: var(--border);
-		border-radius: 3px;
+		background: var(--bg-highest, #20262f);
+		border-radius: 10px;
 	}
 
 	.tree-item {
 		display: flex;
 		align-items: center;
-		gap: 4px;
+		gap: 6px;
 		width: 100%;
-		padding: 3px 12px;
-		font-size: 12px;
+		padding: 4px 8px;
+		font-size: 11px;
 		cursor: pointer;
 		border: none;
 		background: none;
@@ -496,13 +494,19 @@
 
 	.tree-item:hover {
 		background: var(--bg-tertiary);
+	}
+
+	.tree-item:hover .tree-label {
 		color: var(--text-primary);
 	}
 
 	.tree-item.selected {
-		background: var(--accent-bg, rgba(59, 130, 246, 0.12));
-		color: var(--accent, #3b82f6);
+		background: var(--bg-tertiary);
 		border-left: 2px solid var(--accent);
+	}
+
+	.tree-item.selected .tree-label {
+		color: var(--text-primary);
 	}
 
 	.tree-item.highlighted {
@@ -510,21 +514,32 @@
 	}
 
 	.tree-chevron {
-		font-size: 10px;
-		color: var(--text-muted);
-		transition: transform 0.15s ease;
-		width: 10px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 16px;
 		flex-shrink: 0;
-		display: inline-block;
+		color: var(--text-muted);
+		transition: none;
 	}
 
-	.tree-chevron.expanded {
-		transform: rotate(90deg);
+	.tree-chevron .material-symbols-outlined {
+		font-size: 16px;
 	}
 
 	.tree-icon {
-		font-size: 13px;
+		display: flex;
+		align-items: center;
 		flex-shrink: 0;
+		color: var(--text-muted);
+	}
+
+	.tree-icon .material-symbols-outlined {
+		font-size: 16px;
+	}
+
+	.tree-icon.expanded {
+		color: color-mix(in srgb, var(--accent) 70%, transparent);
 	}
 
 	.tree-label {
@@ -540,13 +555,23 @@
 		flex-shrink: 0;
 	}
 
-	.tree-color-dot {
-		width: 6px;
-		height: 6px;
-		border-radius: 50%;
+	.tree-file-icon {
+		display: flex;
+		align-items: center;
 		flex-shrink: 0;
-		margin-left: 14px;
-		opacity: 0.7;
+		color: var(--text-muted);
+	}
+
+	.tree-file-icon .material-symbols-outlined {
+		font-size: 16px;
+	}
+
+	.tree-file-icon.selected {
+		color: var(--accent-secondary, #53ddfc);
+	}
+
+	.file-item .tree-label {
+		font-family: var(--font-code);
 	}
 
 	/* Mobile overlay mode */

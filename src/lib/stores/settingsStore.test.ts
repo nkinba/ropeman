@@ -34,6 +34,10 @@ describe('settingsStore', () => {
 		it('syntaxTheme defaults to tomorrow', () => {
 			expect(settingsStore.syntaxTheme).toBe('tomorrow');
 		});
+
+		it('showSymbols defaults to false', () => {
+			expect(settingsStore.showSymbols).toBe(false);
+		});
 	});
 
 	describe('setters', () => {
@@ -70,6 +74,11 @@ describe('settingsStore', () => {
 		it('sets syntaxTheme', () => {
 			settingsStore.syntaxTheme = 'monokai';
 			expect(settingsStore.syntaxTheme).toBe('monokai');
+		});
+
+		it('sets showSymbols', () => {
+			settingsStore.showSymbols = true;
+			expect(settingsStore.showSymbols).toBe(true);
 		});
 	});
 
@@ -231,6 +240,7 @@ describe('settingsStore', () => {
 			expect(settingsStore.cacheEnabled).toBe(true);
 			expect(settingsStore.language).toBe('ko');
 			expect(settingsStore.syntaxTheme).toBe('tomorrow');
+			expect(settingsStore.showSymbols).toBe(false);
 		});
 
 		it('resets openaiApiKey to empty string', () => {

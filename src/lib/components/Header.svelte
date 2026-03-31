@@ -85,6 +85,7 @@
 				Analyze
 			</button>
 		{/if}
+		<div class="header-divider"></div>
 		<button class="header-btn" onclick={() => i18nStore.toggleLocale()} title="Toggle Language">
 			{i18nStore.locale === 'ko' ? 'EN' : '\uD55C'}
 		</button>
@@ -138,22 +139,29 @@
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		padding: 0 20px;
-		background: var(--bg-secondary);
+		padding: 0 16px;
+		width: 100%;
+		background: var(--sidebar-icon-bg);
 		flex-shrink: 0;
+		border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+		position: sticky;
+		top: 0;
+		z-index: 50;
 	}
 
 	.header-left {
 		display: flex;
 		align-items: baseline;
-		gap: 12px;
+		gap: 32px;
 	}
 
 	.header-title {
 		font-size: 18px;
 		font-weight: 700;
-		color: var(--text-primary);
+		color: var(--accent);
 		font-family: var(--font-display, 'Space Grotesk', sans-serif);
+		text-transform: uppercase;
+		letter-spacing: 0.1em;
 	}
 
 	.header-subtitle {
@@ -170,22 +178,26 @@
 	.header-right {
 		display: flex;
 		align-items: center;
-		gap: 8px;
+		gap: 16px;
 	}
 
 	.header-btn {
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		width: 36px;
-		height: 36px;
-		border-radius: 8px;
-		font-size: 14px;
-		font-weight: 600;
+		padding: 4px;
+		border-radius: 4px;
+		font-size: 11px;
+		font-weight: 700;
 		color: var(--text-secondary);
 		transition:
 			background-color var(--transition),
 			color var(--transition);
+	}
+
+	.header-btn :global(svg) {
+		width: 18px;
+		height: 18px;
 	}
 
 	.header-btn:hover {
@@ -195,25 +207,41 @@
 
 	.header-btn.text-btn {
 		width: auto;
-		padding: 0 12px;
+		padding: 4px 12px;
 		gap: 6px;
+		background: var(--bg-tertiary);
+		border: 1px solid rgba(255, 255, 255, 0.1);
+		border-radius: 4px;
+		color: var(--accent-secondary, #53ddfc);
+		font-family: var(--font-display);
+		font-size: 11px;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+	}
+
+	.header-btn.text-btn:hover {
+		background: rgba(255, 255, 255, 0.05);
 	}
 
 	.btn-label {
-		font-size: 13px;
+		font-size: 11px;
 	}
 
 	.analyze-btn {
 		display: flex;
 		align-items: center;
 		gap: 6px;
-		padding: 6px 14px;
+		padding: 4px 12px;
 		background: var(--accent);
-		color: var(--bg-primary);
+		color: var(--sidebar-icon-bg, #0f141a);
 		border: none;
-		border-radius: 8px;
-		font-size: 13px;
-		font-weight: 600;
+		border-radius: 4px;
+		font-family: var(--font-display);
+		font-size: 11px;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
 		cursor: pointer;
 		transition: opacity 0.2s;
 	}
@@ -226,31 +254,52 @@
 		display: flex;
 		align-items: center;
 		gap: 6px;
-		padding: 4px 10px;
+		padding: 2px 8px;
 		margin-left: 4px;
-		border-radius: 12px;
-		background: color-mix(in srgb, var(--track-color) 15%, transparent);
-		border: 1px solid color-mix(in srgb, var(--track-color) 30%, transparent);
+		border-radius: 9999px;
+		background: rgba(163, 166, 255, 0.1);
+		border: 1px solid rgba(163, 166, 255, 0.2);
 		cursor: pointer;
 		transition: background 0.2s;
 	}
 
 	.track-badge:hover {
-		background: color-mix(in srgb, var(--track-color) 25%, transparent);
+		background: rgba(163, 166, 255, 0.15);
 	}
 
 	.track-dot {
-		width: 7px;
-		height: 7px;
+		width: 6px;
+		height: 6px;
 		border-radius: 50%;
-		background: var(--track-color);
+		background: var(--accent, #a3a6ff);
 		flex-shrink: 0;
+		animation: trackPulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+	}
+
+	@keyframes trackPulse {
+		0%,
+		100% {
+			opacity: 1;
+		}
+		50% {
+			opacity: 0.5;
+		}
 	}
 
 	.track-label {
-		font-size: 11px;
-		font-weight: 600;
-		color: var(--track-color);
+		font-size: 9px;
+		font-weight: 700;
+		color: var(--accent, #a3a6ff);
+		letter-spacing: -0.05em;
+		text-transform: uppercase;
+	}
+
+	.header-divider {
+		width: 0;
+		height: 100%;
+		border-left: 1px solid rgba(255, 255, 255, 0.1);
+		margin-left: 8px;
+		padding-left: 16px;
 	}
 
 	@media (max-width: 768px) {
@@ -263,7 +312,7 @@
 		}
 
 		.header-btn.text-btn {
-			width: 36px;
+			width: 32px;
 			padding: 0;
 		}
 	}

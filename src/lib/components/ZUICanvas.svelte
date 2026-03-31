@@ -238,12 +238,33 @@
 
 			if (highlightedNodeId) {
 				if (n.id === highlightedNodeId) {
-					n.data = { ...n.data, highlighted: true, dimmed: false, isCached, nodeId: n.id, onReanalyze: handleReanalyze };
+					n.data = {
+						...n.data,
+						highlighted: true,
+						dimmed: false,
+						isCached,
+						nodeId: n.id,
+						onReanalyze: handleReanalyze
+					};
 				} else {
-					n.data = { ...n.data, highlighted: false, dimmed: true, isCached, nodeId: n.id, onReanalyze: handleReanalyze };
+					n.data = {
+						...n.data,
+						highlighted: false,
+						dimmed: true,
+						isCached,
+						nodeId: n.id,
+						onReanalyze: handleReanalyze
+					};
 				}
 			} else {
-				n.data = { ...n.data, highlighted: false, dimmed: false, isCached, nodeId: n.id, onReanalyze: handleReanalyze };
+				n.data = {
+					...n.data,
+					highlighted: false,
+					dimmed: false,
+					isCached,
+					nodeId: n.id,
+					onReanalyze: handleReanalyze
+				};
 			}
 		}
 
@@ -370,7 +391,7 @@
 		{#if showMinimap}
 			<MiniMap />
 		{/if}
-		<Background gap={20} size={1} />
+		<Background gap={24} size={1} />
 		<ExportController onready={(fns) => (exportFns = fns)} />
 	</SvelteFlow>
 
@@ -600,25 +621,26 @@
 	}
 
 	.zui-canvas :global(.svelte-flow) {
-		background: var(--bg-primary);
+		background: var(--sidebar-icon-bg, #0f141a);
 	}
 
 	.zui-canvas :global(.svelte-flow__minimap) {
 		background: var(--bg-secondary);
-		border: 1px solid var(--border);
+		border: none;
 		border-radius: 4px;
 	}
 
 	.zui-canvas :global(.svelte-flow__controls) {
-		border: 1px solid var(--border);
+		border: none;
 		border-radius: 4px;
 		overflow: hidden;
+		background: var(--bg-secondary);
 	}
 
 	.zui-canvas :global(.svelte-flow__controls button) {
-		background: var(--bg-primary);
+		background: var(--bg-secondary);
 		color: var(--text-primary);
-		border-bottom: 1px solid var(--border);
+		border-bottom: none;
 	}
 
 	.zui-canvas :global(.svelte-flow__controls button:hover) {

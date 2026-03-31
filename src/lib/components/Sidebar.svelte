@@ -137,31 +137,31 @@
 	.sidebar {
 		display: flex;
 		background: var(--sidebar-content-bg, var(--bg-primary));
-		border-right: 1px solid var(--border);
 		overflow: hidden;
 		flex-shrink: 0;
+		border-right: 1px solid rgba(255, 255, 255, 0.05);
 	}
 
 	.sidebar-icons {
+		width: 48px;
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		gap: 2px;
-		padding: 8px 4px;
-		border-right: 1px solid var(--border);
+		gap: 16px;
+		padding: 16px 0;
 		background: var(--sidebar-icon-bg, var(--bg-secondary));
 	}
 
 	.sidebar.content-closed .sidebar-icons {
-		border-right: none;
+		/* No border needed — tonal shift only */
 	}
 
 	.icon-btn {
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		width: 36px;
-		height: 36px;
+		width: 40px;
+		height: 40px;
 		border-radius: 6px;
 		color: var(--text-muted);
 		background: none;
@@ -178,8 +178,9 @@
 	}
 
 	.icon-btn.active {
-		color: var(--accent, #3b82f6);
-		background: var(--accent-bg, rgba(59, 130, 246, 0.12));
+		color: var(--accent);
+		background: var(--bg-tertiary);
+		border-left: 2px solid var(--accent);
 	}
 
 	.icon-btn.disabled {
@@ -188,10 +189,11 @@
 	}
 
 	.sidebar-content {
-		width: 260px;
+		width: 232px;
 		display: flex;
 		flex-direction: column;
 		overflow: hidden;
+		background: var(--sidebar-content-bg, var(--bg-primary));
 	}
 
 	.semantic-panel {
@@ -205,17 +207,17 @@
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		padding: 10px 12px;
-		border-bottom: 1px solid var(--border);
+		padding: 16px;
+		border-bottom: 1px solid rgba(15, 20, 26, 0.3);
 	}
 
 	.panel-title {
 		font-family: var(--font-display, inherit);
 		font-size: 11px;
-		font-weight: 600;
+		font-weight: 700;
 		text-transform: uppercase;
 		letter-spacing: 0.05em;
-		color: var(--text-secondary);
+		color: var(--text-muted);
 	}
 
 	.panel-toggle {

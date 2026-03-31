@@ -74,7 +74,7 @@ describe('toSemanticFlowNodes', () => {
 		const flowNodes = toSemanticFlowNodes(level);
 
 		for (const node of flowNodes) {
-			expect(node.width).toBe(280);
+			expect(node.width).toBe(256);
 			expect(node.height).toBe(160);
 		}
 	});
@@ -143,7 +143,7 @@ describe('toSemanticFlowEdges', () => {
 
 		for (const edge of flowEdges) {
 			expect(edge.type).toBe('smoothstep');
-			expect(edge.animated).toBe(true);
+			expect(edge.animated).toBe(false);
 		}
 	});
 

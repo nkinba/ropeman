@@ -159,9 +159,13 @@
 
 {#if open}
 	<!-- svelte-ignore a11y_no_static_element_interactions -->
-	<div class="analyze-backdrop" onclick={handleBackdropClick} onkeydown={handleKeydown}>
-		<div class="analyze-card" role="dialog" aria-modal="true">
-			<div class="analyze-header">
+	<div
+		class="modal-backdrop analyze-backdrop"
+		onclick={handleBackdropClick}
+		onkeydown={handleKeydown}
+	>
+		<div class="modal-card analyze-card" role="dialog" aria-modal="true">
+			<div class="modal-header">
 				<div>
 					<h2>AI Architecture Analysis</h2>
 					{#if trackInfo}
@@ -171,24 +175,24 @@
 						</div>
 					{/if}
 				</div>
-				<button class="analyze-close" onclick={onclose}>&#10005;</button>
+				<button class="modal-close" onclick={onclose}>&#10005;</button>
 			</div>
 
-			<div class="analyze-body">
+			<div class="modal-body analyze-body">
 				<!-- Edge / Demo -->
 				<div class="track-card" class:active={authStore.activeTrack === 'edge'}>
 					<!-- svelte-ignore a11y_no_static_element_interactions -->
 					<div class="track-row" onclick={() => toggleCard('edge')}>
-						<span class="track-icon">&#9889;</span>
+						<span class="track-icon"><span class="material-symbols-outlined">bolt</span></span>
 						<div class="track-info">
 							<span class="track-name">Demo</span>
 							<span class="track-sub">Free &middot; No setup</span>
 						</div>
 						{#if authStore.activeTrack === 'edge'}
-							<span class="active-badge">Active</span>
+							<span class="badge badge-accent">Active</span>
 						{/if}
 						<button
-							class="start-btn"
+							class="btn btn-primary start-btn"
 							onclick={(e: MouseEvent) => {
 								e.stopPropagation();
 								startAnalysis('edge');
@@ -203,7 +207,7 @@
 				<div class="track-card" class:active={authStore.activeTrack === 'byok'}>
 					<!-- svelte-ignore a11y_no_static_element_interactions -->
 					<div class="track-row" onclick={() => toggleCard('byok')}>
-						<span class="track-icon">&#128273;</span>
+						<span class="track-icon"><span class="material-symbols-outlined">vpn_key</span></span>
 						<div class="track-info">
 							<span class="track-name">API Key (BYOK)</span>
 							<span class="track-sub">
@@ -216,22 +220,27 @@
 							</span>
 						</div>
 						{#if authStore.activeTrack === 'byok'}
-							<span class="active-badge">Active</span>
+							<span class="badge badge-accent">Active</span>
 						{/if}
 						<span class="expand-arrow" class:expanded={expandedCard === 'byok'}>&#9656;</span>
 					</div>
 					{#if expandedCard === 'byok'}
 						<div class="track-config">
-							<label class="cfg-label" for="analyze-provider-select">Provider</label>
-							<select id="analyze-provider-select" class="cfg-select" value={selectedProvider} onchange={handleProviderChange}>
+							<label class="form-label" for="analyze-provider-select">Provider</label>
+							<select
+								id="analyze-provider-select"
+								class="select"
+								value={selectedProvider}
+								onchange={handleProviderChange}
+							>
 								{#each AI_PROVIDERS as provider}
 									<option value={provider.id}>{provider.label}</option>
 								{/each}
 							</select>
-							<label class="cfg-label" for="analyze-model-select">Model</label>
+							<label class="form-label" for="analyze-model-select">Model</label>
 							<select
 								id="analyze-model-select"
-								class="cfg-select"
+								class="select"
 								value={providerModels.some((m) => m.id === selectedModel)
 									? selectedModel
 									: '__custom__'}
@@ -244,7 +253,7 @@
 							</select>
 							{#if !providerModels.some((m) => m.id === selectedModel)}
 								<input
-									class="cfg-input"
+									class="input"
 									type="text"
 									placeholder="e.g. claude-sonnet-4-6"
 									value={selectedModel}
@@ -255,18 +264,20 @@
 									}}
 								/>
 							{/if}
-							<label class="cfg-label" for="analyze-api-key">{currentProvider?.label ?? ''} API Key</label>
-							<div class="cfg-row">
+							<label class="form-label" for="analyze-api-key"
+								>{currentProvider?.label ?? ''} API Key</label
+							>
+							<div class="form-row">
 								<input
 									id="analyze-api-key"
 									type="password"
-									class="cfg-input"
+									class="input"
 									placeholder="Enter API key"
 									value={apiKeyValue}
 									oninput={handleApiKeyInput}
 								/>
 								<button
-									class="cfg-btn"
+									class="btn btn-primary"
 									onclick={testKey}
 									disabled={!apiKeyValue || testStatus === 'testing'}
 								>
@@ -279,7 +290,10 @@
 								<span class="cfg-status error">{testError || 'Invalid'}</span>
 							{/if}
 							{#if apiKeyValue}
-								<button class="start-btn wide" onclick={() => startAnalysis('byok')}>
+								<button
+									class="btn btn-primary start-btn wide"
+									onclick={() => startAnalysis('byok')}
+								>
 									Start with API Key
 								</button>
 							{/if}
@@ -291,7 +305,7 @@
 				<div class="track-card" class:active={authStore.activeTrack === 'bridge'}>
 					<!-- svelte-ignore a11y_no_static_element_interactions -->
 					<div class="track-row" onclick={() => toggleCard('bridge')}>
-						<span class="track-icon">&#128279;</span>
+						<span class="track-icon"><span class="material-symbols-outlined">link</span></span>
 						<div class="track-info">
 							<span class="track-name">Local Bridge</span>
 							<span class="track-sub">
@@ -303,16 +317,16 @@
 							</span>
 						</div>
 						{#if authStore.activeTrack === 'bridge'}
-							<span class="active-badge">Active</span>
+							<span class="badge badge-accent">Active</span>
 						{/if}
 						<span class="expand-arrow" class:expanded={expandedCard === 'bridge'}>&#9656;</span>
 					</div>
 					{#if expandedCard === 'bridge'}
 						<div class="track-config">
-							<label class="cfg-label" for="analyze-cli-select">CLI Tool</label>
+							<label class="form-label" for="analyze-cli-select">CLI Tool</label>
 							<select
 								id="analyze-cli-select"
-								class="cfg-select"
+								class="select"
 								value={settingsStore.bridgeCli}
 								onchange={(e) =>
 									(settingsStore.bridgeCli = (e.target as HTMLSelectElement).value as
@@ -324,21 +338,21 @@
 								<option value="claude">Claude Code</option>
 								<option value="gemini">Gemini CLI</option>
 							</select>
-							<label class="cfg-label" for="analyze-bridge-port">Port</label>
-							<div class="cfg-row">
+							<label class="form-label" for="analyze-bridge-port">Port</label>
+							<div class="form-row">
 								<input
 									id="analyze-bridge-port"
 									type="number"
-									class="cfg-input"
+									class="input"
 									value={bridgePort}
 									oninput={(e) =>
 										(bridgePort = parseInt((e.target as HTMLInputElement).value) || 9876)}
 								/>
 								{#if authStore.bridgeStatus === 'connected'}
-									<button class="cfg-btn danger" onclick={disconnectBridge}>Disconnect</button>
+									<button class="btn btn-danger" onclick={disconnectBridge}>Disconnect</button>
 								{:else}
 									<button
-										class="cfg-btn"
+										class="btn btn-primary"
 										onclick={handleBridgeConnect}
 										disabled={authStore.bridgeStatus === 'connecting'}
 									>
@@ -354,7 +368,10 @@
 								>
 							</div>
 							{#if authStore.bridgeStatus === 'connected'}
-								<button class="start-btn wide" onclick={() => startAnalysis('bridge')}>
+								<button
+									class="btn btn-primary start-btn wide"
+									onclick={() => startAnalysis('bridge')}
+								>
 									Start with Bridge
 								</button>
 							{/if}
@@ -370,9 +387,10 @@
 				>
 					<!-- svelte-ignore a11y_no_static_element_interactions -->
 					<div class="track-row" onclick={() => webgpuStore.isSupported && toggleCard('webgpu')}>
-						<span class="track-icon">&#129504;</span>
+						<span class="track-icon"><span class="material-symbols-outlined">psychology</span></span
+						>
 						<div class="track-info">
-							<span class="track-name">Browser AI <span class="beta-tag">Beta</span></span>
+							<span class="track-name">Browser AI <span class="badge badge-muted">Beta</span></span>
 							<span class="track-sub">
 								{#if !webgpuStore.isSupported}
 									WebGPU not supported
@@ -383,12 +401,14 @@
 								{:else if webgpuStore.isCached}
 									Cached (needs loading)
 								{:else}
-									Not initialized (~{webgpuStore.selectedModel.downloadSizeMB >= 1000 ? (webgpuStore.selectedModel.downloadSizeMB / 1000).toFixed(1) + 'GB' : webgpuStore.selectedModel.downloadSizeMB + 'MB'} download)
+									Not initialized (~{webgpuStore.selectedModel.downloadSizeMB >= 1000
+										? (webgpuStore.selectedModel.downloadSizeMB / 1000).toFixed(1) + 'GB'
+										: webgpuStore.selectedModel.downloadSizeMB + 'MB'} download)
 								{/if}
 							</span>
 						</div>
 						{#if authStore.activeTrack === 'webgpu'}
-							<span class="active-badge">Active</span>
+							<span class="badge badge-accent">Active</span>
 						{/if}
 						{#if webgpuStore.isSupported}
 							<span class="expand-arrow" class:expanded={expandedCard === 'webgpu'}>&#9656;</span>
@@ -397,11 +417,14 @@
 					{#if expandedCard === 'webgpu' && webgpuStore.isSupported}
 						<div class="track-config">
 							{#if webgpuStore.isReady}
-								<button class="start-btn wide" onclick={() => startAnalysis('webgpu')}>
+								<button
+									class="btn btn-primary start-btn wide"
+									onclick={() => startAnalysis('webgpu')}
+								>
 									Start with WebGPU
 								</button>
 							{:else}
-								<button class="cfg-btn" onclick={() => (showWebGPUSetup = true)}>
+								<button class="btn btn-primary" onclick={() => (showWebGPUSetup = true)}>
 									Setup Model
 								</button>
 							{/if}
@@ -437,6 +460,10 @@
 					</div>
 				{/if}
 			</div>
+
+			<div class="analyze-footer">
+				<p class="analyze-footer-hint">Select a track to begin the structural analysis.</p>
+			</div>
 		</div>
 	</div>
 {/if}
@@ -444,47 +471,19 @@
 <WebGPUSetupModal open={showWebGPUSetup} onclose={() => (showWebGPUSetup = false)} />
 
 <style>
-	.analyze-backdrop {
-		position: fixed;
-		inset: 0;
-		background: var(--modal-backdrop);
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		z-index: 1000;
-	}
 	.analyze-card {
-		background: rgba(21, 26, 33, 0.85);
-		backdrop-filter: blur(20px);
-		-webkit-backdrop-filter: blur(20px);
-		border: 1px solid rgba(68, 72, 79, 0.15);
-		border-radius: 12px;
-		width: 520px;
-		max-width: 90vw;
-		max-height: 85vh;
-		overflow-y: auto;
-		box-shadow: 0 24px 48px rgba(0, 0, 0, 0.5);
+		width: 420px;
 	}
-	:root .analyze-card {
-		background: var(--bg-primary);
-		backdrop-filter: none;
-		-webkit-backdrop-filter: none;
-		border: 1px solid var(--border);
-		box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+	.analyze-card :global(.modal-header) {
+		padding: 20px;
 	}
-	.analyze-header {
-		display: flex;
-		align-items: flex-start;
-		justify-content: space-between;
-		padding: 16px 20px;
-		background: var(--bg-secondary);
+	.analyze-card :global(.modal-header h2) {
+		font-size: 14px;
+		letter-spacing: 0.025em;
 	}
-	.analyze-header h2 {
-		margin: 0;
-		font-size: 16px;
-		font-weight: 700;
-		color: var(--text-primary);
-		font-family: var(--font-display, 'Space Grotesk', sans-serif);
+	.analyze-body {
+		padding: 16px;
+		gap: 12px;
 	}
 	.current-track {
 		display: flex;
@@ -501,34 +500,31 @@
 		font-size: 11px;
 		color: var(--text-secondary);
 	}
-	.analyze-close {
-		background: none;
-		border: none;
-		color: var(--text-secondary);
-		font-size: 18px;
-		cursor: pointer;
-		padding: 4px;
-	}
-	.analyze-body {
-		padding: 16px 20px;
-		display: flex;
-		flex-direction: column;
-		gap: 8px;
-	}
 
 	/* Track cards */
 	.track-card {
-		border: none;
-		border-radius: 10px;
+		border-radius: 8px;
 		overflow: hidden;
+		background: rgba(255, 255, 255, 0.05);
+		border: 1px solid rgba(255, 255, 255, 0.05);
+		transition:
+			background-color 0.2s,
+			border-color 0.2s;
+	}
+	:global(:root) .track-card {
 		background: var(--bg-secondary);
-		transition: background-color 0.2s;
+		border: none;
 	}
 	.track-card:hover:not(.disabled) {
 		background: var(--bg-tertiary);
 	}
 	.track-card.active {
+		background: rgba(163, 166, 255, 0.1);
+		border: 1px solid rgba(163, 166, 255, 0.3);
+	}
+	:global(:root) .track-card.active {
 		background: var(--surface-elevated, var(--bg-tertiary));
+		border: none;
 	}
 	.track-card.disabled {
 		opacity: 0.5;
@@ -536,9 +532,9 @@
 	.track-row {
 		display: flex;
 		align-items: center;
-		gap: 12px;
+		gap: 16px;
 		width: 100%;
-		padding: 12px 14px;
+		padding: 12px;
 		background: none;
 		border: none;
 		cursor: pointer;
@@ -546,10 +542,20 @@
 		color: inherit;
 	}
 	.track-icon {
-		font-size: 20px;
+		width: 40px;
+		height: 40px;
+		border-radius: 8px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
 		flex-shrink: 0;
-		width: 28px;
-		text-align: center;
+		background: rgba(255, 255, 255, 0.05);
+		color: var(--text-secondary);
+		font-size: 20px;
+	}
+	.track-card.active .track-icon {
+		background: rgba(163, 166, 255, 0.2);
+		color: var(--accent);
 	}
 	.track-info {
 		flex: 1;
@@ -558,32 +564,14 @@
 		flex-direction: column;
 	}
 	.track-name {
-		font-size: 14px;
-		font-weight: 600;
+		font-size: 12px;
+		font-weight: 700;
 		color: var(--text-primary);
 	}
 	.track-sub {
-		font-size: 11px;
+		font-size: 10px;
 		color: var(--text-secondary);
 		margin-top: 1px;
-	}
-	.active-badge {
-		font-size: 10px;
-		font-weight: 600;
-		padding: 2px 7px;
-		border-radius: 8px;
-		background: var(--accent-muted);
-		color: var(--accent);
-		flex-shrink: 0;
-	}
-	.beta-tag {
-		font-size: 10px;
-		font-weight: 500;
-		padding: 1px 5px;
-		border-radius: 6px;
-		background: var(--bg-secondary);
-		color: var(--text-secondary);
-		vertical-align: middle;
 	}
 	.expand-arrow {
 		font-size: 12px;
@@ -596,18 +584,12 @@
 	}
 	.start-btn {
 		flex-shrink: 0;
-		padding: 6px 14px;
-		background: var(--accent);
-		color: var(--bg-primary);
-		border: none;
-		border-radius: 6px;
-		font-size: 12px;
-		font-weight: 600;
-		cursor: pointer;
-		white-space: nowrap;
-	}
-	.start-btn:hover {
-		opacity: 0.9;
+		padding: 4px 12px;
+		font-size: 10px;
+		font-weight: 700;
+		font-family: var(--font-display);
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
 	}
 	.start-btn.wide {
 		width: 100%;
@@ -622,51 +604,6 @@
 		flex-direction: column;
 		gap: 8px;
 		background: var(--bg-tertiary);
-	}
-	.cfg-label {
-		font-size: 12px;
-		font-weight: 500;
-		color: var(--text-secondary);
-	}
-	.cfg-select,
-	.cfg-input {
-		padding: 7px 10px;
-		background: var(--bg-primary);
-		border: 1px solid transparent;
-		border-radius: 6px;
-		color: var(--text-primary);
-		font-size: 12px;
-		outline: none;
-		transition: border-color 0.15s ease;
-	}
-	.cfg-select:focus,
-	.cfg-input:focus {
-		border-color: rgba(68, 72, 79, 0.4);
-	}
-	.cfg-row {
-		display: flex;
-		gap: 6px;
-	}
-	.cfg-row .cfg-input {
-		flex: 1;
-	}
-	.cfg-btn {
-		padding: 7px 12px;
-		background: var(--accent);
-		color: var(--bg-primary);
-		border: none;
-		border-radius: 6px;
-		font-size: 12px;
-		font-weight: 500;
-		cursor: pointer;
-		white-space: nowrap;
-	}
-	.cfg-btn:disabled {
-		opacity: 0.5;
-		cursor: not-allowed;
-	}
-	.cfg-btn.danger {
-		background: var(--color-error);
 	}
 	.cfg-status {
 		font-size: 11px;
@@ -744,5 +681,19 @@
 		word-break: break-all;
 		margin-top: 8px;
 		color: var(--text-secondary);
+	}
+
+	/* Footer */
+	.analyze-footer {
+		padding: 16px;
+		background: rgba(255, 255, 255, 0.05);
+		border-top: 1px solid rgba(255, 255, 255, 0.05);
+		border-radius: 0 0 12px 12px;
+	}
+	.analyze-footer-hint {
+		font-size: 10px;
+		color: var(--text-muted);
+		font-style: italic;
+		margin: 0;
 	}
 </style>
