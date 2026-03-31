@@ -298,7 +298,7 @@
 		padding: 0 16px;
 		height: 40px;
 		background: var(--sidebar-content-bg, #151a21);
-		border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+		border-bottom: 1px solid var(--ghost-border);
 		flex-shrink: 0;
 		gap: 8px;
 	}
@@ -321,7 +321,7 @@
 		letter-spacing: 0.1em;
 		color: var(--text-secondary);
 		background: var(--bg-tertiary);
-		border: 1px solid rgba(255, 255, 255, 0.05);
+		border: 1px solid var(--ghost-border);
 		padding: 2px 8px;
 		border-radius: 4px;
 		flex-shrink: 0;
@@ -344,7 +344,7 @@
 		flex-shrink: 0;
 		overflow-y: auto;
 		background: var(--sidebar-content-bg, #151a21);
-		border-left: 1px solid rgba(255, 255, 255, 0.05);
+		border-left: 1px solid var(--ghost-border);
 	}
 
 	.symbol-header {
@@ -354,7 +354,7 @@
 		letter-spacing: 0.05em;
 		color: var(--text-muted);
 		padding: 16px;
-		border-bottom: 1px solid rgba(15, 20, 26, 0.3);
+		border-bottom: 1px solid var(--border);
 	}
 
 	.symbol-item {

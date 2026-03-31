@@ -99,7 +99,7 @@
 		align-items: center;
 		justify-content: space-between;
 		padding: 20px;
-		border-bottom: 1px solid rgba(15, 20, 26, 0.3);
+		border-bottom: 1px solid var(--border);
 		flex-shrink: 0;
 	}
 
@@ -135,7 +135,7 @@
 
 	.panel-section {
 		padding: 20px;
-		border-bottom: 1px solid rgba(15, 20, 26, 0.3);
+		border-bottom: 1px solid var(--border);
 	}
 
 	.section-title {
@@ -190,7 +190,7 @@
 	}
 
 	.file-item:hover {
-		background: rgba(27, 32, 40, 0.5);
+		background: var(--bg-tertiary);
 		color: var(--text-primary);
 	}
 

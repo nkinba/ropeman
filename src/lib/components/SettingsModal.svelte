@@ -1,8 +1,12 @@
 <script lang="ts">
 	import { settingsStore } from '$lib/stores/settingsStore.svelte';
 	import { i18nStore } from '$lib/stores/i18nStore.svelte';
-	import { clearCache, getCacheSize } from '$lib/services/cacheService';
+	import { projectStore } from '$lib/stores/projectStore.svelte';
+	import { clearCache } from '$lib/services/cacheService';
+	import { clearSemanticCache, getSemanticCacheSize } from '$lib/services/semanticCacheService';
 	import { SYNTAX_THEMES } from '$lib/services/syntaxThemeService';
+
+	const hasProject = $derived(projectStore.fileTree !== null);
 
 	let { open, onclose, onconnect }: { open: boolean; onclose: () => void; onconnect?: () => void } =
 		$props();
@@ -23,7 +27,7 @@
 			skeletonUnlimited = settingsStore.skeletonUnlimited;
 			lang = settingsStore.language;
 			syntaxTheme = settingsStore.syntaxTheme;
-			getCacheSize().then((n) => {
+			getSemanticCacheSize().then((n) => {
 				cacheSize = n;
 			});
 		}
@@ -63,6 +67,7 @@
 
 	async function handleClearAll() {
 		await clearCache();
+		await clearSemanticCache();
 		settingsStore.clearAll();
 		cacheEnabled = true;
 		showSymbols = false;
@@ -99,20 +104,22 @@
 			</div>
 
 			<div class="modal-body">
-				<section class="settings-section">
-					<span class="form-label">AI Connection</span>
-					<div class="section-card">
-						<button
-							class="btn btn-primary"
-							onclick={() => {
-								onclose();
-								onconnect?.();
-							}}
-						>
-							Configure AI
-						</button>
-					</div>
-				</section>
+				{#if hasProject}
+					<section class="settings-section">
+						<span class="form-label">AI Connection</span>
+						<div class="section-card">
+							<button
+								class="btn btn-primary"
+								onclick={() => {
+									onclose();
+									onconnect?.();
+								}}
+							>
+								Configure AI
+							</button>
+						</div>
+					</section>
+				{/if}
 
 				<section class="settings-section">
 					<span class="form-label">Skeleton Size Limit</span>

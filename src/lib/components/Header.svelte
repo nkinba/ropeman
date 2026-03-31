@@ -113,7 +113,7 @@
 				/>
 			</svg>
 		</button>
-		{#if trackInfo}
+		{#if hasProject && trackInfo}
 			<button
 				class="track-badge"
 				style="--track-color: {trackInfo.color}"
@@ -143,7 +143,7 @@
 		width: 100%;
 		background: var(--sidebar-icon-bg);
 		flex-shrink: 0;
-		border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+		border-bottom: 1px solid var(--ghost-border);
 		position: sticky;
 		top: 0;
 		z-index: 50;
@@ -210,9 +210,9 @@
 		padding: 4px 12px;
 		gap: 6px;
 		background: var(--bg-tertiary);
-		border: 1px solid rgba(255, 255, 255, 0.1);
+		border: 1px solid var(--ghost-border);
 		border-radius: 4px;
-		color: var(--accent-secondary, #53ddfc);
+		color: var(--accent-secondary);
 		font-family: var(--font-display);
 		font-size: 11px;
 		font-weight: 700;
@@ -221,7 +221,7 @@
 	}
 
 	.header-btn.text-btn:hover {
-		background: rgba(255, 255, 255, 0.05);
+		background: var(--bg-tertiary);
 	}
 
 	.btn-label {
@@ -257,14 +257,14 @@
 		padding: 2px 8px;
 		margin-left: 4px;
 		border-radius: 9999px;
-		background: rgba(163, 166, 255, 0.1);
-		border: 1px solid rgba(163, 166, 255, 0.2);
+		background: var(--accent-bg);
+		border: 1px solid color-mix(in srgb, var(--accent) 20%, transparent);
 		cursor: pointer;
 		transition: background 0.2s;
 	}
 
 	.track-badge:hover {
-		background: rgba(163, 166, 255, 0.15);
+		background: color-mix(in srgb, var(--accent) 15%, transparent);
 	}
 
 	.track-dot {
@@ -297,7 +297,7 @@
 	.header-divider {
 		width: 0;
 		height: 100%;
-		border-left: 1px solid rgba(255, 255, 255, 0.1);
+		border-left: 1px solid var(--ghost-border);
 		margin-left: 8px;
 		padding-left: 16px;
 	}

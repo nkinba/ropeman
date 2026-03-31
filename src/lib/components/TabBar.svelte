@@ -156,7 +156,7 @@
 		display: flex;
 		align-items: stretch;
 		background: var(--sidebar-icon-bg, #0f141a);
-		border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+		border-bottom: 1px solid var(--ghost-border);
 		flex-shrink: 0;
 		min-height: 36px;
 		overflow-x: auto;
@@ -203,7 +203,7 @@
 	}
 
 	.tab:hover {
-		background: rgba(21, 26, 33, 0.5);
+		background: var(--bg-tertiary);
 		color: var(--text-primary);
 	}
 

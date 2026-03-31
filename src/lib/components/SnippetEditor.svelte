@@ -148,25 +148,14 @@
 	{/if}
 
 	<button class="analyze-btn" onclick={handleAnalyze} disabled={!code.trim()}>
-		<svg
-			width="16"
-			height="16"
-			viewBox="0 0 24 24"
-			fill="none"
-			stroke="currentColor"
-			stroke-width="2"
-			stroke-linecap="round"
-			stroke-linejoin="round"
-		>
-			<polygon points="5 3 19 12 5 21 5 3" />
-		</svg>
+		<span class="material-symbols-outlined">play_arrow</span>
 		{i18nStore.t('snippet.analyze')}
 	</button>
 </section>
 
 <style>
 	.snippet-section {
-		margin-top: 32px;
+		margin-top: 48px;
 	}
 
 	.snippet-divider {
@@ -179,30 +168,34 @@
 	.divider-line {
 		flex: 1;
 		height: 1px;
-		background: var(--border);
+		background: var(--ghost-border, rgba(255, 255, 255, 0.08));
 	}
 
 	.divider-text {
-		font-size: 13px;
+		font-family: var(--font-display);
+		font-size: 11px;
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.1em;
 		color: var(--text-muted);
 		white-space: nowrap;
 	}
 
 	.preset-row {
 		display: flex;
-		gap: 10px;
-		margin-bottom: 16px;
+		gap: 12px;
+		margin-bottom: 20px;
 		flex-wrap: wrap;
 	}
 
 	.preset-card {
 		display: flex;
 		align-items: center;
-		gap: 10px;
-		padding: 10px 14px;
-		background: var(--landing-card-bg);
-		border: 1px solid var(--landing-card-border);
-		border-radius: 10px;
+		gap: 12px;
+		padding: 12px 16px;
+		background: var(--bg-tertiary, #1b2028);
+		border: 1px solid var(--ghost-border, rgba(255, 255, 255, 0.05));
+		border-radius: 8px;
 		cursor: pointer;
 		transition:
 			border-color 0.15s ease,
@@ -212,11 +205,12 @@
 
 	.preset-card:hover {
 		border-color: var(--text-muted);
+		background: var(--bg-highest, #20262f);
 	}
 
 	.preset-card.active {
 		border-color: var(--accent);
-		background: color-mix(in srgb, var(--accent) 8%, var(--landing-card-bg));
+		background: rgba(163, 166, 255, 0.08);
 	}
 
 	.preset-dot {
@@ -233,44 +227,56 @@
 	}
 
 	.preset-name {
+		font-family: var(--font-body);
 		font-size: 13px;
-		font-weight: 600;
+		font-weight: 700;
 		color: var(--text-primary);
 	}
 
 	.preset-desc {
+		font-family: var(--font-body);
 		font-size: 11px;
 		color: var(--text-muted);
 	}
 
 	.editor-area {
-		border: 1px solid var(--border);
-		border-radius: 10px;
+		border: 1px solid var(--ghost-border, rgba(255, 255, 255, 0.05));
+		border-radius: 8px;
 		overflow: hidden;
-		background: var(--bg-primary);
+		background: var(--bg-lowest, #000000);
 	}
 
 	.editor-toolbar {
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		padding: 6px 12px;
-		background: var(--bg-secondary);
-		border-bottom: 1px solid var(--border);
+		padding: 8px 12px;
+		background: var(--bg-secondary, #151a21);
+		border-bottom: 1px solid var(--ghost-border, rgba(255, 255, 255, 0.05));
 	}
 
 	.lang-select {
-		background: var(--bg-primary);
+		background: var(--bg-bright, #262c36);
 		color: var(--text-primary);
-		border: 1px solid var(--border);
-		border-radius: 6px;
+		border: none;
+		border-radius: 4px;
 		padding: 4px 8px;
-		font-size: 12px;
+		font-family: var(--font-display);
+		font-size: 11px;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
 		cursor: pointer;
 	}
 
+	.lang-select:focus {
+		outline: none;
+		box-shadow: 0 0 0 1px var(--accent);
+	}
+
 	.line-info {
-		font-size: 11px;
+		font-family: var(--font-code);
+		font-size: 10px;
 		color: var(--text-muted);
 		font-variant-numeric: tabular-nums;
 	}
@@ -289,24 +295,24 @@
 		min-width: 40px;
 		text-align: right;
 		user-select: none;
-		border-right: 1px solid var(--border);
-		background: var(--bg-secondary);
+		border-right: 1px solid var(--ghost-border, rgba(255, 255, 255, 0.05));
+		background: var(--sidebar-icon-bg, #0f141a);
 	}
 
 	.line-numbers span {
 		display: block;
 		padding: 0 8px;
-		font-size: 12px;
+		font-family: var(--font-code);
+		font-size: 11px;
 		line-height: 20px;
 		color: var(--text-muted);
-		font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
 	}
 
 	.code-textarea {
 		flex: 1;
-		padding: 12px;
-		font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
-		font-size: 12px;
+		padding: 12px 16px;
+		font-family: var(--font-code);
+		font-size: 13px;
 		line-height: 20px;
 		color: var(--text-primary);
 		background: transparent;
@@ -320,40 +326,54 @@
 
 	.code-textarea::placeholder {
 		color: var(--text-muted);
+		opacity: 0.5;
 	}
 
 	.error-msg {
 		margin-top: 8px;
-		color: #e53e3e;
-		font-size: 13px;
+		color: var(--color-error);
+		font-size: 12px;
 	}
 
 	.analyze-btn {
 		display: inline-flex;
 		align-items: center;
-		gap: 6px;
-		margin-top: 12px;
-		padding: 10px 24px;
+		gap: 8px;
+		margin-top: 16px;
+		padding: 12px 24px;
 		background: var(--accent);
-		color: white;
-		border-radius: 10px;
+		color: var(--bg-primary);
+		border-radius: 8px;
+		font-family: var(--font-display);
 		font-size: 14px;
-		font-weight: 600;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
 		cursor: pointer;
+		box-shadow:
+			0 10px 15px -3px rgba(163, 166, 255, 0.1),
+			0 4px 6px -4px rgba(163, 166, 255, 0.1);
 		transition:
-			background 0.2s ease,
-			transform 0.15s ease,
-			opacity 0.2s ease;
+			opacity 0.15s ease,
+			transform 0.15s ease;
 	}
 
 	.analyze-btn:hover:not(:disabled) {
-		background: var(--accent-hover);
-		transform: translateY(-1px);
+		opacity: 0.9;
+		transform: none;
+	}
+
+	.analyze-btn:active:not(:disabled) {
+		transform: scale(0.98);
 	}
 
 	.analyze-btn:disabled {
-		opacity: 0.5;
+		opacity: 0.4;
 		cursor: not-allowed;
+	}
+
+	.analyze-btn .material-symbols-outlined {
+		font-size: 18px;
 	}
 
 	@media (max-width: 720px) {

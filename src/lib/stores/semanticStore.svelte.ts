@@ -1,5 +1,6 @@
 import type { SemanticLevel, SemanticNode } from '$lib/types/semantic';
 import { tabStore } from './tabStore.svelte';
+import { saveSemanticLevel, loadSemanticCache } from '$lib/services/semanticCacheService';
 
 export type ViewMode = 'semantic' | 'code';
 
@@ -8,6 +9,13 @@ export interface AnalysisRequest {
 	nodeLabel: string;
 	progress: string;
 	abortController: AbortController;
+}
+
+// Callback to get settings/project without circular imports
+let _getSettingsAndProject: (() => { cacheEnabled: boolean; projectName: string }) | null = null;
+
+export function setSemanticCacheDeps(fn: () => { cacheEnabled: boolean; projectName: string }) {
+	_getSettingsAndProject = fn;
 }
 
 function createSemanticStore() {
@@ -160,6 +168,13 @@ function createSemanticStore() {
 			const next = new Map(cache);
 			next.set(key, level);
 			cache = next;
+			// Persist to IndexedDB if cache is enabled
+			if (_getSettingsAndProject) {
+				const { cacheEnabled, projectName } = _getSettingsAndProject();
+				if (cacheEnabled && projectName) {
+					saveSemanticLevel(projectName, key, level).catch(() => {});
+				}
+			}
 		},
 
 		getCachedLevel(key: string): SemanticLevel | undefined {
@@ -176,6 +191,19 @@ function createSemanticStore() {
 			cache = next;
 		},
 
+		async restoreCache(projectName: string) {
+			if (_getSettingsAndProject && !_getSettingsAndProject().cacheEnabled) return;
+			const restored = await loadSemanticCache(projectName);
+			if (restored.size > 0) {
+				cache = restored;
+				// Restore root level if available
+				const root = restored.get('__root__');
+				if (root) {
+					currentLevel = root;
+				}
+			}
+		},
+
 		drillDown(node: SemanticNode) {
 			// Cache current level before drilling down
 			const cacheKey = currentLevel?.parentId ?? '__root__';
@@ -183,6 +211,13 @@ function createSemanticStore() {
 				const next = new Map(cache);
 				next.set(cacheKey, currentLevel);
 				cache = next;
+				// Persist to IndexedDB
+				if (_getSettingsAndProject) {
+					const { cacheEnabled, projectName } = _getSettingsAndProject();
+					if (cacheEnabled && projectName) {
+						saveSemanticLevel(projectName, cacheKey, currentLevel).catch(() => {});
+					}
+				}
 			}
 
 			drilldownPath = [...drilldownPath, { nodeId: node.id, label: node.label }];

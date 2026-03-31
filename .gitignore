@@ -50,4 +50,4 @@ playwright-report
 !.env.example
 
 .claude.json
-.mcp.json
+.mcp.json.stitch-html/

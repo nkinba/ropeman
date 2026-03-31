@@ -139,7 +139,7 @@
 		background: var(--sidebar-content-bg, var(--bg-primary));
 		overflow: hidden;
 		flex-shrink: 0;
-		border-right: 1px solid rgba(255, 255, 255, 0.05);
+		border-right: 1px solid var(--ghost-border);
 	}
 
 	.sidebar-icons {
@@ -208,7 +208,7 @@
 		align-items: center;
 		justify-content: space-between;
 		padding: 16px;
-		border-bottom: 1px solid rgba(15, 20, 26, 0.3);
+		border-bottom: 1px solid var(--border);
 	}
 
 	.panel-title {

@@ -87,7 +87,7 @@
 		width: 256px;
 		min-height: 120px;
 		background: var(--bg-tertiary, #1b2028);
-		border: 1px solid rgba(255, 255, 255, 0.05);
+		border: 1px solid var(--ghost-border);
 		border-radius: 8px;
 		padding: 16px;
 		cursor: pointer;
@@ -186,7 +186,7 @@
 		text-transform: uppercase;
 		padding: 2px 6px;
 		border-radius: 4px;
-		background: rgba(163, 166, 255, 0.2);
+		background: color-mix(in srgb, var(--accent) 20%, transparent);
 		color: var(--accent, #a3a6ff);
 		white-space: nowrap;
 		flex-shrink: 0;

@@ -138,13 +138,21 @@
 		}
 	}
 
+	function switchTrack(track: CardId) {
+		if (track === 'edge') {
+			authStore.edgeEnabled = true;
+		}
+		authStore.preferredTrack = track;
+	}
+
 	function startAnalysis(track: CardId) {
-		if (track === 'edge') authStore.edgeEnabled = true;
-		else authStore.edgeEnabled = false;
+		switchTrack(track);
 		onanalyze(track);
 	}
 
 	function toggleCard(id: CardId) {
+		// Switch active track on card click (without starting analysis)
+		switchTrack(id);
 		expandedCard = expandedCard === id ? null : id;
 	}
 
@@ -505,26 +513,18 @@
 	.track-card {
 		border-radius: 8px;
 		overflow: hidden;
-		background: rgba(255, 255, 255, 0.05);
-		border: 1px solid rgba(255, 255, 255, 0.05);
+		background: var(--bg-secondary);
+		border: 1px solid var(--ghost-border);
 		transition:
 			background-color 0.2s,
 			border-color 0.2s;
-	}
-	:global(:root) .track-card {
-		background: var(--bg-secondary);
-		border: none;
 	}
 	.track-card:hover:not(.disabled) {
 		background: var(--bg-tertiary);
 	}
 	.track-card.active {
-		background: rgba(163, 166, 255, 0.1);
-		border: 1px solid rgba(163, 166, 255, 0.3);
-	}
-	:global(:root) .track-card.active {
-		background: var(--surface-elevated, var(--bg-tertiary));
-		border: none;
+		background: var(--accent-bg);
+		border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
 	}
 	.track-card.disabled {
 		opacity: 0.5;
@@ -549,12 +549,12 @@
 		align-items: center;
 		justify-content: center;
 		flex-shrink: 0;
-		background: rgba(255, 255, 255, 0.05);
+		background: var(--bg-tertiary);
 		color: var(--text-secondary);
 		font-size: 20px;
 	}
 	.track-card.active .track-icon {
-		background: rgba(163, 166, 255, 0.2);
+		background: color-mix(in srgb, var(--accent) 20%, transparent);
 		color: var(--accent);
 	}
 	.track-info {
@@ -686,8 +686,8 @@
 	/* Footer */
 	.analyze-footer {
 		padding: 16px;
-		background: rgba(255, 255, 255, 0.05);
-		border-top: 1px solid rgba(255, 255, 255, 0.05);
+		background: var(--bg-secondary);
+		border-top: 1px solid var(--ghost-border);
 		border-radius: 0 0 12px 12px;
 	}
 	.analyze-footer-hint {
