@@ -246,10 +246,6 @@
 							<span class="shortcut-keys"><kbd>Ctrl</kbd>+<kbd>B</kbd></span>
 						</div>
 						<div class="shortcut-row">
-							<span class="shortcut-desc">{i18nStore.t('shortcuts.exportDiagram')}</span>
-							<span class="shortcut-keys"><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>E</kbd></span>
-						</div>
-						<div class="shortcut-row">
 							<span class="shortcut-desc">{i18nStore.t('shortcuts.showHelp')}</span>
 							<span class="shortcut-keys"><kbd>?</kbd></span>
 						</div>

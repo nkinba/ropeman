@@ -355,7 +355,7 @@
 		font-family: var(--font-display);
 		font-size: 48px;
 		font-weight: 700;
-		color: white;
+		color: var(--text-primary);
 		line-height: 1.25;
 		margin-bottom: 0;
 	}

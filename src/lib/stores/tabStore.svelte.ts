@@ -104,6 +104,8 @@ function createTabStore() {
 
 		/**
 		 * Open or focus a diagram tab for a given drilldown path.
+		 * Reuses an existing diagram tab in the same pane if one exists,
+		 * updating its key, label, and drilldownPath rather than creating a duplicate.
 		 * Returns the tab ID.
 		 */
 		openDiagramTab(drilldownPath: { nodeId: string; label: string }[], label: string): string {
@@ -112,6 +114,21 @@ function createTabStore() {
 			if (existing) {
 				activateTab(existing.id);
 				return existing.id;
+			}
+
+			// Reuse an existing diagram tab in the same pane instead of creating a duplicate
+			const targetPane = layoutStore.isSplit ? layoutStore.focusedPane : 'primary';
+			const existingDiagram = tabs.find(
+				(t) => t.type === 'diagram' && (t.paneId ?? 'primary') === targetPane
+			);
+			if (existingDiagram) {
+				existingDiagram.key = key;
+				existingDiagram.label = label;
+				existingDiagram.drilldownPath = [...drilldownPath];
+				existingDiagram.lastAccessed = Date.now();
+				tabs = [...tabs]; // trigger reactivity
+				activateTab(existingDiagram.id);
+				return existingDiagram.id;
 			}
 
 			const tab: Tab = {
@@ -149,8 +166,26 @@ function createTabStore() {
 				return existing.id;
 			}
 
-			// Determine target pane: use focused pane in split mode
-			const targetPane = layoutStore.isSplit ? layoutStore.focusedPane : 'primary';
+			// Determine target pane: in split mode, open code tabs in the pane
+			// that does NOT contain the active diagram tab, so clicking a file
+			// from the explorer never replaces the diagram view.
+			let targetPane: 'primary' | 'secondary' = 'primary';
+			if (layoutStore.isSplit) {
+				const primaryHasDiagram = tabs.some(
+					(t) => t.type === 'diagram' && (t.paneId ?? 'primary') === 'primary'
+				);
+				const secondaryHasDiagram = tabs.some(
+					(t) => t.type === 'diagram' && t.paneId === 'secondary'
+				);
+				if (primaryHasDiagram && !secondaryHasDiagram) {
+					targetPane = 'secondary';
+				} else if (secondaryHasDiagram && !primaryHasDiagram) {
+					targetPane = 'primary';
+				} else {
+					// Both or neither have diagram tabs — use focused pane
+					targetPane = layoutStore.focusedPane;
+				}
+			}
 
 			if (preview) {
 				// Replace existing preview tab in the same pane

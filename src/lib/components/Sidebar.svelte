@@ -30,6 +30,16 @@
 		contentOpen = !contentOpen;
 	}
 
+	export function togglePanel() {
+		if (activePanel === 'files' && hasSemanticData) {
+			activePanel = 'semantic';
+			contentOpen = true;
+		} else {
+			activePanel = 'files';
+			contentOpen = true;
+		}
+	}
+
 	function handleIconClick(panel: 'files' | 'semantic') {
 		if (panel === 'semantic' && !hasSemanticData) return;
 		if (activePanel === panel) {
@@ -190,6 +200,8 @@
 
 	.sidebar-content {
 		width: 232px;
+		height: 100%;
+		min-height: 0;
 		display: flex;
 		flex-direction: column;
 		overflow: hidden;
