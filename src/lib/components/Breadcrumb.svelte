@@ -131,7 +131,7 @@
 	}}
 />
 
-{#if activeTab?.type === 'diagram' && semanticStore.currentLevel !== null}
+{#if activeTab?.type !== 'code' && semanticStore.currentLevel !== null}
 	<!-- Semantic diagram breadcrumb -->
 	<nav class="breadcrumb-bar">
 		<button

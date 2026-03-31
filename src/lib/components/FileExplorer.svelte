@@ -325,6 +325,8 @@
 <style>
 	.file-explorer {
 		width: 260px;
+		height: 100%;
+		min-height: 0;
 		display: flex;
 		flex-direction: column;
 		background: var(--sidebar-content-bg, var(--bg-primary));

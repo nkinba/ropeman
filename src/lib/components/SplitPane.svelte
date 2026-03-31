@@ -63,7 +63,11 @@
 	}
 
 	function handlePrimaryClose(tabId: string) {
+		const tabCount = tabStore.tabsForPane('primary').length;
 		tabStore.closeTab(tabId);
+		if (tabCount <= 1) {
+			layoutStore.isSplit = false;
+		}
 	}
 
 	function handleSecondaryClose(tabId: string) {

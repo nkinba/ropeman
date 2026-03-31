@@ -7,7 +7,7 @@
 	import SemanticDetailPanel from '$lib/components/SemanticDetailPanel.svelte';
 	import Sidebar from '$lib/components/Sidebar.svelte';
 	import ChatPopup from '$lib/components/ChatPopup.svelte';
-	import StatusBar from '$lib/components/StatusBar.svelte';
+	// import StatusBar from '$lib/components/StatusBar.svelte'; // hidden — reserved for future use
 	import LoadingOverlay from '$lib/components/LoadingOverlay.svelte';
 	import SettingsModal from '$lib/components/SettingsModal.svelte';
 	import AnalyzeModal from '$lib/components/AnalyzeModal.svelte';
@@ -377,7 +377,11 @@
 					}
 				}
 			} else if (tabStore.activeTabId) {
+				const primaryTabs = tabStore.tabsForPane('primary');
 				tabStore.closeTab(tabStore.activeTabId);
+				if (layoutStore.isSplit && primaryTabs.length <= 1) {
+					layoutStore.isSplit = false;
+				}
 			}
 			return;
 		}
@@ -407,6 +411,13 @@
 		if (e.ctrlKey && !e.shiftKey && e.key === 'b') {
 			e.preventDefault();
 			sidebarRef?.toggleContent();
+			return;
+		}
+
+		// Ctrl+Shift+V: Toggle sidebar panel (File Explorer <-> Semantic Tree)
+		if (e.ctrlKey && e.shiftKey && e.key === 'V') {
+			e.preventDefault();
+			sidebarRef?.togglePanel();
 			return;
 		}
 
@@ -522,7 +533,8 @@
 				</div>
 			{/if}
 		</div>
-		<StatusBar />
+		<!-- StatusBar hidden — reserved for future use -->
+		<!-- <StatusBar /> -->
 		<!-- U1-1: Analysis progress indicator (bottom-right, always visible) -->
 		{#if semanticStore.isAnalyzing}
 			<div class="analysis-progress-pill">
