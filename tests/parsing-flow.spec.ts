@@ -153,7 +153,25 @@ test.describe('Parsing Flow (testDir mode)', () => {
 		// Wait for code to load
 		await expect(page.locator('.code-filepath')).toBeVisible({ timeout: 10_000 });
 
-		// Symbol sidebar should be visible with parsed symbols
+		// Symbol sidebar is OFF by default — enable it first
+		await page.evaluate(() => {
+			const raw = localStorage.getItem('ropeman-settings');
+			const settings = raw ? JSON.parse(raw) : {};
+			settings.showSymbols = true;
+			localStorage.setItem('ropeman-settings', JSON.stringify(settings));
+		});
+		await page.reload();
+		await expect(page.locator('.main-layout')).toBeVisible({ timeout: 60_000 });
+
+		// Click the file again after reload
+		const rootDir2 = page.locator('.tree-item.dir-item');
+		await rootDir2.click();
+		const pyFile2 = page.locator('.tree-item.file-item', { hasText: 'hello.py' });
+		await expect(pyFile2).toBeVisible({ timeout: 5_000 });
+		await pyFile2.click();
+		await expect(page.locator('.code-filepath')).toBeVisible({ timeout: 10_000 });
+
+		// Symbol sidebar should now be visible with parsed symbols
 		const symbolSidebar = page.locator('.symbol-sidebar');
 		await expect(symbolSidebar).toBeVisible({ timeout: 5_000 });
 
