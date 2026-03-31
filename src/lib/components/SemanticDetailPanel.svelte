@@ -90,7 +90,7 @@
 		height: 100%;
 		display: flex;
 		flex-direction: column;
-		background: var(--bg-primary);
+		background: var(--sidebar-content-bg, #151a21);
 		overflow-y: auto;
 	}
 
@@ -98,14 +98,17 @@
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		padding: 16px;
-		border-bottom: 1px solid var(--border);
+		padding: 20px;
+		border-bottom: 1px solid rgba(15, 20, 26, 0.3);
 		flex-shrink: 0;
 	}
 
 	.panel-label {
-		font-size: 16px;
+		font-size: 14px;
 		font-weight: 700;
+		font-family: var(--font-display, 'Space Grotesk', sans-serif);
+		text-transform: uppercase;
+		letter-spacing: 0.025em;
 		line-height: 1.3;
 		flex: 1;
 		min-width: 0;
@@ -131,17 +134,18 @@
 	}
 
 	.panel-section {
-		padding: 12px 16px;
-		border-bottom: 1px solid var(--border);
+		padding: 20px;
+		border-bottom: 1px solid rgba(15, 20, 26, 0.3);
 	}
 
 	.section-title {
+		font-family: var(--font-display, 'Space Grotesk', sans-serif);
 		font-size: 11px;
 		font-weight: 700;
 		text-transform: uppercase;
-		letter-spacing: 0.5px;
+		letter-spacing: 0.05em;
 		color: var(--text-muted);
-		margin-bottom: 8px;
+		margin-bottom: 16px;
 		display: flex;
 		align-items: center;
 		gap: 6px;
@@ -157,24 +161,24 @@
 	}
 
 	.panel-description {
-		font-size: 13px;
+		font-size: 12px;
 		color: var(--text-secondary);
-		line-height: 1.5;
+		line-height: 1.625;
 		margin: 0;
 	}
 
 	.file-list {
 		display: flex;
 		flex-direction: column;
-		gap: 2px;
+		gap: 6px;
 	}
 
 	.file-item {
 		display: flex;
 		align-items: center;
-		gap: 6px;
+		gap: 8px;
 		padding: 6px 8px;
-		font-size: 12px;
+		font-size: 11px;
 		color: var(--text-secondary);
 		cursor: pointer;
 		border: none;
@@ -186,8 +190,8 @@
 	}
 
 	.file-item:hover {
-		background: var(--bg-tertiary);
-		color: var(--accent, #3b82f6);
+		background: rgba(27, 32, 40, 0.5);
+		color: var(--text-primary);
 	}
 
 	.file-icon {
@@ -199,7 +203,7 @@
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
-		font-family: var(--font-mono, monospace);
+		font-family: var(--font-code, 'JetBrains Mono', monospace);
 		flex: 1;
 		min-width: 0;
 	}
@@ -207,15 +211,15 @@
 	.symbol-tags {
 		display: flex;
 		flex-wrap: wrap;
-		gap: 6px;
+		gap: 8px;
 	}
 
 	.symbol-tag {
-		font-size: 11px;
-		font-family: var(--font-mono, monospace);
+		font-size: 10px;
+		font-family: var(--font-code, 'JetBrains Mono', monospace);
 		color: var(--text-secondary);
-		background: var(--bg-tertiary, rgba(255, 255, 255, 0.06));
-		padding: 3px 8px;
+		background: var(--bg-tertiary, #1b2028);
+		padding: 4px 8px;
 		border-radius: 4px;
 	}
 </style>

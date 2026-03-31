@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ROPEMAN | Code Viewer</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Inter:wght@300;400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            DEFAULT: "#a3a6ff",
+                            container: "#1b2028",
+                            on: "#ffffff"
+                        },
+                        secondary: {
+                            DEFAULT: "#53ddfc",
+                        },
+                        tertiary: {
+                            DEFAULT: "#ac8aff",
+                        },
+                        surface: {
+                            lowest: "#000000",
+                            DEFAULT: "#0a0e14",
+                            low: "#0f141a",
+                            container: "#151a21",
+                            high: "#1b2028",
+                            highest: "#20262f",
+                            bright: "#262c36",
+                        },
+                        success: "#7ad4a0",
+                        error: "#ff6e84",
+                        warning: "#f2c478",
+                    },
+                    fontFamily: {
+                        "headline": ["Space Grotesk", "sans-serif"],
+                        "body": ["Inter", "sans-serif"],
+                        "label": ["Inter", "sans-serif"],
+                        "code": ["JetBrains Mono", "monospace"]
+                    },
+                    letterSpacing: {
+                        tightest: '-.075em',
+                        tighter: '-.05em',
+                        tight: '-.025em',
+                        normal: '0',
+                        wide: '.025em',
+                        wider: '.05em',
+                        widest: '.1em',
+                        'extra-widest': '.2em',
+                    }
+                },
+            },
+        }
+    </script>
+<style type="text/tailwindcss">
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+            font-size: 18px;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+            height: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #0f141a;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #262c36;
+        }
+        .code-syntax-keyword { color: #ac8aff; }
+        .code-syntax-func { color: #53ddfc; }
+        .code-syntax-string { color: #7ad4a0; }
+        .code-syntax-type { color: #f2c478; }
+        .code-syntax-comment { color: #4b5563; }
+        .code-syntax-meta { color: #a3a6ff; }
+    </style>
+</head>
+<body class="bg-surface-lowest text-slate-300 font-body select-none overflow-hidden h-screen flex flex-col">
+<header class="flex justify-between items-center px-4 w-full h-12 shrink-0 z-50 bg-[#0f141a]">
+<div class="flex items-center gap-8 h-full">
+<div class="text-lg font-bold tracking-widest text-[#a3a6ff] font-headline">ROPEMAN</div>
+<nav class="flex h-full items-center gap-6">
+<div class="flex flex-col justify-center h-full px-2 text-[#a3a6ff] font-bold border-b-2 border-[#a3a6ff] cursor-pointer">
+<span class="font-headline text-[11px] tracking-wider uppercase">Project</span>
+</div>
+<div class="flex flex-col justify-center h-full px-2 text-slate-400 hover:bg-[#1b2028] transition-colors cursor-pointer">
+<span class="font-headline text-[11px] tracking-wider uppercase">Explorer</span>
+</div>
+<div class="flex flex-col justify-center h-full px-2 text-slate-400 hover:bg-[#1b2028] transition-colors cursor-pointer">
+<span class="font-headline text-[11px] tracking-wider uppercase">typst</span>
+</div>
+</nav>
+</div>
+<div class="flex items-center gap-3">
+<button class="bg-[#a3a6ff] text-[#0f141a] px-4 py-1 rounded text-xs font-bold font-headline uppercase tracking-wider hover:opacity-80 active:scale-95 transition-all">
+                Analyze
+            </button>
+<div class="flex items-center gap-1 text-slate-400">
+<button class="p-1.5 hover:bg-[#1b2028] rounded transition-colors">
+<span class="material-symbols-outlined">settings</span>
+</button>
+<button class="p-1.5 hover:bg-[#1b2028] rounded transition-colors">
+<span class="material-symbols-outlined">help</span>
+</button>
+</div>
+</div>
+</header>
+<main class="flex-1 flex overflow-hidden">
+<aside class="flex w-[280px] shrink-0 z-40 border-r border-white/5">
+<div class="w-[48px] bg-[#0f141a] flex flex-col items-center py-4 gap-4 shrink-0">
+<button class="w-10 h-10 flex items-center justify-center border-l-2 border-[#a3a6ff] bg-[#1b2028] text-[#a3a6ff] transition-all duration-200">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">folder</span>
+</button>
+<button class="w-10 h-10 flex items-center justify-center text-slate-500 hover:text-slate-300 transition-all duration-200">
+<span class="material-symbols-outlined">search</span>
+</button>
+<button class="w-10 h-10 flex items-center justify-center text-slate-500 hover:text-slate-300 transition-all duration-200">
+<span class="material-symbols-outlined">account_tree</span>
+</button>
+<button class="w-10 h-10 flex items-center justify-center text-slate-500 hover:text-slate-300 transition-all duration-200">
+<span class="material-symbols-outlined">history</span>
+</button>
+<div class="mt-auto">
+<button class="w-10 h-10 flex items-center justify-center text-slate-500 hover:text-slate-300 transition-all duration-200">
+<span class="material-symbols-outlined">settings</span>
+</button>
+</div>
+</div>
+<div class="flex-1 bg-[#151a21] flex flex-col overflow-hidden">
+<div class="p-4 border-b border-surface-low/30">
+<h2 class="text-[11px] font-headline font-bold uppercase tracking-wider text-slate-500">File Explorer</h2>
+<p class="text-[10px] font-code text-primary mt-0.5 opacity-70">typst-main</p>
+</div>
+<nav class="flex-1 overflow-y-auto custom-scrollbar py-2">
+<div class="px-1">
+<div class="flex items-center gap-1.5 px-2 py-1 hover:bg-[#1b2028] rounded cursor-pointer group">
+<span class="material-symbols-outlined text-[16px] text-slate-500">expand_more</span>
+<span class="material-symbols-outlined text-[16px] text-primary/70">folder_open</span>
+<span class="text-[11px] font-medium text-slate-300 uppercase tracking-wider">src</span>
+</div>
+<div class="ml-4 space-y-0.5">
+<div class="flex items-center gap-1.5 px-2 py-1 hover:bg-[#1b2028] rounded cursor-pointer group">
+<span class="material-symbols-outlined text-[16px] text-slate-500">chevron_right</span>
+<span class="material-symbols-outlined text-[16px] text-slate-500">folder</span>
+<span class="text-[11px] text-slate-400">eval</span>
+</div>
+<div class="flex items-center gap-2 px-2 py-1 bg-[#1b2028] border-l-2 border-[#a3a6ff] cursor-pointer">
+<span class="material-symbols-outlined text-[16px] text-secondary">description</span>
+<span class="text-[11px] font-code text-slate-200">eval.rs</span>
+</div>
+<div class="flex items-center gap-2 px-2 py-1 hover:bg-[#1b2028] rounded cursor-pointer group">
+<span class="material-symbols-outlined text-[16px] text-slate-500">description</span>
+<span class="text-[11px] font-code text-slate-400 group-hover:text-slate-300">model.rs</span>
+</div>
+<div class="flex items-center gap-2 px-2 py-1 hover:bg-[#1b2028] rounded cursor-pointer group">
+<span class="material-symbols-outlined text-[16px] text-slate-500">description</span>
+<span class="text-[11px] font-code text-slate-400 group-hover:text-slate-300">syntax.rs</span>
+</div>
+<div class="flex items-center gap-2 px-2 py-1 hover:bg-[#1b2028] rounded cursor-pointer group">
+<span class="material-symbols-outlined text-[16px] text-slate-500">description</span>
+<span class="text-[11px] font-code text-slate-400 group-hover:text-slate-300">lib.rs</span>
+</div>
+</div>
+<div class="flex items-center gap-1.5 px-2 py-1 mt-2 hover:bg-[#1b2028] rounded cursor-pointer group">
+<span class="material-symbols-outlined text-[16px] text-slate-500">chevron_right</span>
+<span class="material-symbols-outlined text-[16px] text-slate-500">folder</span>
+<span class="text-[11px] text-slate-400 uppercase tracking-wider">tests</span>
+</div>
+<div class="flex items-center gap-2 px-2 py-1 hover:bg-[#1b2028] rounded cursor-pointer group">
+<span class="material-symbols-outlined text-[16px] text-warning/70">settings_b_roll</span>
+<span class="text-[11px] font-code text-slate-400 group-hover:text-slate-300">Cargo.toml</span>
+</div>
+</div>
+</nav>
+</div>
+</aside>
+<div class="flex-1 flex flex-col min-w-0 bg-[#0f141a] overflow-hidden">
+<div class="h-10 flex items-center justify-between px-4 bg-[#151a21] border-b border-white/5 shrink-0">
+<div class="flex items-center gap-2 text-[11px] font-code text-slate-500">
+<span class="hover:text-slate-300 cursor-pointer">typst</span>
+<span>/</span>
+<span class="hover:text-slate-300 cursor-pointer">src</span>
+<span>/</span>
+<span class="text-slate-200 font-medium">eval.rs</span>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-1.5 px-2 py-0.5 rounded bg-[#1b2028] border border-white/5">
+<span class="w-2 h-2 rounded-full bg-orange-400"></span>
+<span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Rust</span>
+</div>
+<button class="flex items-center gap-1 text-[11px] text-slate-400 hover:text-slate-200 transition-colors">
+<span class="material-symbols-outlined text-[16px]">content_copy</span>
+<span class="font-headline font-bold uppercase tracking-wider">Copy</span>
+</button>
+</div>
+</div>
+<div class="h-9 flex items-center bg-[#0f141a] border-b border-white/5 shrink-0 px-2">
+<button class="h-full flex items-center gap-2 px-4 border-t-2 border-[#a3a6ff] bg-[#151a21] text-slate-100">
+<span class="material-symbols-outlined text-[16px] text-primary">code</span>
+<span class="text-[11px] font-headline font-bold uppercase tracking-widest">Code</span>
+</button>
+<button class="h-full flex items-center gap-2 px-4 text-slate-500 hover:text-slate-300 hover:bg-[#151a21]/50 transition-all">
+<span class="material-symbols-outlined text-[16px]">account_tree</span>
+<span class="text-[11px] font-headline font-bold uppercase tracking-widest">Diagram</span>
+</button>
+</div>
+<div class="flex-1 overflow-auto custom-scrollbar flex">
+<div class="w-12 shrink-0 bg-[#0f141a] py-4 border-r border-white/5 flex flex-col items-center text-[11px] font-code text-slate-600 select-none">
+<div>1</div><div>2</div><div>3</div><div>4</div><div>5</div><div>6</div><div>7</div><div>8</div><div>9</div><div>10</div>
+<div>11</div><div>12</div><div>13</div><div>14</div><div>15</div><div>16</div><div>17</div><div>18</div><div>19</div><div>20</div>
+<div>21</div><div>22</div><div>23</div><div>24</div><div>25</div>
+</div>
+<div class="flex-1 py-4 px-6 font-code text-[13px] leading-relaxed whitespace-pre overflow-x-auto">
+<span class="code-syntax-meta">use</span> <span class="text-slate-300">crate::model::{Content, Value};</span>
+<span class="code-syntax-meta">use</span> <span class="text-slate-300">crate::syntax::{AstNode, Span};</span>
+<span class="code-syntax-comment">/// Orchestrates the evaluation of Typst scripts.</span>
+<span class="code-syntax-keyword">pub struct</span> <span class="code-syntax-type">Interpreter</span> {
+    <span class="text-slate-300">scopes: Vec&lt;Scope&gt;,</span>
+<span class="text-slate-300">span: Span,</span>
+}
+<span class="code-syntax-keyword">impl</span> <span class="code-syntax-type">Interpreter</span> {
+    <span class="code-syntax-keyword">pub fn</span> <span class="code-syntax-func">new</span>() -&gt; <span class="code-syntax-type">Self</span> {
+        <span class="code-syntax-type">Self</span> {
+            <span class="text-slate-300">scopes: vec![Scope::new()],</span>
+<span class="text-slate-300">span: Span::detached(),</span>
+        }
+    }
+    <span class="code-syntax-keyword">pub fn</span> <span class="code-syntax-func">eval</span>(&amp;<span class="code-syntax-keyword">mut</span> <span class="code-syntax-type">self</span>, <span class="text-slate-300">node: AstNode</span>) -&gt; <span class="code-syntax-type">Value</span> {
+        <span class="code-syntax-comment">// Core execution logic here</span>
+<span class="code-syntax-keyword">match</span> <span class="text-slate-300">node</span> {
+            <span class="text-slate-300">AstNode::Literal(lit) =&gt; Value::from(lit),</span>
+<span class="text-slate-300">AstNode::FuncCall(call) =&gt; </span><span class="code-syntax-type">self</span>.<span class="code-syntax-func">call_function</span>(<span class="text-slate-300">call</span>),
+            <span class="text-slate-300">_ =&gt; Value::None,</span>
+        }
+    }
+}</div>
+</div>
+</div>
+<aside class="w-[240px] bg-[#151a21] border-l border-white/5 flex flex-col shrink-0">
+<div class="p-4 border-b border-surface-low/30">
+<h3 class="text-[11px] font-headline font-bold uppercase tracking-wider text-slate-500">Symbol Outline</h3>
+</div>
+<div class="flex-1 overflow-y-auto custom-scrollbar py-2">
+<div class="px-2 space-y-1">
+<div class="flex items-center gap-2 px-2 py-1 hover:bg-[#1b2028] rounded cursor-pointer group">
+<span class="text-[10px] font-bold text-tertiary">S</span>
+<span class="text-[11px] font-code text-slate-300">Interpreter</span>
+</div>
+<div class="ml-4 space-y-1">
+<div class="flex items-center gap-2 px-2 py-1 hover:bg-[#1b2028] rounded cursor-pointer group">
+<span class="text-[10px] font-bold text-secondary">m</span>
+<span class="text-[11px] font-code text-slate-400">new()</span>
+</div>
+<div class="flex items-center gap-2 px-2 py-1 hover:bg-[#1b2028] rounded cursor-pointer group">
+<span class="text-[10px] font-bold text-secondary">m</span>
+<span class="text-[11px] font-code text-slate-400">eval()</span>
+</div>
+<div class="flex items-center gap-2 px-2 py-1 hover:bg-[#1b2028] rounded cursor-pointer group">
+<span class="text-[10px] font-bold text-secondary">m</span>
+<span class="text-[11px] font-code text-slate-400">call_function()</span>
+</div>
+</div>
+<div class="flex items-center gap-2 px-2 py-1 hover:bg-[#1b2028] rounded cursor-pointer group">
+<span class="text-[10px] font-bold text-tertiary">S</span>
+<span class="text-[11px] font-code text-slate-300">Scope</span>
+</div>
+<div class="ml-4 space-y-1">
+<div class="flex items-center gap-2 px-2 py-1 hover:bg-[#1b2028] rounded cursor-pointer group">
+<span class="text-[10px] font-bold text-secondary">m</span>
+<span class="text-[11px] font-code text-slate-400">lookup()</span>
+</div>
+</div>
+<div class="flex items-center gap-2 px-2 py-1 hover:bg-[#1b2028] rounded cursor-pointer group">
+<span class="text-[10px] font-bold text-warning">E</span>
+<span class="text-[11px] font-code text-slate-300">EvalError</span>
+</div>
+</div>
+</div>
+<div class="p-4 bg-surface-high/30 mt-auto">
+<div class="flex items-center gap-2 text-[10px] text-slate-500 italic">
+<span class="material-symbols-outlined text-[14px]">info</span>
+                    5 symbols detected
+                </div>
+</div>
+</aside>
+</main>
+<footer class="h-8 w-full shrink-0 bg-[#151a21] flex justify-between items-center px-4 z-50 border-t border-white/5">
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-1.5 cursor-pointer hover:text-white transition-colors">
+<span class="text-[11px] font-body text-slate-500">Ln 18, Col 32</span>
+</div>
+<div class="flex items-center gap-1.5 cursor-pointer hover:text-white transition-colors">
+<span class="text-[11px] font-body text-slate-500">UTF-8</span>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-success animate-pulse"></div>
+<span class="text-[11px] font-body text-[#7ad4a0]">Connected</span>
+</div>
+<div class="h-3 w-[1px] bg-slate-800"></div>
+<span class="text-[11px] font-body text-slate-500">v1.0.4-beta</span>
+</div>
+</footer>
+
+</body></html>

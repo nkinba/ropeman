@@ -16,6 +16,7 @@ function createSettingsStore() {
 	let language = $state<'ko' | 'en'>(initial.language ?? 'ko');
 	let syntaxTheme = $state<string>(initial.syntaxTheme ?? 'tomorrow');
 	let skipDrilldownConfirm = $state<boolean>(initial.skipDrilldownConfirm ?? false);
+	let showSymbols = $state<boolean>(initial.showSymbols ?? false);
 	let bridgeCli = $state<BridgeCliId>(initial.bridgeCli ?? 'auto');
 
 	function persist() {
@@ -34,6 +35,7 @@ function createSettingsStore() {
 					language,
 					syntaxTheme,
 					skipDrilldownConfirm,
+					showSymbols,
 					bridgeCli
 				})
 			);
@@ -129,6 +131,14 @@ function createSettingsStore() {
 			persist();
 		},
 
+		get showSymbols() {
+			return showSymbols;
+		},
+		set showSymbols(v: boolean) {
+			showSymbols = v;
+			persist();
+		},
+
 		get bridgeCli() {
 			return bridgeCli;
 		},
@@ -163,6 +173,7 @@ function createSettingsStore() {
 			language = 'ko';
 			syntaxTheme = 'tomorrow';
 			skipDrilldownConfirm = false;
+			showSymbols = false;
 			bridgeCli = 'auto';
 			if (typeof window !== 'undefined') {
 				localStorage.removeItem('ropeman-settings');

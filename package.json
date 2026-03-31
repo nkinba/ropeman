@@ -67,6 +67,12 @@
 			"eslint --fix",
 			"prettier --write"
 		],
+		"src/lib/services/**/*.ts": [
+			"node scripts/check-test-exists.mjs"
+		],
+		"src/lib/stores/**/*.ts": [
+			"node scripts/check-test-exists.mjs"
+		],
 		"*.{json,css,md}": [
 			"prettier --write"
 		]

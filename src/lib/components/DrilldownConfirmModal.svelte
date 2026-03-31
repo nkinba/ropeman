@@ -58,9 +58,19 @@
 
 {#if open}
 	<!-- svelte-ignore a11y_no_static_element_interactions -->
-	<div class="drilldown-backdrop" onclick={handleBackdropClick} onkeydown={handleKeydown}>
-		<div class="drilldown-card" role="dialog" aria-modal="true">
-			<div class="drilldown-title">추가 분석</div>
+	<div
+		class="modal-backdrop drilldown-backdrop"
+		onclick={handleBackdropClick}
+		onkeydown={handleKeydown}
+	>
+		<div class="modal-card drilldown-card" role="dialog" aria-modal="true">
+			<div class="drilldown-header">
+				<div class="drilldown-title">
+					<span class="title-dot" style="background: {trackInfo.color}"></span>
+					추가 분석
+				</div>
+				<span class="drilldown-label">DRILLDOWN</span>
+			</div>
 			<p class="drilldown-desc">
 				<strong>{nodeLabel}</strong> 도메인의 내부 구조를 분석합니다.
 			</p>
@@ -74,8 +84,8 @@
 				다시 묻지 않기
 			</label>
 			<div class="drilldown-actions">
-				<button class="drilldown-btn secondary" onclick={handleCancel}>취소</button>
-				<button class="drilldown-btn primary" onclick={handleConfirm}>분석</button>
+				<button class="btn btn-secondary drilldown-btn" onclick={handleCancel}>취소</button>
+				<button class="btn btn-primary drilldown-btn" onclick={handleConfirm}>분석</button>
 			</div>
 		</div>
 	</div>
@@ -83,44 +93,46 @@
 
 <style>
 	.drilldown-backdrop {
-		position: fixed;
-		inset: 0;
-		background: var(--modal-backdrop);
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		z-index: 1200;
+		z-index: 1100;
 	}
 	.drilldown-card {
-		background: rgba(21, 26, 33, 0.85);
-		backdrop-filter: blur(20px);
-		-webkit-backdrop-filter: blur(20px);
-		border: 1px solid rgba(68, 72, 79, 0.15);
-		border-radius: 12px;
-		padding: 20px 24px;
-		width: 360px;
-		max-width: 90vw;
-		box-shadow: 0 24px 48px rgba(0, 0, 0, 0.5);
+		padding: 16px;
+		width: 320px;
+		border-radius: 8px;
 	}
-	:root .drilldown-card {
-		background: var(--bg-primary);
-		backdrop-filter: none;
-		-webkit-backdrop-filter: none;
-		border: 1px solid var(--border);
-		box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+	.drilldown-header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		margin-bottom: 12px;
 	}
 	.drilldown-title {
-		font-size: 15px;
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		font-size: 12px;
 		font-weight: 700;
 		color: var(--text-primary);
-		margin-bottom: 8px;
+		margin-bottom: 0;
 		font-family: var(--font-display, 'Space Grotesk', sans-serif);
 	}
+	.title-dot {
+		width: 8px;
+		height: 8px;
+		border-radius: 50%;
+		flex-shrink: 0;
+	}
+	.drilldown-label {
+		font-size: 10px;
+		font-family: var(--font-code);
+		color: var(--text-muted);
+		text-transform: uppercase;
+	}
 	.drilldown-desc {
-		font-size: 13px;
+		font-size: 11px;
 		color: var(--text-secondary);
-		margin: 0 0 14px;
-		line-height: 1.5;
+		margin: 0 0 20px;
+		line-height: 1.625;
 	}
 	.drilldown-track {
 		display: flex;
@@ -148,34 +160,27 @@
 	.dont-ask {
 		display: flex;
 		align-items: center;
-		gap: 6px;
-		font-size: 12px;
-		color: var(--text-secondary);
+		gap: 8px;
+		font-size: 10px;
+		color: var(--text-muted);
 		cursor: pointer;
-		margin-bottom: 16px;
+		margin-bottom: 20px;
 	}
 	.dont-ask input {
+		width: 12px;
+		height: 12px;
 		accent-color: var(--accent);
+		border-radius: 4px;
 	}
 	.drilldown-actions {
 		display: flex;
-		justify-content: flex-end;
 		gap: 8px;
 	}
 	.drilldown-btn {
-		padding: 8px 18px;
-		border: none;
-		border-radius: 6px;
-		font-size: 13px;
-		font-weight: 500;
-		cursor: pointer;
-	}
-	.drilldown-btn.primary {
-		background: var(--accent);
-		color: var(--bg-primary);
-	}
-	.drilldown-btn.secondary {
-		background: var(--bg-tertiary);
-		color: var(--text-secondary);
+		padding: 6px 0;
+		flex: 1;
+		font-size: 11px;
+		font-weight: 700;
+		border-radius: 4px;
 	}
 </style>

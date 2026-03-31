@@ -4,6 +4,7 @@
 	import { selectionStore } from '$lib/stores/selectionStore.svelte';
 	import type { FileNode } from '$lib/types/fileTree';
 	import type { ASTSymbol } from '$lib/types/ast';
+	import { settingsStore } from '$lib/stores/settingsStore.svelte';
 	import { detectLanguage } from '$lib/utils/languageDetector';
 	import Prism from 'prismjs';
 	import 'prismjs/components/prism-python';
@@ -179,7 +180,7 @@
 
 		<div class="code-layout">
 			<!-- Symbol sidebar -->
-			{#if fileSymbols.length > 0}
+			{#if settingsStore.showSymbols && fileSymbols.length > 0}
 				<div class="symbol-sidebar">
 					<div class="symbol-header">Symbols</div>
 					{#each fileSymbols as sym}
@@ -294,15 +295,17 @@
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		padding: 8px 16px;
-		background: var(--bg-secondary);
+		padding: 0 16px;
+		height: 40px;
+		background: var(--sidebar-content-bg, #151a21);
+		border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 		flex-shrink: 0;
 		gap: 8px;
 	}
 
 	.code-filepath {
-		font-size: 12px;
-		font-family: 'SF Mono', 'Fira Code', monospace;
+		font-size: 11px;
+		font-family: var(--font-code);
 		color: var(--text-secondary);
 		overflow: hidden;
 		text-overflow: ellipsis;
@@ -313,11 +316,13 @@
 
 	.code-lang-badge {
 		font-size: 10px;
-		font-weight: 600;
+		font-weight: 700;
 		text-transform: uppercase;
-		color: var(--accent);
-		background: var(--accent-subtle);
-		padding: 2px 6px;
+		letter-spacing: 0.1em;
+		color: var(--text-secondary);
+		background: var(--bg-tertiary);
+		border: 1px solid rgba(255, 255, 255, 0.05);
+		padding: 2px 8px;
 		border-radius: 4px;
 		flex-shrink: 0;
 	}
@@ -335,20 +340,21 @@
 	}
 
 	.symbol-sidebar {
-		width: 200px;
+		width: 240px;
 		flex-shrink: 0;
 		overflow-y: auto;
-		background: var(--bg-secondary);
+		background: var(--sidebar-content-bg, #151a21);
+		border-left: 1px solid rgba(255, 255, 255, 0.05);
 	}
 
 	.symbol-header {
 		font-size: 11px;
 		font-weight: 700;
 		text-transform: uppercase;
-		letter-spacing: 0.5px;
+		letter-spacing: 0.05em;
 		color: var(--text-muted);
-		padding: 8px 12px;
-		background: var(--bg-tertiary);
+		padding: 16px;
+		border-bottom: 1px solid rgba(15, 20, 26, 0.3);
 	}
 
 	.symbol-item {
@@ -357,7 +363,8 @@
 		gap: 6px;
 		width: 100%;
 		padding: 4px 12px;
-		font-size: 12px;
+		font-size: 11px;
+		font-family: var(--font-code);
 		color: var(--text-secondary);
 		cursor: pointer;
 		border: none;
@@ -377,30 +384,26 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		border-radius: 3px;
+		border-radius: 0;
 		font-size: 10px;
 		font-weight: 700;
-		font-family: 'SF Mono', 'Fira Code', monospace;
+		font-family: var(--font-code);
 		flex-shrink: 0;
-		background: var(--bg-tertiary);
+		background: none;
 		color: var(--text-muted);
 	}
 
 	.symbol-kind-icon.fn {
-		color: var(--color-info);
-		background: color-mix(in srgb, var(--color-info) 10%, transparent);
+		color: var(--text-secondary);
 	}
 	.symbol-kind-icon.cls {
 		color: var(--color-warning);
-		background: color-mix(in srgb, var(--color-warning) 10%, transparent);
 	}
 	.symbol-kind-icon.var {
 		color: var(--color-success);
-		background: color-mix(in srgb, var(--color-success) 10%, transparent);
 	}
 	.symbol-kind-icon.type {
-		color: var(--color-class);
-		background: color-mix(in srgb, var(--color-class) 10%, transparent);
+		color: var(--accent-tertiary, #ac8aff);
 	}
 
 	.symbol-name {
@@ -409,7 +412,7 @@
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
-		font-family: 'SF Mono', 'Fira Code', monospace;
+		font-family: var(--font-code);
 	}
 
 	.symbol-line {
@@ -425,7 +428,7 @@
 	}
 
 	.code-lines {
-		padding: 8px 0;
+		padding: 16px 0;
 	}
 
 	.code-line {
@@ -445,24 +448,25 @@
 		padding-right: 12px;
 		color: var(--text-muted);
 		user-select: none;
-		font-family: 'SF Mono', 'Fira Code', monospace;
-		font-size: 12px;
+		font-family: var(--font-code);
+		font-size: 11px;
 	}
 
 	.line-text {
 		flex: 1;
 		margin: 0;
-		padding: 0 16px 0 0;
-		font-family: 'SF Mono', 'Fira Code', monospace;
-		font-size: 12px;
+		padding: 0 24px 0 0;
+		font-family: var(--font-code);
+		font-size: 13px;
+		line-height: 1.625;
 		white-space: pre;
 		tab-size: 4;
 		min-width: 0;
 	}
 
 	.code-content::-webkit-scrollbar {
-		width: 8px;
-		height: 8px;
+		width: 4px;
+		height: 4px;
 	}
 
 	.code-content::-webkit-scrollbar-track {
@@ -470,12 +474,12 @@
 	}
 
 	.code-content::-webkit-scrollbar-thumb {
-		background: var(--border);
+		background: var(--bg-bright, #262c36);
 		border-radius: 4px;
 	}
 
 	.symbol-sidebar::-webkit-scrollbar {
-		width: 6px;
+		width: 4px;
 	}
 
 	.symbol-sidebar::-webkit-scrollbar-track {
@@ -483,7 +487,7 @@
 	}
 
 	.symbol-sidebar::-webkit-scrollbar-thumb {
-		background: var(--border);
+		background: var(--bg-highest, #20262f);
 		border-radius: 3px;
 	}
 </style>

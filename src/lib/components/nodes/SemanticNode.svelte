@@ -31,16 +31,17 @@
 	class="semantic-node"
 	class:highlighted={data.highlighted}
 	class:dimmed={data.dimmed}
+	class:selected={data.selected}
+	class:node-glow={data.glow}
 	style="
 		--node-color: {data.color};
-		border-left-color: {data.color};
 	"
 >
+	<div class="accent-bar" style="background: {data.color};"></div>
 	<div class="node-header">
-		<span class="node-label" style="color: {data.color};">{data.label}</span>
-		<span class="node-badge" style="background: {data.color}30; color: {data.color};">
-			{#if isLeaf}&#128196;
-			{/if}{data.fileCount}
+		<span class="node-label">{data.label}</span>
+		<span class="node-badge">
+			{data.fileCount}
 			{data.fileCount === 1 ? 'file' : 'files'}
 		</span>
 	</div>
@@ -63,11 +64,7 @@
 	{#if !isLeaf}
 		<div class="drilldown-hint">
 			{#if isCached}
-				<button
-					class="reanalyze-btn"
-					title="Re-analyze"
-					onclick={handleReanalyze}
-				>
+				<button class="reanalyze-btn" title="Re-analyze" onclick={handleReanalyze}>
 					&#x21BB;
 				</button>
 			{/if}
@@ -87,36 +84,46 @@
 
 <style>
 	.semantic-node {
-		width: 280px;
+		width: 256px;
 		min-height: 120px;
-		background: var(--surface-elevated, #1b2028);
-		border: none;
-		border-left: 2px solid var(--node-accent, #53ddfc);
+		background: var(--bg-tertiary, #1b2028);
+		border: 1px solid rgba(255, 255, 255, 0.05);
 		border-radius: 8px;
 		padding: 16px;
 		cursor: pointer;
 		position: relative;
-		transition:
-			box-shadow 0.2s ease,
-			transform 0.15s ease;
+		transition: background 0.15s ease;
 		display: flex;
 		flex-direction: column;
 		gap: 8px;
 	}
 
+	.accent-bar {
+		position: absolute;
+		left: 0;
+		top: 0;
+		bottom: 0;
+		width: 4px;
+		border-radius: 8px 0 0 8px;
+	}
+
 	.semantic-node:hover {
-		box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-		transform: translateY(-1px);
+		background: var(--bg-highest, #20262f);
 	}
 
 	.semantic-node.highlighted {
-		box-shadow:
-			0 0 0 2px color-mix(in srgb, var(--node-color, var(--accent)) 50%, transparent),
-			0 0 16px color-mix(in srgb, var(--node-color, var(--accent)) 30%, transparent),
-			0 4px 20px rgba(0, 0, 0, 0.3);
-		opacity: 0.95;
-		transform: scale(1.03);
+		background: var(--bg-highest, #20262f);
+		box-shadow: 0 0 12px color-mix(in srgb, var(--node-color, var(--accent)) 20%, transparent);
 		animation: pulse 2s ease-in-out infinite;
+	}
+
+	.semantic-node.selected {
+		border: 2px solid var(--accent, #a3a6ff);
+		box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+	}
+
+	.semantic-node.node-glow {
+		filter: drop-shadow(0 0 8px rgba(83, 221, 252, 0.2));
 	}
 
 	.semantic-node.dimmed {
@@ -130,17 +137,25 @@
 	@keyframes pulse {
 		0%,
 		100% {
-			box-shadow:
-				0 0 0 2px color-mix(in srgb, var(--node-color, var(--accent)) 50%, transparent),
-				0 0 16px color-mix(in srgb, var(--node-color, var(--accent)) 30%, transparent),
-				0 4px 20px rgba(0, 0, 0, 0.3);
+			box-shadow: 0 0 12px color-mix(in srgb, var(--node-color, var(--accent)) 20%, transparent);
 		}
 		50% {
-			box-shadow:
-				0 0 0 3px color-mix(in srgb, var(--node-color, var(--accent)) 60%, transparent),
-				0 0 24px color-mix(in srgb, var(--node-color, var(--accent)) 40%, transparent),
-				0 4px 20px rgba(0, 0, 0, 0.3);
+			box-shadow: 0 0 18px color-mix(in srgb, var(--node-color, var(--accent)) 30%, transparent);
 		}
+	}
+
+	/* Handles — hidden by default, visible on hover */
+	.semantic-node :global(.svelte-flow__handle) {
+		width: 6px;
+		height: 6px;
+		background: var(--accent-secondary, #53ddfc);
+		border: none;
+		opacity: 0;
+		transition: opacity 0.15s ease;
+	}
+
+	.semantic-node:hover :global(.svelte-flow__handle) {
+		opacity: 1;
 	}
 
 	.node-header {
@@ -151,9 +166,12 @@
 	}
 
 	.node-label {
-		font-size: 14px;
+		font-size: 13px;
 		font-weight: 700;
+		letter-spacing: 0.025em;
+		text-transform: uppercase;
 		line-height: 1.2;
+		color: var(--text-primary, #f1f3fc);
 		flex: 1;
 		min-width: 0;
 		overflow: hidden;
@@ -163,19 +181,23 @@
 	}
 
 	.node-badge {
-		font-size: 10px;
-		font-weight: 600;
-		padding: 2px 8px;
-		border-radius: 10px;
+		font-size: 9px;
+		font-weight: 700;
+		text-transform: uppercase;
+		padding: 2px 6px;
+		border-radius: 4px;
+		background: rgba(163, 166, 255, 0.2);
+		color: var(--accent, #a3a6ff);
 		white-space: nowrap;
 		flex-shrink: 0;
 	}
 
 	.node-description {
 		font-size: 11px;
-		color: var(--text-secondary);
-		line-height: 1.4;
-		margin: 0;
+		font-family: var(--font-body, 'Inter', sans-serif);
+		color: var(--text-secondary, #a8abb3);
+		line-height: 1.625;
+		margin: 0 0 12px 0;
 		display: -webkit-box;
 		-webkit-line-clamp: 2;
 		-webkit-box-orient: vertical;
@@ -185,15 +207,15 @@
 	.node-symbols {
 		display: flex;
 		flex-wrap: wrap;
-		gap: 4px;
+		gap: 6px;
 	}
 
 	.symbol-tag {
 		font-size: 10px;
 		font-family: var(--font-mono, monospace);
-		color: var(--text-secondary);
-		background: var(--bg-tertiary, rgba(255, 255, 255, 0.06));
-		padding: 1px 6px;
+		color: var(--text-muted, #72757d);
+		background: var(--bg-secondary, #151a21);
+		padding: 2px 8px;
 		border-radius: 4px;
 		max-width: 120px;
 		overflow: hidden;
@@ -235,7 +257,9 @@
 		cursor: pointer;
 		padding: 0;
 		line-height: 1;
-		transition: background-color 0.15s ease, color 0.15s ease;
+		transition:
+			background-color 0.15s ease,
+			color 0.15s ease;
 	}
 
 	.semantic-node:hover .reanalyze-btn {
@@ -245,7 +269,7 @@
 	}
 
 	.reanalyze-btn:hover {
-		background: var(--accent-bg, rgba(59, 130, 246, 0.15));
-		color: var(--accent, #3b82f6);
+		background: var(--accent-bg, rgba(163, 166, 255, 0.12));
+		color: var(--accent, #a3a6ff);
 	}
 </style>

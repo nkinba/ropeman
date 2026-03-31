@@ -140,11 +140,15 @@
 
 {#if open}
 	<!-- svelte-ignore a11y_no_static_element_interactions -->
-	<div class="connect-backdrop" onclick={handleBackdropClick} onkeydown={handleKeydown}>
-		<div class="connect-card" role="dialog" aria-modal="true">
-			<div class="connect-header">
+	<div
+		class="modal-backdrop connect-backdrop"
+		onclick={handleBackdropClick}
+		onkeydown={handleKeydown}
+	>
+		<div class="modal-card connect-card" role="dialog" aria-modal="true">
+			<div class="modal-header connect-header">
 				<h2>AI Connection</h2>
-				<button class="connect-close" onclick={onclose}>&#10005;</button>
+				<button class="modal-close" onclick={onclose}>&#10005;</button>
 			</div>
 
 			<div class="connect-tabs">
@@ -175,14 +179,14 @@
 					onclick={() => (activeTab = 'webgpu')}
 				>
 					Browser AI
-					<span class="tab-badge">Beta</span>
+					<span class="badge badge-muted tab-badge">Beta</span>
 				</button>
 			</div>
 
-			<div class="connect-body">
+			<div class="modal-body connect-body">
 				{#if activeTab === 'edge'}
 					<section class="connect-section">
-						<p class="connect-hint" style="font-size:13px; opacity:1;">
+						<p class="hint connect-hint" style="font-size:13px; opacity:1;">
 							서버를 경유하여 AI 분석을 수행합니다. API 키 없이 무료로 사용 가능하며, 파일 구조
 							메타데이터만 전달됩니다.
 						</p>
@@ -193,25 +197,30 @@
 								<span class="connect-status">Inactive</span>
 							{/if}
 						</div>
-						<button class="connect-btn" onclick={activateEdge}>
+						<button class="btn btn-primary" onclick={activateEdge}>
 							{authStore.activeTrack === 'edge' ? 'Using Demo Mode' : 'Use Demo Mode'}
 						</button>
 					</section>
 				{:else if activeTab === 'byok'}
 					<section class="connect-section">
 						<!-- Provider Selection -->
-						<label class="connect-label" for="connect-provider-select">Provider</label>
-						<select id="connect-provider-select" class="connect-select" value={selectedProvider} onchange={handleProviderChange}>
+						<label class="form-label connect-label" for="connect-provider-select">Provider</label>
+						<select
+							id="connect-provider-select"
+							class="select connect-select"
+							value={selectedProvider}
+							onchange={handleProviderChange}
+						>
 							{#each AI_PROVIDERS as provider}
 								<option value={provider.id}>{provider.label}</option>
 							{/each}
 						</select>
 
 						<!-- Model Selection -->
-						<label class="connect-label" for="connect-model-select">Model</label>
+						<label class="form-label connect-label" for="connect-model-select">Model</label>
 						<select
 							id="connect-model-select"
-							class="connect-select"
+							class="select connect-select"
 							value={providerModels.some((m) => m.id === selectedModel)
 								? selectedModel
 								: '__custom__'}
@@ -224,7 +233,7 @@
 						</select>
 						{#if !providerModels.some((m) => m.id === selectedModel)}
 							<input
-								class="connect-input"
+								class="input connect-input"
 								type="text"
 								placeholder="e.g. claude-sonnet-4-6"
 								value={selectedModel}
@@ -237,17 +246,19 @@
 						{/if}
 
 						<!-- API Key Input -->
-						<label class="connect-label" for="connect-api-key">{currentProvider?.label ?? ''} API Key</label>
+						<label class="form-label connect-label" for="connect-api-key"
+							>{currentProvider?.label ?? ''} API Key</label
+						>
 						<div class="connect-row">
 							<input
 								type="password"
-								class="connect-input"
+								class="input connect-input"
 								placeholder="Enter API key"
 								value={apiKeyValue}
 								oninput={handleApiKeyInput}
 							/>
 							<button
-								class="connect-btn"
+								class="btn btn-primary"
 								onclick={testKey}
 								disabled={!apiKeyValue || testStatus === 'testing'}
 							>
@@ -259,21 +270,21 @@
 						{:else if testStatus === 'error'}
 							<span class="connect-status error">{testError || 'Invalid key'}</span>
 						{/if}
-						<p class="connect-hint">
+						<p class="hint connect-hint">
 							Your API key is stored locally and never sent to our servers.
 						</p>
 						{#if apiKeyValue}
-							<button class="connect-btn" onclick={activateByok}>
+							<button class="btn btn-primary" onclick={activateByok}>
 								{authStore.activeTrack === 'byok' ? 'Using API Key' : 'Use API Key'}
 							</button>
 						{/if}
 					</section>
 				{:else if activeTab === 'bridge'}
 					<section class="connect-section">
-						<label class="connect-label" for="connect-cli-select">CLI Tool</label>
+						<label class="form-label connect-label" for="connect-cli-select">CLI Tool</label>
 						<select
 							id="connect-cli-select"
-							class="connect-select"
+							class="select connect-select"
 							value={settingsStore.bridgeCli}
 							onchange={handleCliChange}
 						>
@@ -282,19 +293,19 @@
 							<option value="gemini">Gemini CLI</option>
 						</select>
 
-						<label class="connect-label" for="connect-bridge-port">Bridge Port</label>
+						<label class="form-label connect-label" for="connect-bridge-port">Bridge Port</label>
 						<div class="connect-row">
 							<input
 								type="number"
-								class="connect-input"
+								class="input connect-input"
 								value={bridgePort}
 								oninput={handleBridgePortInput}
 							/>
 							{#if authStore.bridgeStatus === 'connected'}
-								<button class="connect-btn danger" onclick={handleDisconnect}>Disconnect</button>
+								<button class="btn btn-danger" onclick={handleDisconnect}>Disconnect</button>
 							{:else}
 								<button
-									class="connect-btn"
+									class="btn btn-primary"
 									onclick={handleConnect}
 									disabled={authStore.bridgeStatus === 'connecting'}
 								>
@@ -342,7 +353,7 @@
 								</svg>
 							</button>
 						</div>
-						<p class="connect-hint">
+						<p class="hint connect-hint">
 							{#if settingsStore.bridgeCli === 'auto'}
 								Run this command in your terminal. The bridge will auto-detect Claude Code or Gemini
 								CLI.
@@ -356,7 +367,7 @@
 				{:else if activeTab === 'webgpu'}
 					<section class="connect-section">
 						{#if !webgpuStore.isSupported}
-							<div class="bridge-notice">
+							<div class="notice notice-warning bridge-notice">
 								<span class="notice-icon">&#9888;</span>
 								<span class="notice-text">
 									Your browser does not support WebGPU. Please use Chrome 113+ or Edge 113+.
@@ -364,7 +375,7 @@
 							</div>
 						{:else}
 							<div class="webgpu-status-row">
-								<span class="connect-label">Status</span>
+								<span class="form-label connect-label">Status</span>
 								{#if webgpuStore.isReady}
 									<span class="connect-status success">Model loaded</span>
 								{:else if webgpuStore.status === 'downloading'}
@@ -375,12 +386,12 @@
 									<span class="connect-status">Not initialized</span>
 								{/if}
 							</div>
-							<p class="connect-hint">
+							<p class="hint connect-hint">
 								Run a small AI model (Qwen2.5-Coder-1.5B) directly in your browser using WebGPU. No
 								data leaves your machine.
 							</p>
 							<button
-								class="connect-btn"
+								class="btn btn-primary"
 								disabled={webgpuStore.status === 'downloading'}
 								onclick={() => (showWebGPUSetup = true)}
 							>
@@ -397,44 +408,12 @@
 <WebGPUSetupModal open={showWebGPUSetup} onclose={() => (showWebGPUSetup = false)} />
 
 <style>
-	.connect-backdrop {
-		position: fixed;
-		inset: 0;
-		background: var(--modal-backdrop);
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		z-index: 1000;
-	}
 	.connect-card {
-		background: var(--bg-primary);
-		border: 1px solid var(--border);
-		border-radius: 12px;
 		width: 440px;
-		max-width: 90vw;
-		max-height: 80vh;
-		overflow-y: auto;
-		box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
 	}
 	.connect-header {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		padding: 16px 20px;
+		background: transparent;
 		border-bottom: 1px solid var(--border);
-	}
-	.connect-header h2 {
-		margin: 0;
-		font-size: 16px;
-		color: var(--text-primary);
-	}
-	.connect-close {
-		background: none;
-		border: none;
-		color: var(--text-secondary);
-		font-size: 18px;
-		cursor: pointer;
-		padding: 4px;
 	}
 	.connect-tabs {
 		display: flex;
@@ -457,11 +436,6 @@
 		border-bottom-color: var(--accent);
 	}
 	.tab-badge {
-		font-size: 9px;
-		padding: 1px 5px;
-		border-radius: 8px;
-		background: var(--bg-secondary);
-		color: var(--text-secondary);
 		vertical-align: super;
 	}
 	.webgpu-status-row {
@@ -469,67 +443,15 @@
 		align-items: center;
 		justify-content: space-between;
 	}
-	.connect-body {
-		padding: 20px;
-	}
 	.connect-section {
 		display: flex;
 		flex-direction: column;
 		gap: 10px;
 	}
-	.connect-label {
-		font-size: 13px;
-		font-weight: 500;
-		color: var(--text-secondary);
-	}
 	.connect-row {
 		display: flex;
 		align-items: center;
 		gap: 8px;
-	}
-	.connect-input {
-		flex: 1;
-		padding: 8px 12px;
-		background: var(--bg-secondary);
-		border: 1px solid var(--border);
-		border-radius: 6px;
-		color: var(--text-primary);
-		font-size: 13px;
-		outline: none;
-	}
-	.connect-input:focus {
-		border-color: var(--accent);
-	}
-	.connect-select {
-		padding: 8px 12px;
-		background: var(--bg-secondary);
-		border: 1px solid var(--border);
-		border-radius: 6px;
-		color: var(--text-primary);
-		font-size: 13px;
-		outline: none;
-		cursor: pointer;
-	}
-	.connect-select:focus {
-		border-color: var(--accent);
-	}
-	.connect-btn {
-		padding: 8px 14px;
-		background: var(--accent);
-		color: var(--bg-primary);
-		border: none;
-		border-radius: 6px;
-		font-size: 13px;
-		font-weight: 500;
-		cursor: pointer;
-		white-space: nowrap;
-	}
-	.connect-btn:disabled {
-		opacity: 0.5;
-		cursor: not-allowed;
-	}
-	.connect-btn.danger {
-		background: var(--color-error);
 	}
 	.connect-status {
 		font-size: 12px;
@@ -539,40 +461,6 @@
 	}
 	.connect-status.error {
 		color: var(--color-error);
-	}
-	.connect-hint {
-		font-size: 11px;
-		color: var(--text-secondary);
-		margin: 0;
-		opacity: 0.7;
-	}
-	.bridge-notice {
-		display: flex;
-		align-items: flex-start;
-		gap: 8px;
-		padding: 10px 12px;
-		background: color-mix(in srgb, var(--color-warning) 8%, transparent);
-		border: 1px solid color-mix(in srgb, var(--color-warning) 20%, transparent);
-		border-radius: 6px;
-	}
-	.notice-icon {
-		font-size: 16px;
-		flex-shrink: 0;
-		color: var(--color-warning);
-	}
-	.notice-text {
-		font-size: 12px;
-		color: var(--text-secondary);
-		line-height: 1.5;
-	}
-	.notice-link {
-		background: none;
-		border: none;
-		color: var(--accent);
-		cursor: pointer;
-		padding: 0;
-		font-size: 12px;
-		text-decoration: underline;
 	}
 	.bridge-status {
 		display: flex;

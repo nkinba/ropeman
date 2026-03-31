@@ -336,10 +336,10 @@
 	.tree-node {
 		display: flex;
 		align-items: center;
-		gap: 6px;
+		gap: 12px;
 		flex: 1;
 		min-width: 0;
-		padding: 3px 8px;
+		padding: 8px 12px;
 		border-radius: 4px;
 		font-size: 12px;
 		color: var(--text-secondary);
@@ -347,23 +347,26 @@
 		border: none;
 		cursor: pointer;
 		text-align: left;
-		transition: background-color 0.1s ease;
+		transition:
+			background-color 0.15s ease,
+			color 0.15s ease;
 	}
 
 	.tree-node:hover {
-		background: var(--bg-tertiary);
+		background: rgba(27, 32, 40, 0.5);
 		color: var(--text-primary);
 	}
 
 	.tree-node.selected {
-		background: var(--accent-bg, rgba(59, 130, 246, 0.12));
-		color: var(--accent, #3b82f6);
+		background: var(--bg-tertiary, #1b2028);
+		color: var(--text-primary);
+		font-weight: 500;
 	}
 
 	.node-color {
-		width: 8px;
-		height: 8px;
-		border-radius: 2px;
+		width: 6px;
+		height: 6px;
+		border-radius: 9999px;
 		flex-shrink: 0;
 	}
 
@@ -410,7 +413,9 @@
 		flex-shrink: 0;
 		align-items: center;
 		justify-content: center;
-		transition: background-color 0.1s ease, color 0.1s ease;
+		transition:
+			background-color 0.1s ease,
+			color 0.1s ease;
 	}
 
 	.tree-node:hover .tree-reanalyze-btn {

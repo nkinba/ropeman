@@ -44,7 +44,7 @@ test.describe('Settings Modal', () => {
 		const settingsBtn = page.locator('header .header-right .header-btn').last();
 		await settingsBtn.click();
 
-		const langSelect = page.locator('.settings-select').first();
+		const langSelect = page.locator('.settings-card .select').first();
 		await expect(langSelect).toBeVisible();
 		await expect(langSelect.locator('option')).toHaveCount(2);
 	});
@@ -56,7 +56,7 @@ test.describe('Settings Modal', () => {
 		await settingsBtn.click();
 
 		// The second select is the syntax theme
-		const selects = page.locator('.settings-select');
+		const selects = page.locator('.settings-card .select');
 		await expect(selects).toHaveCount(2);
 	});
 
@@ -68,7 +68,7 @@ test.describe('Settings Modal', () => {
 		await settingsBtn.click();
 
 		// Change language to English
-		const langSelect = page.locator('.settings-select').first();
+		const langSelect = page.locator('.settings-card .select').first();
 		await langSelect.selectOption('en');
 
 		// Close settings
@@ -94,7 +94,7 @@ test.describe('Settings Modal', () => {
 		await settingsBtn.click();
 
 		// Get the syntax theme select (second select)
-		const themeSelect = page.locator('.settings-select').nth(1);
+		const themeSelect = page.locator('.settings-card .select').nth(1);
 		const options = themeSelect.locator('option');
 		const optionCount = await options.count();
 

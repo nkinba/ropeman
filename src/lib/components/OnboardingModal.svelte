@@ -53,14 +53,18 @@
 
 {#if open}
 	<!-- svelte-ignore a11y_no_static_element_interactions -->
-	<div class="onboarding-backdrop" onclick={handleBackdropClick} onkeydown={handleKeydown}>
-		<div class="onboarding-card" role="dialog" aria-modal="true">
+	<div
+		class="modal-backdrop onboarding-backdrop"
+		onclick={handleBackdropClick}
+		onkeydown={handleKeydown}
+	>
+		<div class="modal-card onboarding-card" role="dialog" aria-modal="true">
 			<div class="onboarding-header">
 				<div>
 					<h2>AI 아키텍처 분석</h2>
 					<p class="onboarding-subtitle">코드의 논리적 구조를 자동으로 파악합니다</p>
 				</div>
-				<button class="onboarding-close" onclick={onclose}>&#10005;</button>
+				<button class="modal-close onboarding-close" onclick={onclose}>&#10005;</button>
 			</div>
 
 			<div class="onboarding-body">
@@ -85,7 +89,7 @@
 						<div class="track-title">
 							내 API 키 사용 (BYOK)
 							{#if hasApiKey}
-								<span class="badge success">API 키 설정됨 ✓</span>
+								<span class="badge badge-success">API 키 설정됨 ✓</span>
 							{/if}
 						</div>
 						<div class="track-subtitle">
@@ -106,7 +110,7 @@
 					<div class="track-content">
 						<div class="track-title">
 							브라우저 내장 AI
-							<span class="badge muted">Beta</span>
+							<span class="badge badge-muted">Beta</span>
 						</div>
 						{#if !webgpuStore.isSupported}
 							<div class="track-subtitle">WebGPU 미지원 브라우저</div>
@@ -161,25 +165,8 @@
 <WebGPUSetupModal open={showWebGPUSetup} onclose={() => (showWebGPUSetup = false)} />
 
 <style>
-	.onboarding-backdrop {
-		position: fixed;
-		inset: 0;
-		background: var(--modal-backdrop);
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		z-index: 1000;
-	}
-
 	.onboarding-card {
-		background: var(--bg-primary);
-		border: 1px solid var(--border);
-		border-radius: 12px;
 		width: 640px;
-		max-width: 90vw;
-		max-height: 85vh;
-		overflow-y: auto;
-		box-shadow: 0 8px 32px var(--shadow);
 	}
 
 	.onboarding-header {
@@ -201,16 +188,6 @@
 		margin: 4px 0 0;
 		font-size: 13px;
 		color: var(--text-secondary);
-	}
-
-	.onboarding-close {
-		background: none;
-		border: none;
-		color: var(--text-secondary);
-		font-size: 18px;
-		cursor: pointer;
-		padding: 4px;
-		line-height: 1;
 	}
 
 	.onboarding-body {
@@ -321,26 +298,6 @@
 	.track-btn:disabled {
 		opacity: 0.4;
 		cursor: not-allowed;
-	}
-
-	.badge {
-		display: inline-flex;
-		align-items: center;
-		padding: 2px 8px;
-		border-radius: 10px;
-		font-size: 11px;
-		font-weight: 500;
-		line-height: 1.4;
-	}
-
-	.badge.success {
-		background: rgba(34, 197, 94, 0.15);
-		color: #22c55e;
-	}
-
-	.badge.muted {
-		background: var(--bg-tertiary);
-		color: var(--text-muted);
 	}
 
 	.preview-section {

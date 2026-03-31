@@ -2,7 +2,7 @@ import type { SemanticLevel } from '$lib/types/semantic';
 import type { Node, Edge, MarkerType } from '@xyflow/svelte';
 import dagre from '@dagrejs/dagre';
 
-const SEMANTIC_NODE_WIDTH = 280;
+const SEMANTIC_NODE_WIDTH = 256;
 const SEMANTIC_NODE_HEIGHT = 160;
 
 const EDGE_TYPE_COLORS: Record<string, string> = {
@@ -93,9 +93,9 @@ export function toSemanticFlowEdges(level: SemanticLevel): Edge[] {
 			sourceHandle: `source-${sIdx}`,
 			targetHandle: `target-${tIdx}`,
 			type: 'smoothstep',
-			animated: true,
+			animated: false,
 			...(edge.label ? { label: edge.label } : {}),
-			style: `stroke: ${color}; stroke-width: 2px; filter: drop-shadow(0 0 3px ${color});`,
+			style: `stroke: ${color}; stroke-width: 1.5px; stroke-dasharray: 4 4; opacity: 0.5;`,
 			markerEnd: {
 				type: 'arrowclosed' as MarkerType,
 				color
