@@ -1,6 +1,15 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Settings Modal', () => {
+	test.beforeEach(async ({ page }) => {
+		await page.addInitScript(() => {
+			localStorage.setItem(
+				'ropeman-onboarding',
+				JSON.stringify({ phase1Completed: true, phase2Completed: true })
+			);
+		});
+	});
+
 	test('should open settings modal when settings button is clicked', async ({ page }) => {
 		await page.goto('/');
 

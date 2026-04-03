@@ -48,7 +48,7 @@ async function callWebGPU(opts: AICallOptions): Promise<string> {
 		throw new Error(
 			`Input too large for local model (${Math.round(inputLen / 1000)}KB). ` +
 				`Browser AI supports ~${Math.round(WEBGPU_MAX_INPUT_CHARS / 1000)}KB max. ` +
-				`Reduce skeleton size in Settings or use a cloud API (Demo/API Key).`
+				`Reduce code summary size in Settings or use a cloud API (Demo/API Key).`
 		);
 	}
 	return await webllmGenerate(opts.system, opts.user);

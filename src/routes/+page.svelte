@@ -10,7 +10,9 @@
 	// import StatusBar from '$lib/components/StatusBar.svelte'; // hidden — reserved for future use
 	import LoadingOverlay from '$lib/components/LoadingOverlay.svelte';
 	import SettingsModal from '$lib/components/SettingsModal.svelte';
+	import HelpModal from '$lib/components/HelpModal.svelte';
 	import AnalyzeModal from '$lib/components/AnalyzeModal.svelte';
+	import OnboardingTour from '$lib/components/OnboardingTour.svelte';
 	import { projectStore } from '$lib/stores/projectStore.svelte';
 	import { selectionStore } from '$lib/stores/selectionStore.svelte';
 	import { semanticStore, setSemanticCacheDeps } from '$lib/stores/semanticStore.svelte';
@@ -55,6 +57,7 @@
 	});
 
 	let showSettings = $state(false);
+	let showHelp = $state(false);
 	let showAnalyze = $state(false);
 	// explorerCollapsed removed — sidebar icon bar is always visible,
 	// content panel is managed internally by Sidebar component
@@ -341,7 +344,9 @@
 
 	function handleKeydown(e: KeyboardEvent) {
 		if (e.key === 'Escape') {
-			if (showAnalyze) {
+			if (showHelp) {
+				showHelp = false;
+			} else if (showAnalyze) {
 				showAnalyze = false;
 			} else if (showSettings) {
 				showSettings = false;
@@ -453,10 +458,10 @@
 			return;
 		}
 
-		// ? or Ctrl+/: Show keyboard shortcuts help (open settings modal)
+		// ? or Ctrl+/: Show help modal
 		if (e.key === '?' || (e.ctrlKey && e.key === '/')) {
 			e.preventDefault();
-			showSettings = true;
+			showHelp = true;
 			return;
 		}
 	}
@@ -467,6 +472,7 @@
 <div id="app">
 	<Header
 		onsettings={() => (showSettings = !showSettings)}
+		onhelp={() => (showHelp = !showHelp)}
 		onnewproject={handleNewProject}
 		onconnect={() => (showAnalyze = true)}
 		onanalyze={() => (showAnalyze = true)}
@@ -512,7 +518,7 @@
 						onactivate={(id) => tabStore.activateTab(id)}
 						onclose={(id) => tabStore.closeTab(id)}
 					/>
-					<div class="canvas-content">
+					<div class="canvas-content" data-tour-step="8">
 						{#if tabStore.activeTab?.type === 'code'}
 							<CodeViewer filePath={tabStore.activeTab.filePath} />
 						{:else if tabStore.activeTab?.type === 'diagram' || semanticStore.currentLevel}
@@ -584,6 +590,10 @@
 		/>
 	{/if}
 
+	{#if showHelp}
+		<HelpModal open={showHelp} onclose={() => (showHelp = false)} />
+	{/if}
+
 	{#if showAnalyze}
 		<AnalyzeModal
 			open={showAnalyze}
@@ -602,6 +612,8 @@
 			onchange={handleFallbackFiles}
 		/>
 	{/if}
+
+	<OnboardingTour />
 </div>
 
 <style>

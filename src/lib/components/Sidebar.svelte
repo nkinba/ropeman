@@ -30,6 +30,11 @@
 		contentOpen = !contentOpen;
 	}
 
+	export function showFiles() {
+		activePanel = 'files';
+		contentOpen = true;
+	}
+
 	export function togglePanel() {
 		if (activePanel === 'files' && hasSemanticData) {
 			activePanel = 'semantic';
@@ -118,7 +123,7 @@
 			{#if activePanel === 'files'}
 				<FileExplorer collapsed={false} mobile={false} ontoggle={() => (contentOpen = false)} />
 			{:else}
-				<div class="semantic-panel">
+				<div class="semantic-panel" data-tour-step="4">
 					<div class="panel-header">
 						<span class="panel-title">Semantic Tree</span>
 						<button class="panel-toggle" onclick={() => (contentOpen = false)} title="Hide Panel">
@@ -219,17 +224,17 @@
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		padding: 16px;
+		padding: 10px 12px;
 		border-bottom: 1px solid var(--border);
 	}
 
 	.panel-title {
 		font-family: var(--font-display, inherit);
 		font-size: 11px;
-		font-weight: 700;
+		font-weight: 600;
 		text-transform: uppercase;
 		letter-spacing: 0.05em;
-		color: var(--text-muted);
+		color: var(--text-secondary);
 	}
 
 	.panel-toggle {

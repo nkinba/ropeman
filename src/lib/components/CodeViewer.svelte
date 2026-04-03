@@ -71,6 +71,35 @@
 		return prismKey;
 	});
 
+	const LANG_LABELS: Record<string, string> = {
+		javascript: 'JavaScript',
+		typescript: 'TypeScript',
+		python: 'Python',
+		go: 'Go',
+		rust: 'Rust',
+		java: 'Java',
+		c: 'C',
+		cpp: 'C++',
+		csharp: 'C#',
+		ruby: 'Ruby',
+		php: 'PHP',
+		swift: 'Swift',
+		kotlin: 'Kotlin',
+		scala: 'Scala',
+		json: 'JSON',
+		css: 'CSS',
+		html: 'HTML',
+		markup: 'HTML',
+		bash: 'Shell',
+		yaml: 'YAML',
+		toml: 'TOML',
+		markdown: 'Markdown',
+		jsx: 'JSX',
+		tsx: 'TSX'
+	};
+
+	const langLabel = $derived(detectedLang ? (LANG_LABELS[detectedLang] ?? detectedLang) : null);
+
 	// Highlighted lines (split per line, with HTML)
 	const highlightedLines = $derived.by(() => {
 		if (!fileContent) return [];
@@ -151,7 +180,7 @@
 		}
 	}
 
-	const fileName = $derived(currentFilePath.split('/').pop() ?? '');
+	const _fileName = $derived(currentFilePath.split('/').pop() ?? '');
 </script>
 
 <div class="code-viewer">
@@ -172,8 +201,8 @@
 	{:else}
 		<div class="code-header">
 			<span class="code-filepath" title={currentFilePath}>{currentFilePath}</span>
-			{#if detectedLang}
-				<span class="code-lang-badge">{detectedLang}</span>
+			{#if langLabel}
+				<span class="code-lang-badge">{langLabel}</span>
 			{/if}
 			<span class="code-line-count">{highlightedLines.length} lines</span>
 		</div>
@@ -211,7 +240,7 @@
 			{/if}
 
 			<!-- Code content -->
-			<div class="code-content">
+			<div class="code-content" style="font-size: {settingsStore.codeFontSize}px;">
 				<div class="code-lines">
 					{#each highlightedLines as line, i}
 						<div class="code-line" data-line={i + 1}>
@@ -317,8 +346,7 @@
 	.code-lang-badge {
 		font-size: 10px;
 		font-weight: 700;
-		text-transform: uppercase;
-		letter-spacing: 0.1em;
+		letter-spacing: 0.02em;
 		color: var(--text-secondary);
 		background: var(--bg-tertiary);
 		border: 1px solid var(--ghost-border);
@@ -433,8 +461,7 @@
 
 	.code-line {
 		display: flex;
-		line-height: 20px;
-		font-size: 12px;
+		line-height: 1.625;
 	}
 
 	.code-line:hover {
@@ -457,7 +484,7 @@
 		margin: 0;
 		padding: 0 24px 0 0;
 		font-family: var(--font-code);
-		font-size: 13px;
+		font-size: inherit;
 		line-height: 1.625;
 		white-space: pre;
 		tab-size: 4;

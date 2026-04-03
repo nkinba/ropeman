@@ -175,7 +175,12 @@
 		<div class="modal-card analyze-card" role="dialog" aria-modal="true">
 			<div class="modal-header">
 				<div>
-					<h2>AI Architecture Analysis</h2>
+					<h2>
+						<span class="material-symbols-outlined" style="font-size:18px; color: var(--accent);"
+							>auto_awesome</span
+						>
+						AI Architecture Analysis
+					</h2>
 					{#if trackInfo}
 						<div class="current-track">
 							<span class="ct-dot" style="background: {trackInfo.color}"></span>
@@ -488,6 +493,9 @@
 	.analyze-card :global(.modal-header h2) {
 		font-size: 14px;
 		letter-spacing: 0.025em;
+		display: flex;
+		align-items: center;
+		gap: 8px;
 	}
 	.analyze-body {
 		padding: 16px;

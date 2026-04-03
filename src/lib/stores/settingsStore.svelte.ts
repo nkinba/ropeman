@@ -10,7 +10,7 @@ function createSettingsStore() {
 	let openaiApiKey = $state<string>(initial.openaiApiKey ?? '');
 	let aiProvider = $state<AIProviderId>(initial.aiProvider ?? 'google');
 	let aiModel = $state<string>(initial.aiModel ?? 'gemini-2.5-flash-lite');
-	let maxSkeletonKB = $state<number>(initial.maxSkeletonKB ?? 150);
+	let maxSkeletonKB = $state<number>(initial.maxSkeletonKB ?? 250);
 	let skeletonUnlimited = $state<boolean>(initial.skeletonUnlimited ?? false);
 	let cacheEnabled = $state<boolean>(initial.cacheEnabled ?? true);
 	let language = $state<'ko' | 'en'>(initial.language ?? 'ko');
@@ -18,6 +18,7 @@ function createSettingsStore() {
 	let skipDrilldownConfirm = $state<boolean>(initial.skipDrilldownConfirm ?? false);
 	let showSymbols = $state<boolean>(initial.showSymbols ?? false);
 	let bridgeCli = $state<BridgeCliId>(initial.bridgeCli ?? 'auto');
+	let codeFontSize = $state<number>(initial.codeFontSize ?? 13);
 
 	function persist() {
 		if (typeof window !== 'undefined') {
@@ -36,7 +37,8 @@ function createSettingsStore() {
 					syntaxTheme,
 					skipDrilldownConfirm,
 					showSymbols,
-					bridgeCli
+					bridgeCli,
+					codeFontSize
 				})
 			);
 		}
@@ -147,6 +149,14 @@ function createSettingsStore() {
 			persist();
 		},
 
+		get codeFontSize() {
+			return codeFontSize;
+		},
+		set codeFontSize(v: number) {
+			codeFontSize = Math.max(10, Math.min(24, v));
+			persist();
+		},
+
 		get hasApiKey() {
 			if (aiProvider === 'google') return geminiApiKey.length > 0;
 			if (aiProvider === 'anthropic') return anthropicApiKey.length > 0;
@@ -167,7 +177,7 @@ function createSettingsStore() {
 			openaiApiKey = '';
 			aiProvider = 'google';
 			aiModel = 'gemini-2.5-flash-lite';
-			maxSkeletonKB = 150;
+			maxSkeletonKB = 250;
 			skeletonUnlimited = false;
 			cacheEnabled = true;
 			language = 'ko';
@@ -175,6 +185,7 @@ function createSettingsStore() {
 			skipDrilldownConfirm = false;
 			showSymbols = false;
 			bridgeCli = 'auto';
+			codeFontSize = 13;
 			if (typeof window !== 'undefined') {
 				localStorage.removeItem('ropeman-settings');
 			}

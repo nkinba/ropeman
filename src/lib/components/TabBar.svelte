@@ -188,8 +188,7 @@
 		font-size: 11px;
 		font-family: var(--font-display);
 		font-weight: 700;
-		text-transform: uppercase;
-		letter-spacing: 0.1em;
+		letter-spacing: 0.02em;
 		color: var(--text-secondary);
 		background: transparent;
 		border: none;

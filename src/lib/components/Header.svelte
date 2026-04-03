@@ -8,11 +8,13 @@
 
 	let {
 		onsettings,
+		onhelp,
 		onnewproject,
 		onconnect,
 		onanalyze
 	}: {
 		onsettings?: () => void;
+		onhelp?: () => void;
 		onnewproject?: () => void;
 		onconnect?: () => void;
 		onanalyze?: () => void;
@@ -67,7 +69,12 @@
 			</button>
 		{/if}
 		{#if hasProject}
-			<button class="analyze-btn" onclick={() => onanalyze?.()} title="AI Semantic Analysis">
+			<button
+				class="analyze-btn"
+				data-tour-step="2"
+				onclick={() => onanalyze?.()}
+				title="AI Semantic Analysis"
+			>
 				<svg
 					width="14"
 					height="14"
@@ -96,7 +103,15 @@
 		>
 			{themeStore.current === 'dark' ? '\u2600' : '\u263D'}
 		</button>
-		<button class="header-btn" onclick={onsettings} title="{i18nStore.t('settings')} (?)">
+		<button class="header-btn" onclick={onhelp} title="{i18nStore.t('shortcuts.showHelp')} (?)">
+			<span class="material-symbols-outlined" style="font-size:18px;">help_outline</span>
+		</button>
+		<button
+			class="header-btn"
+			data-tour-step="3"
+			onclick={onsettings}
+			title={i18nStore.t('settings')}
+		>
 			<svg
 				width="18"
 				height="18"

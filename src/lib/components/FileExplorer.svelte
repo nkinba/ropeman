@@ -6,6 +6,7 @@
 	import { graphStore } from '$lib/stores/graphStore.svelte';
 	import type { FileNode } from '$lib/types/fileTree';
 	import type { GraphNode } from '$lib/types/graph';
+	import { getFileIcon, getFolderIcon } from '$lib/utils/fileIcons';
 
 	let {
 		collapsed = false,
@@ -186,7 +187,7 @@
 			}}
 		></div>
 	{/if}
-	<aside class="file-explorer" class:mobile>
+	<aside class="file-explorer" class:mobile data-tour-step="7">
 		<div class="explorer-header">
 			<span class="explorer-title">Explorer</span>
 			<button class="explorer-toggle" onclick={ontoggle} title="Hide Explorer">
@@ -285,8 +286,10 @@
 					>
 				</span>
 				<span class="tree-icon" class:expanded={expandedDirs.has(node.path)}>
-					<span class="material-symbols-outlined"
-						>{expandedDirs.has(node.path) ? 'folder_open' : 'folder'}</span
+					<span
+						class="material-symbols-outlined"
+						style="color:{getFolderIcon(expandedDirs.has(node.path)).color}"
+						>{getFolderIcon(expandedDirs.has(node.path)).icon}</span
 					>
 				</span>
 				<span class="tree-label">{node.name}</span>
@@ -314,7 +317,11 @@
 					class="tree-file-icon"
 					class:selected={selectionStore.selectedNode?.filePath === node.path}
 				>
-					<span class="material-symbols-outlined">description</span>
+					<span
+						class="material-symbols-outlined"
+						style={getFileIcon(node.name).color ? `color:${getFileIcon(node.name).color}` : ''}
+						>{getFileIcon(node.name).icon}</span
+					>
 				</span>
 				<span class="tree-label">{node.name}</span>
 			</button>
@@ -324,7 +331,7 @@
 
 <style>
 	.file-explorer {
-		width: 260px;
+		width: 100%;
 		height: 100%;
 		min-height: 0;
 		display: flex;
@@ -341,6 +348,8 @@
 		justify-content: space-between;
 		padding: 10px 12px;
 		border-bottom: 1px solid var(--border);
+		overflow: visible;
+		flex-shrink: 0;
 	}
 
 	.explorer-title {
@@ -358,8 +367,12 @@
 		justify-content: center;
 		width: 24px;
 		height: 24px;
+		flex-shrink: 0;
 		border-radius: 4px;
 		color: var(--text-muted);
+		background: none;
+		border: none;
+		padding: 0;
 		cursor: pointer;
 		transition: background-color 0.15s ease;
 	}

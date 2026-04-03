@@ -104,14 +104,24 @@
 			semanticStore.currentLevel = level;
 			semanticStore.drilldownPath = pathWithoutLast;
 		}
-		// Open/focus diagram tab showing this node's parent level
-		const tabLabel =
-			pathWithoutLast.length > 0 ? pathWithoutLast[pathWithoutLast.length - 1].label : 'Project';
-		tabStore.openDiagramTab(pathWithoutLast, tabLabel);
 
 		// Select this node in the semantic store → highlights on diagram
 		const semNode = level?.nodes.find((n) => n.id === node.id) ?? null;
 		semanticStore.selectedSemanticNode = semNode;
+
+		// Drill into this node if cached (adds to breadcrumb)
+		if (semNode) {
+			const wasCached = semanticStore.drillDown(semNode);
+			if (wasCached) {
+				tabStore.openDiagramTab(semanticStore.drilldownPath, semNode.label);
+				return;
+			}
+		}
+
+		// Fallback: just show parent level diagram
+		const tabLabel =
+			pathWithoutLast.length > 0 ? pathWithoutLast[pathWithoutLast.length - 1].label : 'Project';
+		tabStore.openDiagramTab(pathWithoutLast, tabLabel);
 	}
 
 	function pulseElement(selector: string) {

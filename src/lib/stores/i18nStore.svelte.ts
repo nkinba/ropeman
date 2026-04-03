@@ -36,6 +36,54 @@ export interface AnalysisProgressTranslations {
 	generatingDiagram: string;
 }
 
+interface HelpTranslations {
+	title: string;
+	tabUsage: string;
+	tabAiModes: string;
+	tabShortcuts: string;
+	tabFaq: string;
+	usageTitle: string;
+	usageSteps: string[];
+	usageInteraction: string;
+	usageInteractionItems: string[];
+	aiModesTitle: string;
+	aiModeDemo: string;
+	aiModeDemoDesc: string;
+	aiModeByok: string;
+	aiModeByokDesc: string;
+	aiModeBridge: string;
+	aiModeBridgeDesc: string;
+	aiModeWebgpu: string;
+	aiModeWebgpuDesc: string;
+	shortcutsTitle: string;
+	faqTitle: string;
+	faqItems: { q: string; a: string }[];
+}
+
+interface OnboardingStepTranslation {
+	title: string;
+	desc: string;
+}
+
+interface OnboardingTranslations {
+	skip: string;
+	prev: string;
+	next: string;
+	done: string;
+	restartTour: string;
+	skipConfirmText: string;
+	skipConfirmOk: string;
+	skipConfirmCancel: string;
+	step1: OnboardingStepTranslation;
+	step2: OnboardingStepTranslation;
+	step3: OnboardingStepTranslation;
+	step4: OnboardingStepTranslation;
+	step5: OnboardingStepTranslation;
+	step6: OnboardingStepTranslation;
+	step7: OnboardingStepTranslation;
+	step8: OnboardingStepTranslation;
+}
+
 interface TranslationSet {
 	title: string;
 	subtitle: string;
@@ -52,10 +100,21 @@ interface TranslationSet {
 	dropHint: string;
 	noApiKey: string;
 	cacheEnabled: string;
+	cacheEnabledTooltip: string;
 	clearCache: string;
 	showSymbols: string;
+	showSymbolsTooltip: string;
 	codeTheme: string;
+	codeFontSize: string;
 	apiKeyPlaceholder: string;
+	settingsAiConnection: string;
+	settingsConfigureAi: string;
+	settingsSkeletonLimit: string;
+	settingsSkeletonUnlimited: string;
+	settingsSkeletonHint: string;
+	settingsLanguage: string;
+	settingsReset: string;
+	settingsAiNotConnected: string;
 	analyzing: string;
 	analysisProgress: AnalysisProgressTranslations;
 	landing: LandingTranslations;
@@ -70,7 +129,14 @@ interface TranslationSet {
 		exportDiagram: string;
 		showHelp: string;
 		closeModal: string;
+		closeTab: string;
+		nextPrevTab: string;
+		toggleSplit: string;
+		focusPrimary: string;
+		focusSecondary: string;
 	};
+	help: HelpTranslations;
+	onboarding: OnboardingTranslations;
 }
 
 const translations: Record<Locale, TranslationSet> = {
@@ -90,14 +156,28 @@ const translations: Record<Locale, TranslationSet> = {
 		dropHint: 'Python, JavaScript, TypeScript 프로젝트 지원',
 		noApiKey: 'Settings에서 Gemini API 키를 입력하세요',
 		cacheEnabled: '분석 캐시',
+		cacheEnabledTooltip:
+			'AI 분석 결과를 브라우저에 캐싱합니다. 활성화하면 같은 프로젝트를 다시 열 때 AI 재호출 없이 즉시 복원됩니다.',
 		clearCache: '캐시 초기화',
 		showSymbols: '심볼 사이드바',
+		showSymbolsTooltip:
+			'AST 파싱으로 추출된 함수/클래스 심볼 목록을 사이드바에 표시합니다. 파일을 열면 해당 파일의 심볼을 볼 수 있습니다.',
 		codeTheme: '코드 테마',
+		codeFontSize: '코드 폰트 크기',
+		settingsAiConnection: 'AI 연결',
+		settingsConfigureAi: 'AI 설정',
+		settingsSkeletonLimit: '코드 구조 요약 크기 제한',
+		settingsSkeletonUnlimited: '무제한',
+		settingsSkeletonHint:
+			'AI 분석 시 전송되는 코드 구조 요약(메타데이터)의 최대 크기. 큰 프로젝트에서 API 오류 발생 시 줄이세요. (기본: 250KB)',
+		settingsLanguage: '언어',
+		settingsReset: '초기화',
+		settingsAiNotConnected: '미연결',
 		apiKeyPlaceholder: 'Gemini API 키 입력',
 		analyzing: '분석 중...',
 		analysisProgress: {
 			waitingParse: '파싱 대기 중...',
-			extractingSkeleton: '스켈레톤 추출 중...',
+			extractingSkeleton: '코드 구조 추출 중...',
 			requestingAI: 'AI 분석 요청 중...',
 			generatingDiagram: '다이어그램 생성 중...'
 		},
@@ -137,8 +217,109 @@ const translations: Record<Locale, TranslationSet> = {
 			toggleView: '사이드바 전환 (파일/시맨틱)',
 			toggleSidebar: '사이드바 토글',
 			exportDiagram: '다이어그램 내보내기',
-			showHelp: '단축키 도움말',
-			closeModal: '모달 닫기'
+			showHelp: '도움말',
+			closeModal: '모달 닫기',
+			closeTab: '탭 닫기',
+			nextPrevTab: '다음/이전 탭',
+			toggleSplit: '분할 뷰 전환',
+			focusPrimary: '주 패인 포커스',
+			focusSecondary: '보조 패인 포커스'
+		},
+		help: {
+			title: '도움말',
+			tabUsage: '사용법',
+			tabAiModes: 'AI 모드',
+			tabShortcuts: '단축키',
+			tabFaq: 'FAQ',
+			usageTitle: '기본 사용법',
+			usageSteps: [
+				'폴더 열기 — 프로젝트 디렉토리를 선택하면 AST 파싱이 자동으로 시작됩니다.',
+				'AI 분석 — AI 연결을 설정하면 코드베이스를 의미론적으로 분석하여 다이어그램을 생성합니다.',
+				'드릴다운 — 다이어그램 노드를 더블클릭하면 하위 수준으로 탐색합니다.',
+				'코드 보기 — 파일 탐색기에서 파일을 더블클릭하면 코드 뷰어가 열립니다.'
+			],
+			usageInteraction: '인터랙션',
+			usageInteractionItems: [
+				'노드 클릭 — 선택 및 상세 정보 확인',
+				'노드 더블클릭 — 드릴다운 탐색',
+				'파일 더블클릭 — 코드 뷰어에서 열기',
+				'탭 드래그 — 분할 뷰로 이동'
+			],
+			aiModesTitle: 'AI 분석 모드',
+			aiModeDemo: 'Demo',
+			aiModeDemoDesc:
+				'무료 체험 모드입니다. 서버 프록시를 통해 동작하며, 요청 횟수와 프로젝트 크기에 제한이 있습니다.',
+			aiModeByok: 'API Key (BYOK)',
+			aiModeByokDesc:
+				'자신의 Gemini/Anthropic/OpenAI API 키를 사용합니다. 키는 브라우저에만 저장되며 서버로 전송되지 않습니다.',
+			aiModeBridge: 'Bridge',
+			aiModeBridgeDesc:
+				'로컬에 설치된 Gemini CLI 또는 Claude CLI를 통해 분석합니다. API 키 없이 CLI 인증을 활용합니다.',
+			aiModeWebgpu: 'WebGPU (실험적)',
+			aiModeWebgpuDesc:
+				'브라우저 내장 AI를 활용합니다. 외부 서버 연결 없이 완전히 로컬에서 동작하지만, 성능은 기기 사양에 따라 달라집니다.',
+			shortcutsTitle: '키보드 단축키',
+			faqTitle: '자주 묻는 질문',
+			faqItems: [
+				{
+					q: '소스 코드가 서버로 전송되나요?',
+					a: '원본 소스 코드는 전송되지 않습니다. AI 분석 시에는 함수/클래스 시그니처만 추출한 코드 구조 요약(메타데이터)만 전송됩니다.'
+				},
+				{
+					q: '어떤 프로그래밍 언어를 지원하나요?',
+					a: 'Python, JavaScript, TypeScript, Go, Rust, Java, C, C++, Ruby, PHP, Swift, Kotlin, C#, Scala를 지원합니다.'
+				},
+				{
+					q: '프로젝트 크기에 제한이 있나요?',
+					a: '파일 수 최대 2,000개, 개별 파일 최대 500KB까지 지원합니다. 대규모 프로젝트는 설정에서 코드 구조 요약 크기를 조절하세요.'
+				},
+				{
+					q: 'API 키는 어디에 저장되나요?',
+					a: '브라우저의 localStorage에만 저장됩니다. 서버에는 전송되지 않으며, 설정 초기화로 삭제할 수 있습니다.'
+				}
+			]
+		},
+		onboarding: {
+			skip: '건너뛰기',
+			prev: '이전',
+			next: '다음',
+			done: '완료',
+			restartTour: '투어 다시 보기',
+			skipConfirmText: '투어를 종료하시겠습니까?\n설정에서 언제든 다시 시작할 수 있습니다.',
+			skipConfirmOk: '종료',
+			skipConfirmCancel: '계속하기',
+			step1: {
+				title: '폴더 열기',
+				desc: '프로젝트 폴더를 열어 코드베이스를 로드하세요. Python, JavaScript, TypeScript 등 다양한 언어를 지원합니다.'
+			},
+			step2: {
+				title: 'AI 분석',
+				desc: 'AI가 코드 구조를 의미론적으로 분석합니다. 역할과 의존 관계를 자동으로 파악하여 다이어그램을 생성합니다.'
+			},
+			step3: {
+				title: '설정',
+				desc: 'AI 모드, 테마, 언어 등을 설정할 수 있습니다. API 키 입력이나 분석 옵션도 여기서 관리합니다.'
+			},
+			step4: {
+				title: '시맨틱 트리',
+				desc: 'AI가 분석한 역할 기반 트리입니다. 노드를 클릭하면 관련 파일이 하이라이트됩니다.'
+			},
+			step5: {
+				title: '다이어그램 캔버스',
+				desc: '노드를 클릭하면 선택, 더블클릭하면 하위 레벨로 드릴다운합니다. 드래그로 캔버스를 이동할 수 있습니다.'
+			},
+			step6: {
+				title: '브레드크럼',
+				desc: '드릴다운 경로를 보여줍니다. 클릭하면 상위 레벨로 바로 이동할 수 있습니다.'
+			},
+			step7: {
+				title: '파일 탐색기',
+				desc: '파일을 더블클릭하면 해당 파일이 속하는 시맨틱 노드가 다이어그램에서 하이라이트됩니다. 속하는 노드가 없으면 하이라이트가 해제됩니다.'
+			},
+			step8: {
+				title: '분할 뷰',
+				desc: 'Ctrl+\\ 로 다이어그램과 코드를 동시에 볼 수 있습니다. 탭을 드래그하여 분할할 수도 있습니다.'
+			}
 		}
 	},
 	en: {
@@ -157,14 +338,28 @@ const translations: Record<Locale, TranslationSet> = {
 		dropHint: 'Supports Python, JavaScript, and TypeScript projects',
 		noApiKey: 'Enter your Gemini API key in Settings',
 		cacheEnabled: 'Analysis Cache',
+		cacheEnabledTooltip:
+			'Caches AI analysis results in your browser. When enabled, reopening the same project restores results instantly without re-calling AI.',
 		clearCache: 'Clear Cache',
 		showSymbols: 'Symbol Sidebar',
+		showSymbolsTooltip:
+			'Shows function/class symbols extracted by AST parsing in the sidebar. Open a file to see its symbols.',
 		codeTheme: 'Code Theme',
+		codeFontSize: 'Code Font Size',
+		settingsAiConnection: 'AI Connection',
+		settingsConfigureAi: 'Configure AI',
+		settingsSkeletonLimit: 'Code Summary Size Limit',
+		settingsSkeletonUnlimited: 'Unlimited',
+		settingsSkeletonHint:
+			'Max size of the code structure summary (metadata) sent during AI analysis. Reduce for large projects if API errors occur. (Default: 250KB)',
+		settingsLanguage: 'Language',
+		settingsReset: 'Reset',
+		settingsAiNotConnected: 'Not Connected',
 		apiKeyPlaceholder: 'Enter Gemini API key',
 		analyzing: 'Analyzing...',
 		analysisProgress: {
 			waitingParse: 'Waiting for parsing...',
-			extractingSkeleton: 'Extracting skeleton...',
+			extractingSkeleton: 'Extracting code structure...',
 			requestingAI: 'Requesting AI analysis...',
 			generatingDiagram: 'Generating diagram...'
 		},
@@ -205,8 +400,109 @@ const translations: Record<Locale, TranslationSet> = {
 			toggleView: 'Toggle Sidebar (Files/Semantic)',
 			toggleSidebar: 'Toggle Sidebar',
 			exportDiagram: 'Export Diagram',
-			showHelp: 'Show Shortcuts Help',
-			closeModal: 'Close Modal'
+			showHelp: 'Help',
+			closeModal: 'Close Modal',
+			closeTab: 'Close Tab',
+			nextPrevTab: 'Next / Prev Tab',
+			toggleSplit: 'Toggle Split',
+			focusPrimary: 'Focus Primary Pane',
+			focusSecondary: 'Focus Secondary Pane'
+		},
+		help: {
+			title: 'Help',
+			tabUsage: 'Usage',
+			tabAiModes: 'AI Modes',
+			tabShortcuts: 'Shortcuts',
+			tabFaq: 'FAQ',
+			usageTitle: 'Getting Started',
+			usageSteps: [
+				'Open Folder — Select a project directory to start automatic AST parsing.',
+				'AI Analysis — Configure an AI connection to semantically analyze your codebase and generate diagrams.',
+				'Drill-down — Double-click a diagram node to explore deeper levels.',
+				'View Code — Double-click a file in the explorer to open the code viewer.'
+			],
+			usageInteraction: 'Interactions',
+			usageInteractionItems: [
+				'Click node — Select and view details',
+				'Double-click node — Drill-down navigation',
+				'Double-click file — Open in code viewer',
+				'Drag tab — Move to split view'
+			],
+			aiModesTitle: 'AI Analysis Modes',
+			aiModeDemo: 'Demo',
+			aiModeDemoDesc:
+				'Free trial mode. Runs through a server proxy with limits on request count and project size.',
+			aiModeByok: 'API Key (BYOK)',
+			aiModeByokDesc:
+				'Use your own Gemini/Anthropic/OpenAI API key. Keys are stored only in your browser and never sent to any server.',
+			aiModeBridge: 'Bridge',
+			aiModeBridgeDesc:
+				'Analyze through locally installed Gemini CLI or Claude CLI. Uses CLI authentication without requiring API keys.',
+			aiModeWebgpu: 'WebGPU (Experimental)',
+			aiModeWebgpuDesc:
+				'Uses browser-built-in AI. Runs entirely locally without any external server connection, but performance depends on device specs.',
+			shortcutsTitle: 'Keyboard Shortcuts',
+			faqTitle: 'Frequently Asked Questions',
+			faqItems: [
+				{
+					q: 'Is my source code sent to a server?',
+					a: 'Your original source code is never sent. During AI analysis, only a code structure summary (metadata) containing function/class signatures is transmitted.'
+				},
+				{
+					q: 'What programming languages are supported?',
+					a: 'Python, JavaScript, TypeScript, Go, Rust, Java, C, C++, Ruby, PHP, Swift, Kotlin, C#, and Scala.'
+				},
+				{
+					q: 'Are there project size limits?',
+					a: 'Up to 2,000 files and 500KB per individual file. For large projects, adjust the code summary size limit in Settings.'
+				},
+				{
+					q: 'Where are API keys stored?',
+					a: "Only in your browser's localStorage. They are never sent to any server and can be deleted by resetting settings."
+				}
+			]
+		},
+		onboarding: {
+			skip: 'Skip',
+			prev: 'Prev',
+			next: 'Next',
+			done: 'Done',
+			restartTour: 'Restart Tour',
+			skipConfirmText: 'End the tour?\nYou can restart it anytime from Settings.',
+			skipConfirmOk: 'End Tour',
+			skipConfirmCancel: 'Continue',
+			step1: {
+				title: 'Open Folder',
+				desc: 'Open a project folder to load your codebase. Supports Python, JavaScript, TypeScript, and more.'
+			},
+			step2: {
+				title: 'AI Analysis',
+				desc: 'AI semantically analyzes your code structure, automatically identifying roles and dependencies to generate diagrams.'
+			},
+			step3: {
+				title: 'Settings',
+				desc: 'Configure AI mode, theme, language, and more. Manage API keys and analysis options here.'
+			},
+			step4: {
+				title: 'Semantic Tree',
+				desc: 'A role-based tree generated by AI analysis. Click a node to highlight related files.'
+			},
+			step5: {
+				title: 'Diagram Canvas',
+				desc: 'Click a node to select it, double-click to drill down into sub-levels. Drag to pan the canvas.'
+			},
+			step6: {
+				title: 'Breadcrumb',
+				desc: 'Shows your drill-down path. Click any level to navigate back up instantly.'
+			},
+			step7: {
+				title: 'File Explorer',
+				desc: 'Double-click a file to highlight the semantic node it belongs to on the diagram. If the file has no matching node, the highlight is cleared.'
+			},
+			step8: {
+				title: 'Split View',
+				desc: 'Press Ctrl+\\ to view the diagram and code side by side. You can also drag a tab to split.'
+			}
 		}
 	}
 };

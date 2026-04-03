@@ -1,6 +1,15 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Theme Toggle', () => {
+	test.beforeEach(async ({ page }) => {
+		await page.addInitScript(() => {
+			localStorage.setItem(
+				'ropeman-onboarding',
+				JSON.stringify({ phase1Completed: true, phase2Completed: true })
+			);
+		});
+	});
+
 	test('should toggle between dark and light themes', async ({ page }) => {
 		await page.goto('/');
 

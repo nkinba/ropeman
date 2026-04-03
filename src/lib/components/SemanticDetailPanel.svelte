@@ -3,6 +3,7 @@
 	import { selectionStore } from '$lib/stores/selectionStore.svelte';
 	import { tabStore } from '$lib/stores/tabStore.svelte';
 	import type { GraphNode } from '$lib/types/graph';
+	import { getFileIcon } from '$lib/utils/fileIcons';
 
 	let { ondismiss }: { ondismiss?: () => void } = $props();
 
@@ -63,8 +64,13 @@
 				<div class="section-title">Files <span class="file-count">{node.fileCount}</span></div>
 				<div class="file-list">
 					{#each node.filePaths as fp}
+						{@const fileName = fp.split('/').pop() ?? fp}
+						{@const fIcon = getFileIcon(fileName)}
 						<button class="file-item" onclick={() => handleFileClick(fp)}>
-							<span class="file-icon">&#128196;</span>
+							<span
+								class="file-icon material-symbols-outlined"
+								style={fIcon.color ? `color:${fIcon.color}` : ''}>{fIcon.icon}</span
+							>
 							<span class="file-path">{fp}</span>
 						</button>
 					{/each}
@@ -195,7 +201,7 @@
 	}
 
 	.file-icon {
-		font-size: 12px;
+		font-size: 14px;
 		flex-shrink: 0;
 	}
 

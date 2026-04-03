@@ -39,9 +39,9 @@ export interface AIErrorAction {
 const ERROR_INFO_MAP: Record<AIErrorType, { message: string; actions: AIErrorAction[] }> = {
 	[AIErrorType.TPM_EXCEEDED]: {
 		message:
-			'요청이 모델의 토큰 한도를 초과했습니다. Skeleton 크기를 줄이거나 다른 모델을 선택하세요.',
+			'요청이 모델의 토큰 한도를 초과했습니다. 코드 구조 요약 크기를 줄이거나 다른 모델을 선택하세요.',
 		actions: [
-			{ label: 'Skeleton 설정', target: 'analyze' },
+			{ label: '크기 설정', target: 'analyze' },
 			{ label: '모델 변경', target: 'analyze' }
 		]
 	},
