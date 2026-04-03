@@ -41,6 +41,16 @@ export { formatDate, isEmpty };
 });
 
 test.describe('Parsing Flow (testDir mode)', () => {
+	// Skip onboarding tour in all E2E tests
+	test.beforeEach(async ({ page }) => {
+		await page.addInitScript(() => {
+			localStorage.setItem(
+				'ropeman-onboarding',
+				JSON.stringify({ phase1Completed: true, phase2Completed: true })
+			);
+		});
+	});
+
 	test('should load test project via ?testDir= parameter', async ({ page }) => {
 		// Navigate with testDir query parameter — triggers testLoader
 		await page.goto(`/?testDir=${encodeURIComponent(TEST_DIR)}`);
@@ -119,7 +129,7 @@ test.describe('Parsing Flow (testDir mode)', () => {
 		// Language badge should show python
 		const langBadge = page.locator('.code-lang-badge');
 		await expect(langBadge).toBeVisible();
-		await expect(langBadge).toHaveText('python');
+		await expect(langBadge).toHaveText('Python');
 
 		// Code lines should be rendered
 		const codeLines = page.locator('.code-line');

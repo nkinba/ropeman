@@ -1,6 +1,15 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Landing Page', () => {
+	test.beforeEach(async ({ page }) => {
+		await page.addInitScript(() => {
+			localStorage.setItem(
+				'ropeman-onboarding',
+				JSON.stringify({ phase1Completed: true, phase2Completed: true })
+			);
+		});
+	});
+
 	test('should load the page with header and title', async ({ page }) => {
 		await page.goto('/');
 		const header = page.locator('header.header');
