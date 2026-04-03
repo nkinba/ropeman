@@ -54,19 +54,15 @@ import {
 } from './bridgeService';
 
 describe('bridgeService', () => {
-	let callbacks: {
-		onStatusChange: ReturnType<typeof vi.fn>;
-		onError: ReturnType<typeof vi.fn>;
-		onPortChange: ReturnType<typeof vi.fn>;
-	};
+	let callbacks: BridgeCallbacks;
 
 	beforeEach(() => {
 		vi.useFakeTimers();
 		wsInstances = [];
 		callbacks = {
-			onStatusChange: vi.fn(),
-			onError: vi.fn(),
-			onPortChange: vi.fn()
+			onStatusChange: vi.fn() as unknown as BridgeCallbacks['onStatusChange'],
+			onError: vi.fn() as unknown as BridgeCallbacks['onError'],
+			onPortChange: vi.fn() as unknown as BridgeCallbacks['onPortChange']
 		};
 		setBridgeCallbacks(callbacks);
 		// Ensure clean state
