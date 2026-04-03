@@ -45,6 +45,7 @@ class MockWebSocket {
 (globalThis as any).WebSocket = MockWebSocket;
 
 // Module-level import (uses our MockWebSocket)
+import type { BridgeCallbacks } from './bridgeService';
 import {
 	connectBridge,
 	disconnectBridge,
