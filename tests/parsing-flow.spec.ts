@@ -218,6 +218,6 @@ test.describe('Parsing Flow (testDir mode)', () => {
 
 		// Language badge should update to javascript
 		const langBadge = page.locator('.code-lang-badge');
-		await expect(langBadge).toHaveText('javascript');
+		await expect(langBadge).toHaveText('JavaScript');
 	});
 });
