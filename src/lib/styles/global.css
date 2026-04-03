@@ -138,9 +138,9 @@
 	--surface-elevated: var(--bg-highest);
 
 	/* Glassmorphism — Stitch confirmed */
-	--glass-bg: rgba(32, 38, 47, 0.85);
-	--glass-blur: 20px;
-	--glass-border: rgba(68, 72, 79, 0.15);
+	--glass-bg: rgba(27, 32, 40, 0.7);
+	--glass-blur: 24px;
+	--glass-border: rgba(255, 255, 255, 0.1);
 	--ghost-border: rgba(255, 255, 255, 0.08);
 
 	/* Accent variants */

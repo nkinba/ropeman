@@ -2,11 +2,41 @@
 	import { settingsStore } from '$lib/stores/settingsStore.svelte';
 	import { i18nStore } from '$lib/stores/i18nStore.svelte';
 	import { projectStore } from '$lib/stores/projectStore.svelte';
+	import { authStore } from '$lib/stores/authStore.svelte';
 	import { clearCache } from '$lib/services/cacheService';
 	import { clearSemanticCache, getSemanticCacheSize } from '$lib/services/semanticCacheService';
 	import { SYNTAX_THEMES } from '$lib/services/syntaxThemeService';
 
 	const hasProject = $derived(projectStore.fileTree !== null);
+
+	const aiConnectionInfo = $derived.by(() => {
+		const track = authStore.activeTrack;
+		switch (track) {
+			case 'bridge':
+				return { label: 'Local Bridge', color: 'var(--track-bridge)', connected: true };
+			case 'edge':
+				return { label: 'Demo', color: 'var(--track-demo)', connected: true };
+			case 'webgpu':
+				return { label: 'WebGPU', color: 'var(--track-webgpu)', connected: true };
+			case 'byok': {
+				const provider = settingsStore.aiProvider;
+				const model = settingsStore.aiModel;
+				const providerLabel =
+					provider === 'google' ? 'Gemini' : provider === 'anthropic' ? 'Claude' : 'OpenAI';
+				return {
+					label: `${providerLabel} (${model})`,
+					color: 'var(--track-byok)',
+					connected: settingsStore.hasApiKey
+				};
+			}
+			default:
+				return {
+					label: i18nStore.t('settingsAiNotConnected'),
+					color: 'var(--text-muted)',
+					connected: false
+				};
+		}
+	});
 
 	let { open, onclose, onconnect }: { open: boolean; onclose: () => void; onconnect?: () => void } =
 		$props();
@@ -49,6 +79,12 @@
 		settingsStore.cacheEnabled = cacheEnabled;
 	}
 
+	async function handleCacheClear() {
+		await clearSemanticCache();
+		await clearCache();
+		cacheSize = 0;
+	}
+
 	function handleShowSymbolsToggle() {
 		showSymbols = !showSymbols;
 		settingsStore.showSymbols = showSymbols;
@@ -65,7 +101,7 @@
 		settingsStore.syntaxTheme = syntaxTheme;
 	}
 
-	async function handleClearAll() {
+	async function handleReset() {
 		await clearCache();
 		await clearSemanticCache();
 		settingsStore.clearAll();
@@ -77,6 +113,25 @@
 		syntaxTheme = 'tomorrow';
 		cacheSize = 0;
 		i18nStore.locale = 'ko';
+	}
+
+	// Tooltip positioning for fixed tooltips
+	let tooltipPos = $state<{ top: number; left: number } | null>(null);
+	let tooltipText = $state('');
+
+	function handleTooltipEnter(e: MouseEvent) {
+		const icon = e.currentTarget as HTMLElement;
+		const rect = icon.getBoundingClientRect();
+		const tipWidth = 260;
+		let left = rect.left + rect.width / 2 - tipWidth / 2;
+		left = Math.max(8, Math.min(left, window.innerWidth - tipWidth - 8));
+		tooltipPos = { top: rect.bottom + 6, left };
+		tooltipText = icon.getAttribute('data-tooltip') ?? '';
+	}
+
+	function handleTooltipLeave() {
+		tooltipPos = null;
+		tooltipText = '';
 	}
 
 	function handleBackdropClick(e: MouseEvent) {
@@ -99,30 +154,45 @@
 	>
 		<div class="modal-card settings-card" role="dialog" aria-modal="true">
 			<div class="modal-header">
-				<h2>{i18nStore.t('settings')}</h2>
-				<button class="modal-close" onclick={onclose}>&#10005;</button>
+				<h2>
+					<span class="material-symbols-outlined header-icon">settings</span>
+					{i18nStore.t('settings')}
+				</h2>
+				<div class="header-actions">
+					<button class="btn-reset" onclick={handleReset}>{i18nStore.t('settingsReset')}</button>
+					<button class="modal-close" onclick={onclose}>&#10005;</button>
+				</div>
 			</div>
 
 			<div class="modal-body">
 				{#if hasProject}
 					<section class="settings-section">
-						<span class="form-label">AI Connection</span>
+						<span class="form-label">{i18nStore.t('settingsAiConnection')}</span>
 						<div class="section-card">
 							<button
-								class="btn btn-primary"
+								class="ai-connection-btn"
 								onclick={() => {
 									onclose();
 									onconnect?.();
 								}}
 							>
-								Configure AI
+								<span class="ai-conn-left">
+									<span
+										class="ai-conn-dot"
+										style="background: {aiConnectionInfo.connected
+											? 'var(--color-success)'
+											: 'var(--text-muted)'}"
+									></span>
+									<span class="ai-conn-label">{aiConnectionInfo.label}</span>
+								</span>
+								<span class="material-symbols-outlined ai-conn-icon">settings_input_component</span>
 							</button>
 						</div>
 					</section>
 				{/if}
 
 				<section class="settings-section">
-					<span class="form-label">Skeleton Size Limit</span>
+					<span class="form-label">{i18nStore.t('settingsSkeletonLimit')}</span>
 					<div class="section-card">
 						<div class="form-row">
 							<label class="checkbox-label">
@@ -131,7 +201,7 @@
 									checked={skeletonUnlimited}
 									onchange={handleSkeletonUnlimitedToggle}
 								/>
-								Unlimited
+								{i18nStore.t('settingsSkeletonUnlimited')}
 							</label>
 						</div>
 						{#if !skeletonUnlimited}
@@ -148,17 +218,24 @@
 								<span class="range-value">{maxSkeletonKB} KB</span>
 							</div>
 						{/if}
-						<p class="hint">
-							AI 분석 시 전송되는 코드 스켈레톤 최대 크기. 큰 프로젝트에서 API 오류 발생 시
-							줄이세요. (기본: 150KB)
-						</p>
+						<p class="hint">{i18nStore.t('settingsSkeletonHint')}</p>
 					</div>
 				</section>
 
 				<section class="settings-section">
-					<span class="form-label" id="cache-toggle-label">{i18nStore.t('cacheEnabled')}</span>
+					<span class="form-label" id="cache-toggle-label">
+						{i18nStore.t('cacheEnabled')}
+						<span
+							class="info-tooltip-wrap"
+							onmouseenter={handleTooltipEnter}
+							onmouseleave={handleTooltipLeave}
+							data-tooltip={i18nStore.t('cacheEnabledTooltip')}
+						>
+							<span class="material-symbols-outlined info-icon">info</span>
+						</span>
+					</span>
 					<div class="section-card">
-						<div class="form-row">
+						<div class="form-row cache-row">
 							<button
 								class="toggle"
 								class:active={cacheEnabled}
@@ -170,12 +247,28 @@
 								<span class="toggle-knob"></span>
 							</button>
 							<span class="cache-size">{cacheSize} entries</span>
+							{#if cacheSize > 0}
+								<button class="btn-cache-clear" onclick={handleCacheClear}>
+									<span class="material-symbols-outlined" style="font-size:14px;">delete</span>
+									{i18nStore.t('clearCache')}
+								</button>
+							{/if}
 						</div>
 					</div>
 				</section>
 
 				<section class="settings-section">
-					<span class="form-label" id="symbols-toggle-label">{i18nStore.t('showSymbols')}</span>
+					<span class="form-label" id="symbols-toggle-label">
+						{i18nStore.t('showSymbols')}
+						<span
+							class="info-tooltip-wrap"
+							onmouseenter={handleTooltipEnter}
+							onmouseleave={handleTooltipLeave}
+							data-tooltip={i18nStore.t('showSymbolsTooltip')}
+						>
+							<span class="material-symbols-outlined info-icon">info</span>
+						</span>
+					</span>
 					<div class="section-card">
 						<div class="form-row">
 							<button
@@ -192,38 +285,53 @@
 					</div>
 				</section>
 
-				<section class="settings-section">
-					<label class="form-label" for="lang-select">Language</label>
-					<div class="section-card">
-						<select id="lang-select" class="select" value={lang} onchange={handleLangChange}>
-							<option value="ko">한국어</option>
-							<option value="en">English</option>
-						</select>
-					</div>
-				</section>
+				<!-- 2-column grid: Language + Code Theme (Stitch layout) -->
+				<div class="settings-grid-2col">
+					<section class="settings-section">
+						<label class="form-label" for="lang-select">{i18nStore.t('settingsLanguage')}</label>
+						<div class="section-card">
+							<select id="lang-select" class="select" value={lang} onchange={handleLangChange}>
+								<option value="ko">한국어</option>
+								<option value="en">English</option>
+							</select>
+						</div>
+					</section>
+
+					<section class="settings-section">
+						<label class="form-label" for="theme-select">{i18nStore.t('codeTheme')}</label>
+						<div class="section-card">
+							<select
+								id="theme-select"
+								class="select"
+								value={syntaxTheme}
+								onchange={handleThemeChange}
+							>
+								{#each SYNTAX_THEMES as theme}
+									<option value={theme.id}
+										>{theme.label} ({theme.mode === 'dark' ? 'Dark' : 'Light'})</option
+									>
+								{/each}
+							</select>
+						</div>
+					</section>
+				</div>
 
 				<section class="settings-section">
-					<label class="form-label" for="theme-select">{i18nStore.t('codeTheme')}</label>
-					<div class="section-card">
-						<select
-							id="theme-select"
-							class="select"
-							value={syntaxTheme}
-							onchange={handleThemeChange}
-						>
-							{#each SYNTAX_THEMES as theme}
-								<option value={theme.id}
-									>{theme.label} ({theme.mode === 'dark' ? 'Dark' : 'Light'})</option
-								>
-							{/each}
-						</select>
+					<label class="form-label" for="font-size-input">{i18nStore.t('codeFontSize')}</label>
+					<div class="section-card font-size-row">
+						<input
+							id="font-size-input"
+							type="range"
+							min="10"
+							max="24"
+							step="1"
+							value={settingsStore.codeFontSize}
+							oninput={(e) => {
+								settingsStore.codeFontSize = Number((e.target as HTMLInputElement).value);
+							}}
+						/>
+						<span class="font-size-value">{settingsStore.codeFontSize}px</span>
 					</div>
-				</section>
-
-				<section class="settings-section">
-					<button class="btn btn-danger" onclick={handleClearAll}>
-						{i18nStore.t('clearCache')} & Reset
-					</button>
 				</section>
 
 				<section class="settings-section shortcuts-section">
@@ -258,6 +366,12 @@
 			</div>
 		</div>
 	</div>
+
+	{#if tooltipPos}
+		<div class="info-tooltip-fixed" style="top:{tooltipPos.top}px;left:{tooltipPos.left}px;">
+			{tooltipText}
+		</div>
+	{/if}
 {/if}
 
 <style>
@@ -266,10 +380,42 @@
 	}
 	.settings-card :global(.modal-header) {
 		padding: 20px;
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
 	}
 	.settings-card :global(.modal-header h2) {
 		font-size: 14px;
 		letter-spacing: 0.025em;
+		display: flex;
+		align-items: center;
+		gap: 8px;
+	}
+	.header-icon {
+		font-size: 18px;
+		color: var(--text-secondary);
+	}
+	.header-actions {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+	}
+	.btn-reset {
+		padding: 4px 8px;
+		border-radius: 4px;
+		font-size: 10px;
+		font-weight: 700;
+		font-family: var(--font-display);
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		color: var(--error, #ff6e84);
+		background: rgba(255, 110, 132, 0.1);
+		border: none;
+		cursor: pointer;
+		transition: background 0.15s;
+	}
+	.btn-reset:hover {
+		background: rgba(255, 110, 132, 0.2);
 	}
 	.settings-card :global(.modal-body) {
 		padding: 20px;
@@ -290,10 +436,129 @@
 		flex-direction: column;
 		gap: 8px;
 	}
+
+	/* 2-column grid for Language + Code Theme */
+	.settings-grid-2col {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 12px;
+	}
+
+	.font-size-row {
+		flex-direction: row;
+		align-items: center;
+		gap: 12px;
+	}
+
+	.font-size-row input[type='range'] {
+		flex: 1;
+		accent-color: var(--accent);
+	}
+
+	.font-size-value {
+		font-size: 12px;
+		font-weight: 700;
+		font-family: var(--font-code);
+		color: var(--text-primary);
+		min-width: 36px;
+		text-align: right;
+	}
+
+	/* Info tooltip */
+	.info-tooltip-wrap {
+		position: relative;
+		display: inline-flex;
+		align-items: center;
+		margin-left: 4px;
+	}
+
+	.info-icon {
+		font-size: 14px;
+		color: var(--text-muted);
+		cursor: help;
+		vertical-align: middle;
+	}
+
+	:global(.info-tooltip-fixed) {
+		position: fixed;
+		width: 260px;
+		padding: 10px 12px;
+		background: var(--bg-secondary, #1a1f27);
+		border: 1px solid var(--border, #2a2f38);
+		border-radius: 8px;
+		font-size: 11px;
+		font-weight: 400;
+		line-height: 1.6;
+		color: var(--text-secondary);
+		box-shadow: 0 8px 16px rgba(0, 0, 0, 0.25);
+		z-index: 2000;
+		white-space: normal;
+		pointer-events: none;
+	}
+
+	/* AI Connection button — Stitch style */
+	.ai-connection-btn {
+		width: 100%;
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding: 8px 12px;
+		background: var(--bg-bright, var(--bg-tertiary));
+		border: 1px solid var(--ghost-border, rgba(255, 255, 255, 0.08));
+		border-radius: 6px;
+		cursor: pointer;
+		transition: background 0.15s;
+	}
+	.ai-connection-btn:hover {
+		background: var(--bg-highest, #20262f);
+	}
+	.ai-conn-left {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+	}
+	.ai-conn-dot {
+		width: 8px;
+		height: 8px;
+		border-radius: 50%;
+		flex-shrink: 0;
+	}
+	.ai-conn-label {
+		font-size: 12px;
+		color: var(--text-primary);
+	}
+	.ai-conn-icon {
+		font-size: 16px;
+		color: var(--text-muted);
+	}
+
+	/* Cache row */
+	.cache-row {
+		align-items: center;
+	}
 	.cache-size {
 		font-size: 11px;
 		color: var(--text-secondary);
 	}
+	.btn-cache-clear {
+		margin-left: auto;
+		display: flex;
+		align-items: center;
+		gap: 4px;
+		padding: 2px 8px;
+		border-radius: 4px;
+		font-size: 10px;
+		font-weight: 600;
+		color: var(--error, #ff6e84);
+		background: transparent;
+		border: 1px solid rgba(255, 110, 132, 0.3);
+		cursor: pointer;
+		transition: background 0.15s;
+	}
+	.btn-cache-clear:hover {
+		background: rgba(255, 110, 132, 0.1);
+	}
+
 	.checkbox-label {
 		display: flex;
 		align-items: center;

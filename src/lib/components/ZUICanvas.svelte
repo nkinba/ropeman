@@ -320,6 +320,10 @@
 			const semNode = semanticStore.currentLevel?.nodes.find((n) => n.id === node.id) ?? null;
 			semanticStore.selectedSemanticNode = semNode;
 			selectionStore.selectedNode = null;
+			// Switch to diagram tab so breadcrumb shows semantic mode
+			const path = semanticStore.drilldownPath;
+			const label = path.length > 0 ? path[path.length - 1].label : 'Project';
+			tabStore.openDiagramTab(path, label);
 			return;
 		}
 	}
@@ -378,7 +382,7 @@
 	}
 </script>
 
-<div class="zui-canvas">
+<div class="zui-canvas" data-tour-step="5">
 	<SvelteFlow
 		nodes={flowNodes}
 		edges={flowEdges}

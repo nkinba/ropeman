@@ -5,9 +5,11 @@
 	import { projectStore } from '$lib/stores/projectStore.svelte';
 	import type { FileNode } from '$lib/types/fileTree';
 	import type { SemanticNode } from '$lib/types/semantic';
+	import { getFileIcon, getFolderIcon } from '$lib/utils/fileIcons';
 
 	const activeTab = $derived(tabStore.activeTab);
 	const semanticPath = $derived(semanticStore.drilldownPath);
+	const hasDiagramTab = $derived(tabStore.tabs.some((t) => t.type === 'diagram'));
 
 	// Dropdown state
 	let openDropdownIndex = $state<number | null>(null);
@@ -27,7 +29,7 @@
 	}
 
 	// --- Semantic breadcrumb helpers ---
-	function handleSemanticRootClick() {
+	function handleSemanticRootNavigate() {
 		semanticStore.goToLevel(-1);
 		tabStore.openDiagramTab([], 'Project');
 		closeDropdown();
@@ -41,26 +43,30 @@
 		closeDropdown();
 	}
 
-	function getSemanticSiblings(index: number): SemanticNode[] {
-		// Get the parent level's nodes (siblings at this crumb's level)
-		let parentKey: string;
-		if (index === 0) {
-			parentKey = '__root__';
+	/** Get the children of the node at this crumb level (what's displayed in its diagram) */
+	function getSemanticChildren(index: number): SemanticNode[] {
+		let key: string;
+		if (index === -1) {
+			// Root level: show root diagram's nodes
+			key = '__root__';
 		} else {
-			parentKey = semanticPath[index - 1].nodeId;
+			key = semanticPath[index].nodeId;
 		}
-		const level = semanticStore.getCachedLevel(parentKey);
+		const level = semanticStore.getCachedLevel(key);
 		return level?.nodes ?? [];
 	}
 
 	function handleSemanticDropdownItem(node: SemanticNode, index: number) {
-		// Navigate to the level containing this node, then select it
-		const newPath = semanticPath.slice(0, index);
-		newPath.push({ nodeId: node.id, label: node.label });
-		semanticStore.drilldownPath = newPath.slice(0, index); // go to parent level
-		semanticStore.goToLevel(index - 1);
+		// Highlight the node first
+		semanticStore.selectedSemanticNode = node;
 
-		// Now drill into this node
+		// Navigate to the parent level, then drill into the node
+		if (index === -1) {
+			semanticStore.goToLevel(-1);
+		} else {
+			semanticStore.goToLevel(index);
+		}
+
 		const wasCached = semanticStore.drillDown(node);
 		if (wasCached) {
 			tabStore.openDiagramTab(semanticStore.drilldownPath, node.label);
@@ -131,17 +137,44 @@
 	}}
 />
 
-{#if activeTab?.type !== 'code' && semanticStore.currentLevel !== null}
+{#if (activeTab?.type !== 'code' || (hasDiagramTab && semanticStore.selectedSemanticNode)) && semanticStore.currentLevel !== null}
 	<!-- Semantic diagram breadcrumb -->
-	<nav class="breadcrumb-bar">
-		<button
-			class="crumb group-crumb"
-			class:active={semanticPath.length === 0}
-			onclick={handleSemanticRootClick}
-		>
-			<span class="crumb-icon">&#9673;</span>
-			<span class="crumb-label">Project</span>
-		</button>
+	<nav class="breadcrumb-bar" data-tour-step="6">
+		<div class="crumb-dropdown-wrapper">
+			<button
+				class="crumb group-crumb"
+				class:active={semanticPath.length === 0}
+				onclick={() => {
+					if (semanticPath.length === 0) {
+						// Already at root — toggle dropdown to show root's nodes
+						openDropdownIndex = openDropdownIndex === -1 ? null : -1;
+					} else {
+						// Navigate back to root
+						handleSemanticRootNavigate();
+					}
+				}}
+			>
+				<span class="crumb-icon">&#9673;</span>
+				<span class="crumb-label">Project</span>
+				{#if semanticPath.length === 0}
+					<span class="crumb-chevron">&#9662;</span>
+				{/if}
+			</button>
+			{#if openDropdownIndex === -1}
+				{@const rootChildren = getSemanticChildren(-1)}
+				{#if rootChildren.length > 0}
+					<div class="crumb-dropdown">
+						{#each rootChildren as child}
+							<button class="dropdown-item" onclick={() => handleSemanticDropdownItem(child, -1)}>
+								<span class="dropdown-color" style="background: {child.color};"></span>
+								<span class="dropdown-label">{child.label}</span>
+								<span class="dropdown-count">{child.fileCount}</span>
+							</button>
+						{/each}
+					</div>
+				{/if}
+			{/if}
+		</div>
 
 		{#each semanticPath as crumb, i}
 			<span class="separator">&rsaquo;</span>
@@ -151,27 +184,29 @@
 					class:active={i === semanticPath.length - 1}
 					onclick={() => {
 						if (i === semanticPath.length - 1) {
-							// Toggle dropdown for active crumb
-							openDropdownIndex = openDropdownIndex === i ? null : i;
+							// Active crumb — show its children (current diagram's nodes)
+							const children = getSemanticChildren(i);
+							if (children.length > 0) {
+								openDropdownIndex = openDropdownIndex === i ? null : i;
+							}
 						} else {
 							handleSemanticCrumbClick(i);
 						}
 					}}
 				>
 					<span class="crumb-label">{crumb.label}</span>
-					<span class="crumb-chevron">&#9662;</span>
+					{#if i === semanticPath.length - 1 && getSemanticChildren(i).length > 0}
+						<span class="crumb-chevron">&#9662;</span>
+					{/if}
 				</button>
 				{#if openDropdownIndex === i}
+					{@const children = getSemanticChildren(i)}
 					<div class="crumb-dropdown">
-						{#each getSemanticSiblings(i) as sibling}
-							<button
-								class="dropdown-item"
-								class:current={sibling.id === crumb.nodeId}
-								onclick={() => handleSemanticDropdownItem(sibling, i)}
-							>
-								<span class="dropdown-color" style="background: {sibling.color};"></span>
-								<span class="dropdown-label">{sibling.label}</span>
-								<span class="dropdown-count">{sibling.fileCount}</span>
+						{#each children as child}
+							<button class="dropdown-item" onclick={() => handleSemanticDropdownItem(child, i)}>
+								<span class="dropdown-color" style="background: {child.color};"></span>
+								<span class="dropdown-label">{child.label}</span>
+								<span class="dropdown-count">{child.fileCount}</span>
 							</button>
 						{/each}
 					</div>
@@ -188,8 +223,12 @@
 			{/if}
 			{#if i === codePathSegments.length - 1}
 				<!-- Filename (last segment, no dropdown) -->
+				{@const fIcon = getFileIcon(segment)}
 				<span class="crumb active">
-					<span class="crumb-icon">&#128196;</span>
+					<span
+						class="crumb-icon material-symbols-outlined"
+						style={fIcon.color ? `color:${fIcon.color}` : ''}>{fIcon.icon}</span
+					>
 					<span class="crumb-label">{segment}</span>
 				</span>
 			{:else}
@@ -197,7 +236,11 @@
 				<div class="crumb-dropdown-wrapper">
 					<button class="crumb" onclick={() => handleCodeSegmentClick(i)}>
 						{#if i === 0}
-							<span class="crumb-icon">&#128193;</span>
+							{@const dIcon = getFolderIcon(true)}
+							<span
+								class="crumb-icon material-symbols-outlined"
+								style={dIcon.color ? `color:${dIcon.color}` : ''}>{dIcon.icon}</span
+							>
 						{/if}
 						<span class="crumb-label">{segment}</span>
 						<span class="crumb-chevron">&#9662;</span>
@@ -209,14 +252,17 @@
 								if (a.kind !== b.kind) return a.kind === 'directory' ? -1 : 1;
 								return a.name.localeCompare(b.name);
 							}) as item}
+								{@const itemIcon =
+									item.kind === 'directory' ? getFolderIcon(false) : getFileIcon(item.name)}
 								<button
 									class="dropdown-item"
 									class:current={i + 1 < codePathSegments.length &&
 										item.name === codePathSegments[i + 1]}
 									onclick={() => handleCodeDropdownItem(item)}
 								>
-									<span class="dropdown-icon"
-										>{item.kind === 'directory' ? '\uD83D\uDCC1' : '\uD83D\uDCC4'}</span
+									<span
+										class="dropdown-icon material-symbols-outlined"
+										style={itemIcon.color ? `color:${itemIcon.color}` : ''}>{itemIcon.icon}</span
 									>
 									<span class="dropdown-label">{item.name}</span>
 								</button>
@@ -284,7 +330,7 @@
 	}
 
 	.crumb-icon {
-		font-size: 11px;
+		font-size: 14px;
 	}
 
 	.crumb-label {
@@ -364,7 +410,7 @@
 	}
 
 	.dropdown-icon {
-		font-size: 12px;
+		font-size: 16px;
 		flex-shrink: 0;
 	}
 

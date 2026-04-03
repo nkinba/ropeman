@@ -221,7 +221,7 @@
 					<div class="hero-text">
 						<h1>{@html i18nStore.t('landing.headline')}</h1>
 						<p class="hero-sub">{i18nStore.t('landing.subheadline')}</p>
-						<button class="cta-btn" onclick={handleOpenDirectory}>
+						<button class="cta-btn" data-tour-step="1" onclick={handleOpenDirectory}>
 							<span class="material-symbols-outlined cta-icon">folder_open</span>
 							{i18nStore.t('landing.cta')}
 						</button>
@@ -269,6 +269,11 @@
 				</section>
 
 				<!-- SnippetEditor hidden from landing — available via direct URL -->
+
+				<footer class="landing-footer">
+					<span class="footer-copy">&copy; 2026 Ropeman. All rights reserved.</span>
+					<a class="footer-email" href="mailto:contact@ropeman.dev">contact@ropeman.dev</a>
+				</footer>
 			</div>
 		{/if}
 	</div>
@@ -601,5 +606,29 @@
 		.landing-features {
 			grid-template-columns: 1fr;
 		}
+	}
+
+	.landing-footer {
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		gap: 16px;
+		padding: 32px 0 24px;
+		font-size: 11px;
+		color: var(--text-muted);
+	}
+
+	.footer-copy {
+		letter-spacing: 0.02em;
+	}
+
+	.footer-email {
+		color: var(--text-secondary);
+		text-decoration: none;
+		transition: color 0.15s;
+	}
+
+	.footer-email:hover {
+		color: var(--accent);
 	}
 </style>

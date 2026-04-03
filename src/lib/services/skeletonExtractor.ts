@@ -10,8 +10,8 @@ import { settingsStore } from '$lib/stores/settingsStore.svelte';
 
 const SKIP_KINDS = new Set(['variable', 'interface', 'type']);
 
-// 기본값 150KB, settingsStore.maxSkeletonKB로 조절 가능
-const DEFAULT_MAX_SKELETON_KB = 150;
+// 기본값 250KB, settingsStore.maxSkeletonKB로 조절 가능
+const DEFAULT_MAX_SKELETON_KB = 250;
 
 // 핵심 디렉토리 (우선 포함)
 const CORE_DIR_PATTERNS = [
@@ -160,12 +160,25 @@ export function extractSubSkeleton(
 	fileTree: FileNode | null,
 	astMap: Map<string, ASTSymbol[]>
 ): SkeletonPayload {
-	const filePathSet = new Set(filePaths);
 	const files: SkeletonFile[] = [];
 	let totalSymbols = 0;
 
+	// Build a lookup for astMap keys by suffix to handle path prefix mismatches
+	// e.g. AI may return "src/lib/foo.ts" but astMap has "ropeman/src/lib/foo.ts"
+	const astKeysBySuffix = new Map<string, string>();
+	for (const key of astMap.keys()) {
+		astKeysBySuffix.set(key, key);
+		// Also index without the root prefix (e.g. "ropeman/src/..." → "src/...")
+		const slashIdx = key.indexOf('/');
+		if (slashIdx !== -1) {
+			astKeysBySuffix.set(key.substring(slashIdx + 1), key);
+		}
+	}
+
 	for (const filePath of filePaths) {
-		const astSymbols = astMap.get(filePath);
+		// Try exact match first, then suffix match
+		const resolvedKey = astMap.has(filePath) ? filePath : astKeysBySuffix.get(filePath);
+		const astSymbols = resolvedKey ? astMap.get(resolvedKey) : undefined;
 		if (!astSymbols || astSymbols.length === 0) continue;
 
 		const symbols: SkeletonSymbol[] = [];
