@@ -1,0 +1,197 @@
+<script lang="ts">
+	import type { PageProps } from './$types';
+
+	let { data }: PageProps = $props();
+
+	const ldJson = $derived(
+		JSON.stringify({
+			'@context': 'https://schema.org',
+			'@type': 'TechArticle',
+			headline: data.frontmatter.title,
+			description: data.frontmatter.description,
+			inLanguage: data.lang,
+			url: `https://ropeman.dev/docs/${data.lang}/${data.slug}`,
+			author: { '@type': 'Organization', name: 'Ropeman' }
+		})
+	);
+</script>
+
+<svelte:head>
+	<title>{data.frontmatter.title} | Ropeman Docs</title>
+	<meta name="description" content={data.frontmatter.description} />
+	<meta property="og:title" content={`${data.frontmatter.title} | Ropeman Docs`} />
+	<meta property="og:description" content={data.frontmatter.description} />
+	<meta property="og:type" content="article" />
+	<meta property="og:url" content={`https://ropeman.dev/docs/${data.lang}/${data.slug}`} />
+	<meta name="twitter:card" content="summary" />
+	<meta name="twitter:title" content={`${data.frontmatter.title} | Ropeman Docs`} />
+	<meta name="twitter:description" content={data.frontmatter.description} />
+	<link rel="alternate" hreflang="ko" href={`https://ropeman.dev/docs/ko/${data.slug}`} />
+	<link rel="alternate" hreflang="en" href={`https://ropeman.dev/docs/en/${data.slug}`} />
+	<link rel="alternate" hreflang="x-default" href={`https://ropeman.dev/docs/en/${data.slug}`} />
+	<!--
+		Schema.org JSON-LD. The closing script tag is split across two string
+		literals so the Svelte parser doesn't see a literal `</script>` in the
+		template source, which would terminate its lexer state early.
+	-->
+	<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+	{@html `<script type="application/ld+json">${ldJson}<` + `/script>`}
+</svelte:head>
+
+<article class="docs-article">
+	<header class="article-header">
+		<h1>{data.frontmatter.title}</h1>
+		{#if data.frontmatter.description}
+			<p class="article-lede">{data.frontmatter.description}</p>
+		{/if}
+	</header>
+	<div class="docs-content">
+		<data.component />
+	</div>
+</article>
+
+<style>
+	.docs-article {
+		max-width: 760px;
+		margin: 0 auto;
+		padding: 48px 32px 96px;
+		color: var(--text-primary);
+		font-family: var(--font-body);
+	}
+
+	.article-header {
+		margin-bottom: 40px;
+		padding-bottom: 24px;
+		border-bottom: 1px solid var(--border);
+	}
+
+	.article-header h1 {
+		font-family: var(--font-display);
+		font-size: 36px;
+		font-weight: 600;
+		line-height: 1.2;
+		margin: 0 0 12px;
+		color: var(--text-primary);
+	}
+
+	.article-lede {
+		font-size: 17px;
+		line-height: 1.6;
+		color: var(--text-secondary);
+		margin: 0;
+	}
+
+	.docs-content :global(h2) {
+		font-family: var(--font-display);
+		font-size: 26px;
+		font-weight: 600;
+		margin: 48px 0 16px;
+		color: var(--text-primary);
+		scroll-margin-top: 72px;
+	}
+
+	.docs-content :global(h3) {
+		font-family: var(--font-display);
+		font-size: 20px;
+		font-weight: 600;
+		margin: 32px 0 12px;
+		color: var(--text-primary);
+		scroll-margin-top: 72px;
+	}
+
+	.docs-content :global(p) {
+		font-size: 16px;
+		line-height: 1.75;
+		margin: 16px 0;
+	}
+
+	.docs-content :global(a) {
+		color: var(--accent);
+		text-decoration: none;
+		border-bottom: 1px solid transparent;
+		transition: border-color 0.15s ease;
+	}
+
+	.docs-content :global(a:hover) {
+		border-bottom-color: var(--accent);
+	}
+
+	.docs-content :global(ul),
+	.docs-content :global(ol) {
+		padding-left: 28px;
+		margin: 16px 0;
+	}
+
+	.docs-content :global(li) {
+		font-size: 16px;
+		line-height: 1.75;
+		margin: 6px 0;
+	}
+
+	.docs-content :global(code) {
+		font-family: var(--font-code);
+		font-size: 0.9em;
+		padding: 2px 6px;
+		background: var(--bg-secondary);
+		border: 1px solid var(--border);
+		border-radius: 4px;
+		color: var(--text-primary);
+	}
+
+	.docs-content :global(pre) {
+		background: var(--code-bg);
+		border: 1px solid var(--border);
+		border-radius: 8px;
+		padding: 16px 20px;
+		overflow-x: auto;
+		margin: 20px 0;
+	}
+
+	.docs-content :global(pre code) {
+		background: transparent;
+		border: none;
+		padding: 0;
+		color: var(--code-text);
+		font-size: 14px;
+		line-height: 1.6;
+	}
+
+	.docs-content :global(blockquote) {
+		border-left: 3px solid var(--accent);
+		padding: 8px 16px;
+		margin: 16px 0;
+		background: var(--bg-secondary);
+		color: var(--text-secondary);
+		border-radius: 0 6px 6px 0;
+	}
+
+	.docs-content :global(table) {
+		width: 100%;
+		border-collapse: collapse;
+		margin: 20px 0;
+		font-size: 14px;
+	}
+
+	.docs-content :global(th),
+	.docs-content :global(td) {
+		text-align: left;
+		padding: 10px 12px;
+		border-bottom: 1px solid var(--border);
+	}
+
+	.docs-content :global(th) {
+		font-weight: 600;
+		background: var(--bg-secondary);
+	}
+
+	.docs-content :global(img) {
+		max-width: 100%;
+		border-radius: 8px;
+	}
+
+	.docs-content :global(hr) {
+		border: none;
+		border-top: 1px solid var(--border);
+		margin: 32px 0;
+	}
+</style>
