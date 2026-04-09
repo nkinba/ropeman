@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import { i18nStore } from '$lib/stores/i18nStore.svelte';
 	import { onboardingStore } from '$lib/stores/onboardingStore.svelte';
 
@@ -46,19 +47,23 @@
 		faqItems: [
 			{
 				q: '제 프로젝트의 원본 소스 코드가 외부 서버로 유출되나요?',
-				a: '안심하셔도 됩니다. 어떠한 경우에도 원본 소스 코드는 외부로 전송되지 않습니다. AI가 맥락을 파악하기 위해 필요한 최소한의 코드 구조 정보(메타데이터)만 활용되며, AI 연동 모드에 따라 다음과 같이 처리됩니다.\n\n• WebGPU 모드 (최고 보안): 100% 기기 내부에서 오프라인으로 처리되며, 어떠한 데이터도 외부로 나가지 않습니다.\n• Demo / API Key 모드: 보안이 적용된 자체 중계 서버를 거쳐 AI 모델 제공사로 안전하게 전달됩니다.\n• Bridge 모드: 로컬에 설치된 CLI 툴을 통해 AI 모델 제공사의 서버로 직접 전송됩니다.'
+				a: '안심하셔도 됩니다. 어떠한 경우에도 원본 소스 코드는 외부로 전송되지 않습니다. AI가 맥락을 파악하기 위해 필요한 최소한의 코드 구조 정보(메타데이터)만 활용되며, AI 연동 모드에 따라 다음과 같이 처리됩니다.\n\n• WebGPU 모드 (최고 보안): 100% 기기 내부에서 오프라인으로 처리되며, 어떠한 데이터도 외부로 나가지 않습니다.\n• Demo / API Key 모드: 보안이 적용된 자체 중계 서버를 거쳐 AI 모델 제공사로 안전하게 전달됩니다.\n• Bridge 모드: 로컬에 설치된 CLI 툴을 통해 AI 모델 제공사의 서버로 직접 전송됩니다.',
+				slug: 'security'
 			},
 			{
 				q: '어떤 프로그래밍 언어를 지원하나요?',
-				a: 'Python, JavaScript, TypeScript, Go, Rust, Java, C, C++, Ruby, PHP, Swift, Kotlin, C#, Scala를 지원합니다.'
+				a: 'Python, JavaScript, TypeScript, Go, Rust, Java, C, C++, Ruby, PHP, Swift, Kotlin, C#, Scala를 지원합니다.',
+				slug: 'getting-started'
 			},
 			{
 				q: '프로젝트 크기에 제한이 있나요?',
-				a: '파일 수 최대 2,000개, 개별 파일 최대 500KB까지 지원합니다. 대규모 프로젝트는 설정에서 코드 구조 요약 크기를 조절하세요.'
+				a: '파일 수 최대 2,000개, 개별 파일 최대 500KB까지 지원합니다. 대규모 프로젝트는 설정에서 코드 구조 요약 크기를 조절하세요.',
+				slug: 'troubleshooting'
 			},
 			{
 				q: '입력한 API 키는 안전하게 보관되나요?',
-				a: 'API 키는 저희 서버에 절대 저장되지 않으며, 오직 사용자 기기의 브라우저 로컬 저장소에만 보관됩니다.\n\n• API Key 모드: 브라우저에 저장된 키는 API 호출 시에만 일회성으로 사용되며, 보안 통신을 통해 AI 모델 제공사로 전달됩니다.\n• Bridge 모드: 별도의 API 키 입력 없이, 로컬에 연동된 CLI 툴의 인증 방식을 그대로 사용합니다.\n• WebGPU 모드: 오프라인으로 동작하므로 API 키 자체가 필요하지 않습니다.\n\n설정 초기화로 언제든 삭제할 수 있습니다.'
+				a: 'API 키는 저희 서버에 절대 저장되지 않으며, 오직 사용자 기기의 브라우저 로컬 저장소에만 보관됩니다.\n\n• API Key 모드: 브라우저에 저장된 키는 API 호출 시에만 일회성으로 사용되며, 보안 통신을 통해 AI 모델 제공사로 전달됩니다.\n• Bridge 모드: 별도의 API 키 입력 없이, 로컬에 연동된 CLI 툴의 인증 방식을 그대로 사용합니다.\n• WebGPU 모드: 오프라인으로 동작하므로 API 키 자체가 필요하지 않습니다.\n\n설정 초기화로 언제든 삭제할 수 있습니다.',
+				slug: 'security'
 			}
 		]
 	};
@@ -79,19 +84,23 @@
 		faqItems: [
 			{
 				q: 'Is my original source code ever sent to an external server?',
-				a: 'Rest assured — your original source code is never transmitted externally under any circumstances. Only minimal code structure information (metadata) is used for AI context, and it is handled securely based on your chosen AI mode.\n\n• WebGPU mode (highest security): Processed 100% offline on your device. No data leaves your machine.\n• Demo / API Key mode: Routed through our secure relay server to the AI model provider.\n• Bridge mode: Sent directly to the AI provider via your locally installed CLI tool.'
+				a: 'Rest assured — your original source code is never transmitted externally under any circumstances. Only minimal code structure information (metadata) is used for AI context, and it is handled securely based on your chosen AI mode.\n\n• WebGPU mode (highest security): Processed 100% offline on your device. No data leaves your machine.\n• Demo / API Key mode: Routed through our secure relay server to the AI model provider.\n• Bridge mode: Sent directly to the AI provider via your locally installed CLI tool.',
+				slug: 'security'
 			},
 			{
 				q: 'What programming languages are supported?',
-				a: 'Python, JavaScript, TypeScript, Go, Rust, Java, C, C++, Ruby, PHP, Swift, Kotlin, C#, and Scala.'
+				a: 'Python, JavaScript, TypeScript, Go, Rust, Java, C, C++, Ruby, PHP, Swift, Kotlin, C#, and Scala.',
+				slug: 'getting-started'
 			},
 			{
 				q: 'Are there project size limits?',
-				a: 'Up to 2,000 files and 500KB per individual file. For large projects, adjust the code summary size limit in Settings.'
+				a: 'Up to 2,000 files and 500KB per individual file. For large projects, adjust the code summary size limit in Settings.',
+				slug: 'troubleshooting'
 			},
 			{
 				q: 'Are my API keys stored securely?',
-				a: "API keys are never stored on our servers — they are kept only in your browser's local storage on your device.\n\n• API Key mode: Keys are used only at the moment of an API call and securely transmitted to the AI model provider.\n• Bridge mode: No API key input is needed. It inherits the authentication of your locally configured CLI tool.\n• WebGPU mode: Runs offline, so no API key is required at all.\n\nYou can delete keys anytime by resetting settings."
+				a: "API keys are never stored on our servers — they are kept only in your browser's local storage on your device.\n\n• API Key mode: Keys are used only at the moment of an API call and securely transmitted to the AI model provider.\n• Bridge mode: No API key input is needed. It inherits the authentication of your locally configured CLI tool.\n• WebGPU mode: Runs offline, so no API key is required at all.\n\nYou can delete keys anytime by resetting settings.",
+				slug: 'security'
 			}
 		]
 	};
@@ -237,6 +246,12 @@
 								<details class="faq-item">
 									<summary class="faq-question">{item.q}</summary>
 									<p class="faq-answer">{item.a}</p>
+									<a
+										class="faq-learn-more"
+										href={resolve(`/docs/${i18nStore.locale}/${item.slug}`)}
+									>
+										{i18nStore.t('docs.learnMore')} →
+									</a>
 								</details>
 							{/each}
 						</div>
@@ -525,9 +540,23 @@
 		font-size: 12px;
 		color: var(--text-secondary);
 		line-height: 1.6;
-		padding: 0 12px 12px;
+		padding: 0 12px 8px;
 		margin: 0;
 		white-space: pre-line;
+	}
+
+	.faq-learn-more {
+		display: inline-block;
+		margin: 0 12px 12px;
+		padding: 0;
+		font-size: 12px;
+		color: var(--accent);
+		text-decoration: none;
+		font-weight: 500;
+	}
+
+	.faq-learn-more:hover {
+		text-decoration: underline;
 	}
 
 	/* Footer */

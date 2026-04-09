@@ -60,6 +60,20 @@ interface HelpTranslations {
 	faqItems: { q: string; a: string }[];
 }
 
+interface DocsTranslations {
+	title: string;
+	backToApp: string;
+	onThisPage: string;
+	menu: string;
+	categoryIntro: string;
+	categoryGuides: string;
+	categoryReference: string;
+	categorySupport: string;
+	headerLink: string;
+	footerLink: string;
+	learnMore: string;
+}
+
 interface OnboardingStepTranslation {
 	title: string;
 	desc: string;
@@ -137,6 +151,7 @@ interface TranslationSet {
 	};
 	help: HelpTranslations;
 	onboarding: OnboardingTranslations;
+	docs: DocsTranslations;
 }
 
 const translations: Record<Locale, TranslationSet> = {
@@ -320,6 +335,19 @@ const translations: Record<Locale, TranslationSet> = {
 				title: '분할 뷰',
 				desc: 'Ctrl+\\ 로 다이어그램과 코드를 동시에 볼 수 있습니다. 탭을 드래그하여 분할할 수도 있습니다.'
 			}
+		},
+		docs: {
+			title: '문서',
+			backToApp: '앱으로 돌아가기',
+			onThisPage: '이 페이지',
+			menu: '메뉴',
+			categoryIntro: '시작하기',
+			categoryGuides: '가이드',
+			categoryReference: '레퍼런스',
+			categorySupport: '도움말',
+			headerLink: '문서',
+			footerLink: '문서',
+			learnMore: '자세히 보기'
 		}
 	},
 	en: {
@@ -503,6 +531,19 @@ const translations: Record<Locale, TranslationSet> = {
 				title: 'Split View',
 				desc: 'Press Ctrl+\\ to view the diagram and code side by side. You can also drag a tab to split.'
 			}
+		},
+		docs: {
+			title: 'Documentation',
+			backToApp: 'Back to App',
+			onThisPage: 'On this page',
+			menu: 'Menu',
+			categoryIntro: 'Getting Started',
+			categoryGuides: 'Guides',
+			categoryReference: 'Reference',
+			categorySupport: 'Support',
+			headerLink: 'Docs',
+			footerLink: 'Docs',
+			learnMore: 'Learn more'
 		}
 	}
 };

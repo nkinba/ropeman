@@ -73,5 +73,25 @@ describe('i18nStore', () => {
 			i18nStore.locale = 'en';
 			expect(i18nStore.t('legend.title')).toBe('Legend');
 		});
+
+		it('resolves docs keys in ko', () => {
+			expect(i18nStore.t('docs.headerLink')).toBe('문서');
+			expect(i18nStore.t('docs.backToApp')).toBe('앱으로 돌아가기');
+			expect(i18nStore.t('docs.onThisPage')).toBe('이 페이지');
+		});
+
+		it('resolves docs keys in en', () => {
+			i18nStore.locale = 'en';
+			expect(i18nStore.t('docs.headerLink')).toBe('Docs');
+			expect(i18nStore.t('docs.backToApp')).toBe('Back to App');
+			expect(i18nStore.t('docs.onThisPage')).toBe('On this page');
+		});
+
+		it('resolves docs category labels', () => {
+			expect(i18nStore.t('docs.categoryIntro')).toBe('시작하기');
+			expect(i18nStore.t('docs.categoryGuides')).toBe('가이드');
+			expect(i18nStore.t('docs.categoryReference')).toBe('레퍼런스');
+			expect(i18nStore.t('docs.categorySupport')).toBe('도움말');
+		});
 	});
 });

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import { themeStore } from '$lib/stores/themeStore.svelte';
 	import { i18nStore } from '$lib/stores/i18nStore.svelte';
 	import { projectStore } from '$lib/stores/projectStore.svelte';
@@ -103,6 +104,13 @@
 		>
 			{themeStore.current === 'dark' ? '\u2600' : '\u263D'}
 		</button>
+		<a
+			class="header-btn header-link"
+			href={resolve(`/docs/${i18nStore.locale}/getting-started`)}
+			title={i18nStore.t('docs.headerLink')}
+		>
+			<span class="material-symbols-outlined" style="font-size:18px;">menu_book</span>
+		</a>
 		<button class="header-btn" onclick={onhelp} title="{i18nStore.t('shortcuts.showHelp')} (?)">
 			<span class="material-symbols-outlined" style="font-size:18px;">help_outline</span>
 		</button>
@@ -218,6 +226,10 @@
 	.header-btn:hover {
 		background: var(--bg-tertiary);
 		color: var(--text-primary);
+	}
+
+	.header-link {
+		text-decoration: none;
 	}
 
 	.header-btn.text-btn {

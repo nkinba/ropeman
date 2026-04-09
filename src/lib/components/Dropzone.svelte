@@ -9,6 +9,7 @@
 		handleFallbackInput
 	} from '$lib/services/fileSystemService';
 	import { parseAllFiles } from '$lib/services/parserService';
+	import { resolve } from '$app/paths';
 	import { i18nStore } from '$lib/stores/i18nStore.svelte';
 	import HeroIllustration from './HeroIllustration.svelte';
 
@@ -272,7 +273,10 @@
 
 				<footer class="landing-footer">
 					<span class="footer-copy">&copy; 2026 Ropeman. All rights reserved.</span>
-					<a class="footer-email" href="mailto:contact@ropeman.dev">contact@ropeman.dev</a>
+					<a class="footer-link" href={resolve(`/docs/${i18nStore.locale}/getting-started`)}>
+						{i18nStore.t('docs.footerLink')}
+					</a>
+					<a class="footer-link" href="mailto:contact@ropeman.dev">contact@ropeman.dev</a>
 				</footer>
 			</div>
 		{/if}
@@ -622,13 +626,13 @@
 		letter-spacing: 0.02em;
 	}
 
-	.footer-email {
+	.footer-link {
 		color: var(--text-secondary);
 		text-decoration: none;
 		transition: color 0.15s;
 	}
 
-	.footer-email:hover {
+	.footer-link:hover {
 		color: var(--accent);
 	}
 </style>
