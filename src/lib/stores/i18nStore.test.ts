@@ -53,7 +53,7 @@ describe('i18nStore', () => {
 
 		it('resolves nested English keys', () => {
 			i18nStore.locale = 'en';
-			expect(i18nStore.t('landing.cta')).toBe('폴더 열기');
+			expect(i18nStore.t('landing.cta')).toBe('Open Folder');
 		});
 
 		it('returns key string for unknown keys', () => {

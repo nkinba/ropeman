@@ -95,6 +95,13 @@ function createTabStore() {
 		},
 
 		get viewMode(): 'semantic' | 'code' {
+			// In split mode, check the focused pane's active tab
+			if (layoutStore.isSplit) {
+				const focusedTabId =
+					layoutStore.focusedPane === 'secondary' ? layoutStore.secondaryActiveTabId : activeTabId;
+				const active = tabs.find((t) => t.id === focusedTabId);
+				return active?.type === 'diagram' ? 'semantic' : 'code';
+			}
 			const active = tabs.find((t) => t.id === activeTabId);
 			return active?.type === 'diagram' ? 'semantic' : 'code';
 		},

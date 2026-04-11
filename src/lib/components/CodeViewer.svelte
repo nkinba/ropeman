@@ -143,12 +143,27 @@
 
 			const fileNode = findFileNode(tree, path) as (FileNode & { _absolutePath?: string }) | null;
 
-			// Try FileSystemFileHandle first (production mode)
+			// Try FileSystemFileHandle (local folder mode)
 			if (fileNode?.handle && fileNode.handle.kind === 'file') {
 				const file = await (fileNode.handle as FileSystemFileHandle).getFile();
 				fileContent = await file.text();
 				currentFilePath = path;
 				return;
+			}
+
+			// Try GitHub on-demand fetch
+			const gh = projectStore.githubInfo;
+			if (gh) {
+				// path format: "repo/src/file.ts" → strip repo prefix
+				const repoPrefix = gh.repo + '/';
+				const relativePath = path.startsWith(repoPrefix) ? path.slice(repoPrefix.length) : path;
+				const rawUrl = `https://raw.githubusercontent.com/${gh.owner}/${gh.repo}/${gh.ref}/${relativePath}`;
+				const res = await fetch(rawUrl);
+				if (res.ok) {
+					fileContent = await res.text();
+					currentFilePath = path;
+					return;
+				}
 			}
 
 			// Try dev mode API with absolute path

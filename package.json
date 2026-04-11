@@ -15,7 +15,11 @@
 		"test:e2e": "playwright test",
 		"prepare": "husky",
 		"gen": "wrangler types",
-		"deploy": "npm run build && wrangler deploy",
+		"deploy": "npm run build && npx wrangler pages deploy .svelte-kit/cloudflare --project-name=ropeman --branch=main --commit-dirty=false",
+		"deploy:app": "npm run deploy",
+		"deploy:edge:demo": "npm --prefix edge-proxy run deploy:demo",
+		"deploy:edge:proxy": "npm --prefix edge-proxy run deploy:proxy",
+		"deploy:edge:github": "npm --prefix edge-proxy run deploy:github",
 		"cf-typegen": "wrangler types"
 	},
 	"devDependencies": {
