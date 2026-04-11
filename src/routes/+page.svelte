@@ -185,7 +185,9 @@
 	// Code-mode file detail panel disabled — info already visible in code header & breadcrumb
 	const hasSelection = $derived(false);
 	const hasSemanticSelection = $derived(
-		tabStore.viewMode === 'semantic' &&
+		(tabStore.viewMode === 'semantic' ||
+			(layoutStore.isSplit &&
+				tabStore.viewModeForTab(layoutStore.secondaryActiveTabId) === 'semantic')) &&
 			semanticStore.selectedSemanticNode !== null &&
 			!semanticStore.panelDismissed
 	);
@@ -385,6 +387,11 @@
 				const primaryTabs = tabStore.tabsForPane('primary');
 				tabStore.closeTab(tabStore.activeTabId);
 				if (layoutStore.isSplit && primaryTabs.length <= 1) {
+					tabStore.mergeSecondaryToPrimary();
+					const remaining = tabStore.tabsForPane('primary');
+					if (remaining.length > 0) {
+						tabStore.activateTab(remaining[0].id);
+					}
 					layoutStore.isSplit = false;
 				}
 			}

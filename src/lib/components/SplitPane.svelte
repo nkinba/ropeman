@@ -66,6 +66,12 @@
 		const tabCount = tabStore.tabsForPane('primary').length;
 		tabStore.closeTab(tabId);
 		if (tabCount <= 1) {
+			// Merge remaining secondary tabs to primary before closing split
+			tabStore.mergeSecondaryToPrimary();
+			const remaining = tabStore.tabsForPane('primary');
+			if (remaining.length > 0) {
+				tabStore.activateTab(remaining[0].id);
+			}
 			layoutStore.isSplit = false;
 		}
 	}
@@ -73,7 +79,6 @@
 	function handleSecondaryClose(tabId: string) {
 		const tabCount = tabStore.tabsForPane('secondary').length;
 		tabStore.closeTab(tabId);
-		// If no more secondary tabs, close split
 		if (tabCount <= 1) {
 			layoutStore.isSplit = false;
 		}
@@ -99,6 +104,12 @@
 		tabStore.moveTabToPane(tabId, 'secondary');
 		layoutStore.secondaryActiveTabId = tabId;
 		layoutStore.focusedPane = 'secondary';
+		// If primary has no more tabs, close split and merge all to primary
+		if (tabStore.tabsForPane('primary').length === 0) {
+			tabStore.mergeSecondaryToPrimary();
+			tabStore.activateTab(tabId);
+			layoutStore.isSplit = false;
+		}
 	}
 </script>
 

@@ -59,14 +59,17 @@ Open [http://localhost:5173](http://localhost:5173) in a Chromium-based browser 
 
 ### Scripts
 
-| Command             | Description                |
-| ------------------- | -------------------------- |
-| `npm run dev`       | Start dev server           |
-| `npm run build`     | Production build           |
-| `npm run test:unit` | Run unit tests (Vitest)    |
-| `npm run test:e2e`  | Run E2E tests (Playwright) |
-| `npm run lint`      | Lint with ESLint           |
-| `npm run format`    | Format with Prettier       |
+| Command                     | Description                    |
+| --------------------------- | ------------------------------ |
+| `npm run dev`               | Start dev server               |
+| `npm run build`             | Production build               |
+| `npm run test:unit`         | Run unit tests (Vitest)        |
+| `npm run test:e2e`          | Run E2E tests (Playwright)     |
+| `npm run lint`              | Lint with ESLint               |
+| `npm run format`            | Format with Prettier           |
+| `npm run deploy`            | Deploy Pages app to Cloudflare |
+| `npm run deploy:edge:demo`  | Deploy edge demo Worker        |
+| `npm run deploy:edge:proxy` | Deploy edge proxy Worker       |
 
 ## AI Modes
 

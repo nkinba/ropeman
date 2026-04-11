@@ -13,6 +13,7 @@ interface ProjectState {
 function createProjectStore() {
 	let fileTree = $state.raw<FileNode | null>(null);
 	let astMap = $state.raw<Map<string, ASTSymbol[]>>(new Map());
+	let githubInfo = $state<{ owner: string; repo: string; ref: string } | null>(null);
 	let isLoading = $state(false);
 	let projectName = $state('');
 	let parsingProgress = $state({ done: 0, total: 0 });
@@ -31,6 +32,14 @@ function createProjectStore() {
 		},
 		set astMap(v: Map<string, ASTSymbol[]>) {
 			astMap = v;
+		},
+
+		/** GitHub repo info for on-demand file fetching */
+		get githubInfo() {
+			return githubInfo;
+		},
+		set githubInfo(v: { owner: string; repo: string; ref: string } | null) {
+			githubInfo = v;
 		},
 
 		get isLoading() {
@@ -64,6 +73,7 @@ function createProjectStore() {
 		reset() {
 			fileTree = null;
 			astMap = new Map();
+			githubInfo = null;
 			isLoading = false;
 			projectName = '';
 			parsingProgress = { done: 0, total: 0 };

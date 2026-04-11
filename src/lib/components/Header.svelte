@@ -22,6 +22,10 @@
 	} = $props();
 
 	const hasProject = $derived(projectStore.fileTree !== null);
+	const isParsing = $derived(
+		projectStore.parsingProgress.total > 0 &&
+			projectStore.parsingProgress.done < projectStore.parsingProgress.total
+	);
 
 	const trackInfo = $derived.by(() => {
 		const track = authStore.activeTrack;
@@ -74,23 +78,29 @@
 				class="analyze-btn"
 				data-tour-step="2"
 				onclick={() => onanalyze?.()}
+				disabled={isParsing}
 				title="AI Semantic Analysis"
 			>
-				<svg
-					width="14"
-					height="14"
-					viewBox="0 0 24 24"
-					fill="none"
-					stroke="currentColor"
-					stroke-width="2.5"
-					stroke-linecap="round"
-					stroke-linejoin="round"
-				>
-					<polygon
-						points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
-					/>
-				</svg>
-				Analyze
+				{#if isParsing}
+					<span class="material-symbols-outlined analyze-spinner">progress_activity</span>
+					{projectStore.parsingProgress.done}/{projectStore.parsingProgress.total}
+				{:else}
+					<svg
+						width="14"
+						height="14"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="2.5"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+					>
+						<polygon
+							points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
+						/>
+					</svg>
+					Analyze
+				{/if}
 			</button>
 		{/if}
 		<div class="header-divider"></div>
@@ -273,8 +283,24 @@
 		transition: opacity 0.2s;
 	}
 
-	.analyze-btn:hover {
+	.analyze-btn:hover:not(:disabled) {
 		opacity: 0.85;
+	}
+
+	.analyze-btn:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+
+	.analyze-spinner {
+		font-size: 14px;
+		animation: spin 0.8s linear infinite;
+	}
+
+	@keyframes spin {
+		to {
+			transform: rotate(360deg);
+		}
 	}
 
 	.track-badge {

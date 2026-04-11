@@ -11,6 +11,14 @@ interface LandingTranslations {
 	featureDrillDesc: string;
 	featureBrowserTitle: string;
 	featureBrowserDesc: string;
+	githubPlaceholder: string;
+	githubLoad: string;
+	githubOr: string;
+	githubInvalidUrl: string;
+	githubNotFound: string;
+	githubRateLimit: string;
+	githubPrivate: string;
+	githubLoadError: string;
 }
 
 interface SnippetTranslations {
@@ -209,7 +217,15 @@ const translations: Record<Locale, TranslationSet> = {
 				'고수준 아키텍처 다이어그램에서 특정 코드 라인까지, 맥락을 잃지 않고 탐색합니다.',
 			featureBrowserTitle: 'Multi-Track AI',
 			featureBrowserDesc:
-				'Demo · API Key · Local Bridge · Browser AI — 4가지 분석 방식을 제공합니다. 소스 코드 원문은 어떤 모드에서도 외부로 전송되지 않습니다.'
+				'Demo · API Key · Local Bridge · Browser AI — 4가지 분석 방식을 제공합니다. 소스 코드 원문은 어떤 모드에서도 외부로 전송되지 않습니다.',
+			githubPlaceholder: 'https://github.com/owner/repo',
+			githubLoad: '분석',
+			githubOr: '또는 GitHub 저장소 URL을 입력하세요',
+			githubInvalidUrl: '유효한 GitHub 저장소 URL을 입력해주세요.',
+			githubNotFound: '저장소를 찾을 수 없습니다. URL을 확인해주세요.',
+			githubRateLimit: 'GitHub API 요청 한도 초과. 잠시 후 다시 시도해주세요.',
+			githubPrivate: '비공개 저장소는 지원하지 않습니다.',
+			githubLoadError: 'GitHub 저장소 로딩에 실패했습니다.'
 		},
 		snippet: {
 			divider: '또는 코드 스니펫으로 체험하기',
@@ -395,7 +411,7 @@ const translations: Record<Locale, TranslationSet> = {
 			headline: 'Visualize code<br/><span class="headline-accent">architecture with AI</span>',
 			subheadline:
 				'AI semantically analyzes your codebase, instantly visualizing roles and dependencies as diagrams.',
-			cta: '폴더 열기',
+			cta: 'Open Folder',
 			dragHint: 'or drag & drop a folder here',
 			featureAiTitle: 'AI Semantic Analysis',
 			featureAiDesc:
@@ -405,7 +421,15 @@ const translations: Record<Locale, TranslationSet> = {
 				'Navigate from high-level architecture diagrams down to specific lines of code without losing context.',
 			featureBrowserTitle: 'Multi-Track AI',
 			featureBrowserDesc:
-				'Demo · API Key · Local Bridge · Browser AI — choose from 4 analysis modes. Source code is never sent externally in any mode.'
+				'Demo · API Key · Local Bridge · Browser AI — choose from 4 analysis modes. Source code is never sent externally in any mode.',
+			githubPlaceholder: 'https://github.com/owner/repo',
+			githubLoad: 'Load',
+			githubOr: 'or enter a GitHub repository URL',
+			githubInvalidUrl: 'Please enter a valid GitHub repository URL.',
+			githubNotFound: 'Repository not found. Please check the URL.',
+			githubRateLimit: 'GitHub API rate limit exceeded. Please try again later.',
+			githubPrivate: 'Private repositories are not supported.',
+			githubLoadError: 'Failed to load GitHub repository.'
 		},
 		snippet: {
 			divider: 'or try a code snippet',

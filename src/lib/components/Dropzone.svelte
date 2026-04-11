@@ -12,6 +12,7 @@
 	import { resolve } from '$app/paths';
 	import { i18nStore } from '$lib/stores/i18nStore.svelte';
 	import HeroIllustration from './HeroIllustration.svelte';
+	import { parseGitHubUrl } from '$lib/utils/githubUrl';
 
 	let { oncancel, onload }: { oncancel?: () => void; onload?: () => void } = $props();
 
@@ -61,6 +62,8 @@
 	let isDragOver = $state(false);
 	let error = $state('');
 	let fallbackInput = $state<HTMLInputElement>(null!);
+	let githubUrl = $state('');
+	let isLoadingGithub = $state(false);
 
 	const supportsDirectoryPicker = typeof window !== 'undefined' && 'showDirectoryPicker' in window;
 
@@ -154,6 +157,46 @@
 		}
 	}
 
+	async function handleGitHubLoad() {
+		error = '';
+		const parsed = parseGitHubUrl(githubUrl);
+		if (!parsed) {
+			error = i18nStore.t('landing.githubInvalidUrl');
+			return;
+		}
+
+		isLoadingGithub = true;
+		error = '';
+
+		try {
+			resetStores();
+			projectStore.projectName = parsed.repo;
+			const { loadGitHubRepo } = await import('$lib/services/githubLoader');
+			await loadGitHubRepo(parsed);
+			onload?.();
+		} catch (err: any) {
+			resetStores();
+			const status = err?.status;
+			if (status === 404) {
+				error = i18nStore.t('landing.githubNotFound');
+			} else if (status === 403) {
+				error = i18nStore.t('landing.githubRateLimit');
+			} else if (status === 401) {
+				error = i18nStore.t('landing.githubPrivate');
+			} else {
+				error = i18nStore.t('landing.githubLoadError');
+			}
+		} finally {
+			isLoadingGithub = false;
+		}
+	}
+
+	function handleGitHubKeydown(e: KeyboardEvent) {
+		if (e.key === 'Enter') {
+			handleGitHubLoad();
+		}
+	}
+
 	async function loadFromDirectoryHandle(dirHandle: FileSystemDirectoryHandle) {
 		resetStores();
 		projectStore.isLoading = true;
@@ -227,6 +270,31 @@
 							{i18nStore.t('landing.cta')}
 						</button>
 						<p class="drag-hint">{i18nStore.t('landing.dragHint')}</p>
+						<div class="github-input-section">
+							<p class="github-or">{i18nStore.t('landing.githubOr')}</p>
+							<div class="github-input-row">
+								<input
+									type="text"
+									class="github-input"
+									placeholder={i18nStore.t('landing.githubPlaceholder')}
+									bind:value={githubUrl}
+									onkeydown={handleGitHubKeydown}
+									disabled={isLoadingGithub}
+								/>
+								<button
+									class="github-load-btn"
+									onclick={handleGitHubLoad}
+									disabled={isLoadingGithub || !githubUrl.trim()}
+								>
+									{#if isLoadingGithub}
+										<span class="material-symbols-outlined github-spinner">progress_activity</span>
+									{:else}
+										<span class="material-symbols-outlined">play_arrow</span>
+									{/if}
+									{i18nStore.t('landing.githubLoad')}
+								</button>
+							</div>
+						</div>
 						<div class="hero-languages">
 							{#each languages as lang}
 								<span class="hero-lang" style="color: {lang.color}">
@@ -419,6 +487,85 @@
 		font-family: var(--font-code);
 		font-size: 14px;
 		color: var(--text-muted);
+	}
+
+	/* GitHub URL input */
+	.github-input-section {
+		margin-top: 20px;
+	}
+
+	.github-or {
+		font-family: var(--font-code);
+		font-size: 14px;
+		color: var(--text-muted);
+		margin-bottom: 8px;
+	}
+
+	.github-input-row {
+		display: flex;
+		gap: 8px;
+		align-items: center;
+		max-width: 448px;
+	}
+
+	.github-input {
+		flex: 1;
+		padding: 10px 14px;
+		background: var(--bg-secondary);
+		border: 1px solid var(--ghost-border);
+		border-radius: 8px;
+		color: var(--text-primary);
+		font-family: var(--font-code);
+		font-size: 14px;
+		outline: none;
+		transition: border-color 0.15s ease;
+	}
+
+	.github-input:focus {
+		border-color: var(--accent);
+	}
+
+	.github-input:disabled {
+		opacity: 0.5;
+	}
+
+	.github-input::placeholder {
+		color: var(--text-muted);
+	}
+
+	.github-load-btn {
+		display: inline-flex;
+		align-items: center;
+		gap: 4px;
+		padding: 10px 16px;
+		background: var(--bg-secondary);
+		border: 1px solid var(--ghost-border);
+		border-radius: 8px;
+		color: var(--text-primary);
+		font-family: var(--font-display);
+		font-size: 14px;
+		font-weight: 600;
+		cursor: pointer;
+		transition: all 0.15s ease;
+		white-space: nowrap;
+	}
+
+	.github-load-btn:hover:not(:disabled) {
+		border-color: var(--accent);
+		color: var(--accent);
+	}
+
+	.github-load-btn:disabled {
+		opacity: 0.4;
+		cursor: not-allowed;
+	}
+
+	.github-load-btn .material-symbols-outlined {
+		font-size: 18px;
+	}
+
+	.github-spinner {
+		animation: spin 0.8s linear infinite;
 	}
 
 	.hero-languages {
