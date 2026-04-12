@@ -185,6 +185,10 @@ function createSemanticStore() {
 			return cache.has(key);
 		},
 
+		setCachedLevel(key: string, level: SemanticLevel) {
+			cache = new Map(cache).set(key, level);
+		},
+
 		invalidateCache(key: string) {
 			const next = new Map(cache);
 			next.delete(key);

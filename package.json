@@ -20,6 +20,7 @@
 		"deploy:edge:demo": "npm --prefix edge-proxy run deploy:demo",
 		"deploy:edge:proxy": "npm --prefix edge-proxy run deploy:proxy",
 		"deploy:edge:github": "npm --prefix edge-proxy run deploy:github",
+		"deploy:edge:share": "npm --prefix edge-proxy run deploy:share",
 		"cf-typegen": "wrangler types"
 	},
 	"devDependencies": {

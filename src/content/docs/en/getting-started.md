@@ -26,6 +26,16 @@ The fastest path to your first diagram is **Demo mode**. No API key, no installa
 
 That's it. The resulting diagram is cached in your browser, so reopening the same folder is instant.
 
+## Analyze a GitHub Repository
+
+Don't have a local project handy? You can analyze any public GitHub repository directly from the landing page.
+
+1. Paste a GitHub repository URL into the URL input field (e.g., `https://github.com/owner/repo`).
+2. Click **Load** — Ropeman fetches the repository's file structure and parses it automatically.
+3. From here, everything works the same as a local folder: AI analysis, drill-down, and code viewer are all available.
+
+Only public repositories are supported. Private repositories cannot be analyzed.
+
 ## Supported Languages
 
 Ropeman parses **14 languages** out of the box, all entirely in your browser: Python, JavaScript, TypeScript, Go, Rust, Java, C, C++, Ruby, PHP, Swift, Kotlin, C#, and Scala.

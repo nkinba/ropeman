@@ -4,3 +4,6 @@ export const PROXY_URL = 'https://proxy.ropeman.dev';
 
 /** GitHub proxy — empty string = direct GitHub API (rate-limited) */
 export const GITHUB_PROXY_URL = '';
+
+/** Share API proxy URL */
+export const SHARE_URL = 'https://share.ropeman.dev';

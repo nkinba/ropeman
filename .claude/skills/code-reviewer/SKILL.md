@@ -1,220 +1,82 @@
 ---
 name: code-reviewer
-description: Comprehensive code review skill for TypeScript, JavaScript, Python, Swift, Kotlin, Go. Includes automated code analysis, best practice checking, security scanning, and review checklist generation. Use when reviewing pull requests, providing code feedback, identifying issues, or ensuring code quality standards.
+description: Project-specific code review for Ropeman. Reviews changed files against domain knowledge (Svelte 5 runes, AI tracks, Edge Workers, file limits) and reports Critical/Warning/Suggestion issues. Use during sprint completion before commit/PR, after implementing a feature, or when reviewing a diff.
 ---
 
-# Code Reviewer
+# Code Reviewer (Ropeman)
 
-Complete toolkit for code reviewer with modern tools and best practices.
+Ropeman 프로젝트 맞춤 코드 리뷰 스킬. 변경된 파일을 프로젝트 도메인 지식(Svelte 5 runes, AI provider, Edge Workers, MAX_FILES 등)에 따라 검토합니다.
 
-## Quick Start
+## 수행 절차
 
-### Main Capabilities
+### 1. 변경 파일 수집
 
-This skill provides three core capabilities through automated scripts:
+- `git diff --stat HEAD`로 변경된 파일 목록 확인
+- `git status -u`로 untracked 파일 확인
+- 스프린트 작업 파일만 리뷰 대상으로 삼음 (빌드 산출물, `.spec`은 제외)
 
-```bash
-# Script 1: Pr Analyzer
-python scripts/pr_analyzer.py [options]
+### 2. Agent로 리뷰 위임
 
-# Script 2: Code Quality Checker
-python scripts/code_quality_checker.py [options]
+`Explore` 서브에이전트에 리뷰를 위임합니다. 이유: 메인 컨텍스트에 리뷰 노이즈가 쌓이지 않고, 여러 파일을 병렬 검토 가능.
 
-# Script 3: Review Report Generator
-python scripts/review_report_generator.py [options]
+프롬프트에 포함할 내용:
+
+- 리뷰 대상 파일 목록 (신규/수정 분리)
+- `references/code_review_checklist.md`의 체크리스트 항목
+- `references/common_antipatterns.md`의 알려진 안티패턴
+- 보고 형식: **Critical / Warning / Suggestion** 3단계, 파일명 + 라인 넘버 포함
+- 응답 길이 제한 (보통 300~500단어)
+
+### 3. 이슈 분류 및 수정
+
+| 심각도         | 처리                                              |
+| -------------- | ------------------------------------------------- |
+| **Critical**   | 즉시 수정 (타입 안전성, 보안, 데이터 손실)        |
+| **Warning**    | 이번 스프린트 내 수정 또는 명시적으로 태스크 이월 |
+| **Suggestion** | 판단 후 수정 또는 스킵                            |
+
+수정 후 리뷰어 에이전트를 **다시 호출하지 않음**. 대신 아래 4단계로 검증.
+
+### 4. 재검증
+
+- `npx vitest run` — 전체 단위 테스트 통과
+- `npm run build` — 빌드 성공
+- 둘 다 통과해야 리뷰 완료
+
+실패 시: 이슈 재분석 → 수정 → 재실행. 절대 `--no-verify`로 우회하지 않음.
+
+### 5. 안티패턴 기록
+
+리뷰 중 **새로운 유형의 안티패턴**을 발견하면 `references/common_antipatterns.md`에 추가합니다. 형식:
+
+```markdown
+## AP-{N}: {패턴 이름}
+
+**증상**: 어떤 코드가 문제인가
+**원인**: 왜 발생하는가
+**해결**: 어떻게 고치는가
+**관련 스프린트**: YYYY-MM-DD-NN
 ```
 
-## Core Capabilities
+한 번이라도 동일 패턴이 반복되면 반드시 기록해서 다음 스프린트에서 예방합니다.
 
-### 1. Pr Analyzer
+## 참조 문서
 
-Automated tool for pr analyzer tasks.
+- [`references/code_review_checklist.md`](references/code_review_checklist.md) — 항목별 체크리스트 (구조, Svelte 5 runes, AI track, Edge, 성능, UX, 빌드, 문서)
+- [`references/coding_standards.md`](references/coding_standards.md) — 코딩 규약 상세
+- [`references/common_antipatterns.md`](references/common_antipatterns.md) — 프로젝트에서 발견된 안티패턴 카탈로그
 
-**Features:**
+## `simplify` 스킬과의 관계
 
-- Automated scaffolding
-- Best practices built-in
-- Configurable templates
-- Quality checks
+Claude Code에는 내장 `simplify` 스킬이 있습니다 ("변경된 코드의 재사용성/품질/효율성 검토 후 수정"). 역할 분담:
 
-**Usage:**
+- **`code-reviewer`**: Ropeman 도메인 지식 기반 리뷰 (프로젝트 규칙, 안티패턴, Svelte 5 패턴)
+- **`simplify`**: 범용 코드 간소화 (중복 제거, 과도한 추상화 정리)
 
-```bash
-python scripts/pr_analyzer.py <project-path> [options]
-```
+스프린트 마무리 절차에서는 **`code-reviewer` 먼저 실행** → 이슈 수정 → 필요 시 `simplify`로 추가 정리.
 
-### 2. Code Quality Checker
+## 안티 사용 사례
 
-Comprehensive analysis and optimization tool.
-
-**Features:**
-
-- Deep analysis
-- Performance metrics
-- Recommendations
-- Automated fixes
-
-**Usage:**
-
-```bash
-python scripts/code_quality_checker.py <target-path> [--verbose]
-```
-
-### 3. Review Report Generator
-
-Advanced tooling for specialized tasks.
-
-**Features:**
-
-- Expert-level automation
-- Custom configurations
-- Integration ready
-- Production-grade output
-
-**Usage:**
-
-```bash
-python scripts/review_report_generator.py [arguments] [options]
-```
-
-## Reference Documentation
-
-### Code Review Checklist
-
-Comprehensive guide available in `references/code_review_checklist.md`:
-
-- Detailed patterns and practices
-- Code examples
-- Best practices
-- Anti-patterns to avoid
-- Real-world scenarios
-
-### Coding Standards
-
-Complete workflow documentation in `references/coding_standards.md`:
-
-- Step-by-step processes
-- Optimization strategies
-- Tool integrations
-- Performance tuning
-- Troubleshooting guide
-
-### Common Antipatterns
-
-Technical reference guide in `references/common_antipatterns.md`:
-
-- Technology stack details
-- Configuration examples
-- Integration patterns
-- Security considerations
-- Scalability guidelines
-
-## Tech Stack
-
-**Languages:** TypeScript, JavaScript, Python, Go, Swift, Kotlin
-**Frontend:** React, Next.js, React Native, Flutter
-**Backend:** Node.js, Express, GraphQL, REST APIs
-**Database:** PostgreSQL, Prisma, NeonDB, Supabase
-**DevOps:** Docker, Kubernetes, Terraform, GitHub Actions, CircleCI
-**Cloud:** AWS, GCP, Azure
-
-## Development Workflow
-
-### 1. Setup and Configuration
-
-```bash
-# Install dependencies
-npm install
-# or
-pip install -r requirements.txt
-
-# Configure environment
-cp .env.example .env
-```
-
-### 2. Run Quality Checks
-
-```bash
-# Use the analyzer script
-python scripts/code_quality_checker.py .
-
-# Review recommendations
-# Apply fixes
-```
-
-### 3. Implement Best Practices
-
-Follow the patterns and practices documented in:
-
-- `references/code_review_checklist.md`
-- `references/coding_standards.md`
-- `references/common_antipatterns.md`
-
-## Best Practices Summary
-
-### Code Quality
-
-- Follow established patterns
-- Write comprehensive tests
-- Document decisions
-- Review regularly
-
-### Performance
-
-- Measure before optimizing
-- Use appropriate caching
-- Optimize critical paths
-- Monitor in production
-
-### Security
-
-- Validate all inputs
-- Use parameterized queries
-- Implement proper authentication
-- Keep dependencies updated
-
-### Maintainability
-
-- Write clear code
-- Use consistent naming
-- Add helpful comments
-- Keep it simple
-
-## Common Commands
-
-```bash
-# Development
-npm run dev
-npm run build
-npm run test
-npm run lint
-
-# Analysis
-python scripts/code_quality_checker.py .
-python scripts/review_report_generator.py --analyze
-
-# Deployment
-docker build -t app:latest .
-docker-compose up -d
-kubectl apply -f k8s/
-```
-
-## Troubleshooting
-
-### Common Issues
-
-Check the comprehensive troubleshooting section in `references/common_antipatterns.md`.
-
-### Getting Help
-
-- Review reference documentation
-- Check script output messages
-- Consult tech stack documentation
-- Review error logs
-
-## Resources
-
-- Pattern Reference: `references/code_review_checklist.md`
-- Workflow Guide: `references/coding_standards.md`
-- Technical Guide: `references/common_antipatterns.md`
-- Tool Scripts: `scripts/` directory
+- **단일 파일 수정 후** — `code-reviewer` 과잉, 직접 검토가 빠름
+- **오타/포매팅** — `lint` + `prettier`가 커버
+- **PR 자동 리뷰** — CI 파이프라인으로 처리 (이 스킬은 로컬 사전 검토용)

@@ -4,6 +4,7 @@
 	import { i18nStore } from '$lib/stores/i18nStore.svelte';
 	import { projectStore } from '$lib/stores/projectStore.svelte';
 	import { authStore } from '$lib/stores/authStore.svelte';
+	import { semanticStore } from '$lib/stores/semanticStore.svelte';
 	import Breadcrumb from '$lib/components/Breadcrumb.svelte';
 	import SearchBar from '$lib/components/SearchBar.svelte';
 
@@ -12,14 +13,18 @@
 		onhelp,
 		onnewproject,
 		onconnect,
-		onanalyze
+		onanalyze,
+		onshare
 	}: {
 		onsettings?: () => void;
 		onhelp?: () => void;
 		onnewproject?: () => void;
 		onconnect?: () => void;
 		onanalyze?: () => void;
+		onshare?: () => void;
 	} = $props();
+
+	const canShare = $derived(semanticStore.currentLevel !== null);
 
 	const hasProject = $derived(projectStore.fileTree !== null);
 	const isParsing = $derived(
@@ -101,6 +106,17 @@
 					</svg>
 					Analyze
 				{/if}
+			</button>
+		{/if}
+		{#if hasProject}
+			<button
+				class="share-btn"
+				onclick={() => onshare?.()}
+				disabled={!canShare}
+				title={i18nStore.t('share.button')}
+			>
+				<span class="material-symbols-outlined" style="font-size:14px;">share</span>
+				<span class="btn-label">{i18nStore.t('share.button')}</span>
 			</button>
 		{/if}
 		<div class="header-divider"></div>
@@ -289,6 +305,35 @@
 
 	.analyze-btn:disabled {
 		opacity: 0.5;
+		cursor: not-allowed;
+	}
+
+	.share-btn {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		padding: 4px 12px;
+		background: var(--bg-tertiary);
+		color: var(--accent-secondary, var(--text-secondary));
+		border: 1px solid var(--ghost-border);
+		border-radius: 4px;
+		font-family: var(--font-display);
+		font-size: 11px;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		cursor: pointer;
+		transition:
+			opacity 0.2s,
+			background 0.2s;
+	}
+
+	.share-btn:hover:not(:disabled) {
+		background: var(--bg-secondary);
+	}
+
+	.share-btn:disabled {
+		opacity: 0.4;
 		cursor: not-allowed;
 	}
 

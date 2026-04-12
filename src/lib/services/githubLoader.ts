@@ -4,6 +4,7 @@ import { detectLanguage, isSupported } from '$lib/utils/languageDetector';
 import { parseFile } from '$lib/services/parserService';
 import { projectStore } from '$lib/stores/projectStore.svelte';
 import { GITHUB_PROXY_URL } from '$lib/config';
+import { pathPriority, MAX_FILES, MAX_FILE_SIZE, MAX_TOTAL_SIZE } from '$lib/utils/filePriority';
 
 interface GitHubTreeItem {
 	path: string;
@@ -30,8 +31,6 @@ export class GitHubLoadError extends Error {
 	}
 }
 
-const MAX_FILES = 2000;
-const MAX_FILE_SIZE = 500_000; // 500KB
 const BATCH_SIZE = 20;
 
 function buildTreeUrl(info: GitHubRepoInfo): string {
@@ -109,7 +108,7 @@ function buildFileTree(repoName: string, items: GitHubTreeItem[]): FileNode {
  * Collect all supported files from tree items, respecting limits.
  */
 function collectSupportedItems(items: GitHubTreeItem[]): GitHubTreeItem[] {
-	return items
+	const supported = items
 		.filter(
 			(item) =>
 				item.type === 'blob' &&
@@ -117,7 +116,25 @@ function collectSupportedItems(items: GitHubTreeItem[]): GitHubTreeItem[] {
 				detectLanguage(item.path) !== null &&
 				isSupported(detectLanguage(item.path)!)
 		)
-		.slice(0, MAX_FILES);
+		.sort((a, b) => {
+			const pa = pathPriority(a.path);
+			const pb = pathPriority(b.path);
+			if (pa !== pb) return pa - pb;
+			// Within same priority, smaller files first (more files covered)
+			return (a.size ?? 0) - (b.size ?? 0);
+		});
+
+	// Apply both file count and total size limits
+	const result: GitHubTreeItem[] = [];
+	let totalSize = 0;
+	for (const item of supported) {
+		if (result.length >= MAX_FILES) break;
+		const size = item.size ?? 0;
+		if (totalSize + size > MAX_TOTAL_SIZE) break;
+		totalSize += size;
+		result.push(item);
+	}
+	return result;
 }
 
 /**

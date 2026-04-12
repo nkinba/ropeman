@@ -61,6 +61,16 @@
 				slug: 'troubleshooting'
 			},
 			{
+				q: 'GitHub URL로 분석할 수 있나요?',
+				a: '네. 랜딩 페이지에서 공개 GitHub 저장소의 URL을 입력하면 로컬에 프로젝트를 다운로드하지 않고도 바로 분석할 수 있습니다. 비공개 저장소는 지원되지 않습니다.',
+				slug: 'getting-started'
+			},
+			{
+				q: '분석 결과를 공유할 수 있나요?',
+				a: 'AI 분석이 완료된 후 헤더의 Share 버튼을 클릭하면 공개 링크가 생성됩니다. 이 링크를 통해 다른 사람과 분석 결과를 공유할 수 있습니다.',
+				slug: 'faq'
+			},
+			{
 				q: '입력한 API 키는 안전하게 보관되나요?',
 				a: 'API 키는 저희 서버에 절대 저장되지 않으며, 오직 사용자 기기의 브라우저 로컬 저장소에만 보관됩니다.\n\n• API Key 모드: 브라우저에 저장된 키는 API 호출 시에만 일회성으로 사용되며, 보안 통신을 통해 AI 모델 제공사로 전달됩니다.\n• Bridge 모드: 별도의 API 키 입력 없이, 로컬에 연동된 CLI 툴의 인증 방식을 그대로 사용합니다.\n• WebGPU 모드: 오프라인으로 동작하므로 API 키 자체가 필요하지 않습니다.\n\n설정 초기화로 언제든 삭제할 수 있습니다.',
 				slug: 'security'
@@ -96,6 +106,16 @@
 				q: 'Are there project size limits?',
 				a: 'Up to 2,000 files and 500KB per individual file. For large projects, adjust the code summary size limit in Settings.',
 				slug: 'troubleshooting'
+			},
+			{
+				q: 'Can I analyze a GitHub repository by URL?',
+				a: 'Yes. Paste a public GitHub repository URL into the input field on the landing page and click Load. Ropeman fetches the file structure and analyzes it just like a local folder. Private repositories are not supported.',
+				slug: 'getting-started'
+			},
+			{
+				q: 'Can I share my analysis results?',
+				a: 'Yes. After AI analysis completes, click the Share button in the header to generate a public link. You can share this link with anyone to let them view the analysis.',
+				slug: 'faq'
 			},
 			{
 				q: 'Are my API keys stored securely?',

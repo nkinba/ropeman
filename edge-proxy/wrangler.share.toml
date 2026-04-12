@@ -1,0 +1,18 @@
+name = "ropeman-share"
+main = "src/share.ts"
+compatibility_date = "2026-03-10"
+compatibility_flags = ["nodejs_compat"]
+
+routes = [
+  { pattern = "share.ropeman.dev", custom_domain = true }
+]
+
+[observability]
+enabled = true
+
+[vars]
+ALLOWED_ORIGINS = "https://ropeman.dev,http://localhost:5173,http://localhost:5174,http://localhost:4173"
+
+[[kv_namespaces]]
+binding = "ROPEMAN_SHARE_STORE"
+id = "cad76fde28e74586b497f3e27c80f448"
