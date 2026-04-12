@@ -40,52 +40,68 @@
 
 - 스프린트 ID: `YYYY-MM-dd-{n}` (예: `2026-03-03-01`). PRD 로드맵, history 파일명, changelog, 브랜치명에 사용.
 
-- ⚠️ **스프린트 마무리 절차 (순서 엄수, 2개 커밋 분리)**
+- ⚠️ **스프린트 작업 주기 (반복 가능, 일상 작업)**
 
-  **[1단계] 기능 작업 커밋**
-  1. `npm run test:unit && npm run build` 통과 확인
-  2. 스프린트 브랜치 생성 (`sprint/{sprint_id}`)
-  3. **커밋 A (feat)**: 기능 구현 결과만 커밋
-     - 메시지: `feat({scope}): {스프린트 요약}` 또는 복수 태스크면 `feat: sprint {id} — G1, G2, G4`
+  하나의 스프린트 안에서 아래 주기를 **여러 번** 반복할 수 있다. 태스크 1개를 구현한 뒤 리뷰를 돌려도 되고, 여러 태스크를 묶어 한 번에 리뷰해도 된다. 핵심은 **커밋 A와 커밋 B를 분리**하여 git 이력에 "구현 → 리뷰 수정" 경계를 남기는 것.
+  1. 스프린트 브랜치가 없으면 생성 (`sprint/{sprint_id}`)
+  2. 태스크 구현 → `npm run test:unit && npm run build` 통과
+  3. **커밋 A (feat/fix)**: 기능 구현만 커밋
+     - 메시지: `feat({scope}): ...`, `fix(...)`, 복수 태스크면 `feat: SH1, SH2 구현`
      - 이 커밋은 **리뷰 전 상태**
-
-  **[2단계] 리뷰 & 수정 & 메타데이터 → 커밋 B** 4. `/code-reviewer` 실행 (Explore 에이전트로 위임) 5. **리뷰 보고서 작성** → `.spec/reviews/{sprint_id}-review.md`
-  - 리뷰 대상, Critical/Warning/Suggestion 개수, 이슈별 증상·원인·수정·결정
-  - 오탐(false positive)과 스킵한 Suggestion의 이유 포함
-  - 새 안티패턴은 `common_antipatterns.md`로 승격 후 보고서에서 링크
+  4. `/code-reviewer` 실행 (Explore 에이전트로 위임)
+  5. **리뷰 보고서 작성** → `.spec/reviews/{sprint_id}-review.md`
+     - 리뷰 대상, Critical/Warning/Suggestion 개수, 이슈별 증상·원인·수정·결정
+     - 오탐(false positive)과 스킵한 Suggestion의 이유 포함
+     - 새 안티패턴은 `common_antipatterns.md`로 승격 후 보고서에서 링크
+     - 2차 리뷰가 발생하면 같은 파일에 섹션 추가 (삭제 금지)
   6. Critical / Warning 즉시 수정 (Suggestion은 판단)
   7. 스프린트 중 해결한 버그는 `.spec/bug-report/`에 기록
   8. `npm run test:unit && npm run build` 재통과 확인
-  9. **PRD 최신화** (아래 6개 필드 전부 — 하나라도 빠지면 안 됨)
-     - `최종 업데이트` 날짜 → 오늘
-     - `버전` → 마이너 증가 (0.15.0 → 0.16.0)
+  9. **커밋 B (review)**: 리뷰 수정 + 리뷰 보고서 파일
+     - 메시지 예시:
+
+       ```
+       review: {주요 수정 요약} ({Critical}C/{Warning}W/{Suggestion}S)
+
+       - {주요 수정 1}
+       - {주요 수정 2}
+       - 리뷰 보고서: .spec/reviews/{sprint_id}-review.md
+       ```
+
+  10. 필요 시 1~9 반복. 후속 개발/수정은 독립 커밋 (`feat: ...`, `fix: ...`)으로 이어짐.
+
+  ⚠️ **메타데이터 문서(PRD/Task 상태/Changelog)는 이 단계에서 건드리지 않는다.** 리뷰 수정 커밋과 메타데이터 커밋은 분리된다.
+
+- ⚠️ **스프린트 마무리 절차** (사용자가 "마무리" 요청 시에만 트리거)
+
+  작업과 리뷰가 모두 끝나고 더 이상 변경할 것이 없다고 사용자가 판단한 시점에 실행한다. **메타데이터 업데이트 + push/PR**만 수행.
+  1. 이 시점에 working tree가 clean해야 한다 (모든 코드 변경은 이미 커밋됨)
+  2. **PRD 최신화** (아래 6개 필드 전부 — 하나라도 빠지면 안 됨)
+     - `최종 업데이트` 날짜 → 오늘 (UTC 기준, pre-push hook 확인)
+     - `버전` → 마이너 증가 (1.0.0 → 1.1.0)
      - `상태` → "스프린트 {id} 완료"
      - `7. 우선순위 및 로드맵` → 이전/P0/P1 갱신
      - `8. 변경 이력` → 행 추가
      - `5. 구현 현황` → 태스크 상태 반영
-  10. **Task 파일** 상태·DoD 업데이트
-  11. **Changelog** → `.spec/history/{sprint_id}.md` 작성 (리뷰 보고서 링크 포함)
-  12. **커밋 B (review)**: 리뷰 수정 + 리뷰 보고서 + 메타데이터를 한 번에
-      - 메시지 예시:
-
-        ```
-        review: sprint {id} — {Critical}/{Warning}/{Suggestion} issues addressed
-
-        - {주요 수정 1}
-        - {주요 수정 2}
-        - PRD / changelog / task 상태 업데이트
-        - 리뷰 보고서: .spec/reviews/{sprint_id}-review.md
-        ```
-
-  **[3단계] 사용자 승인 & 후속 작업** 13. 사용자에게 결과 보고 → **승인** 14. 승인 후 추가 개발·수정 요청이 있으면 **커밋 C+ 로 반영** - 각 커밋은 독립된 단위 (예: `fix(ui): ...`, `feat(share): add OG image`) - 추가 작업이 있으면 필요 시 Changelog를 amend 또는 신규 커밋(`docs: update changelog`)으로 갱신 - 추가 작업이 리뷰가 필요할 만큼 크면 [2단계]를 반복 (2차 리뷰 보고서 작성)
-
-  **[4단계] Push + PR** 15. Push → PR 생성 - PR 제목: 완료 태스크 요약 - PR 본문: 완료/미완료 태스크 + 주요 변경사항 + 리뷰 보고서 링크 - 커밋 이력: A(feat) → B(review) → C+(post-approval, 있으면)
+  3. **Task 파일** 상태·DoD 업데이트 (`.spec/tasks/TASK-*.md` frontmatter + 본문)
+  4. **Changelog** → `.spec/history/{sprint_id}.md` 작성
+     - 작업 주기 커밋 요약 (A 커밋들과 B 커밋들 구분)
+     - 리뷰 보고서 링크 포함 (`.spec/reviews/{sprint_id}-review.md`)
+  5. 사용자에게 결과 보고 → **승인**
+  6. **커밋 (docs)**: `docs: finalize sprint {sprint_id}`
+     - 메시지: PRD 버전 증가 + Task 상태 + Changelog 요약
+  7. **Push → PR 생성**
+     - PR 제목: 완료 태스크 요약
+     - PR 본문: 완료/미완료 태스크 + 주요 변경사항 + 리뷰 보고서 링크
+     - 커밋 이력: feat → review → (반복) → docs(finalize)
 
 - **기본 원칙**: 커밋 경계 = 의사결정 경계
-  - **커밋 A** = "이게 내가 만든 것"
-  - **커밋 B** = "리뷰가 찾은 것 + 내가 고친 것"
-  - **커밋 C+** = "사용자 승인 후 추가로 한 것"
-  - 각 커밋은 독립적으로 revert 가능해야 하고, 리뷰 보고서는 B 시점의 스냅샷이지 최종 상태가 아니라는 점을 인지할 것
+  - **feat / fix 커밋** = "이게 내가 만든 것"
+  - **review 커밋** = "리뷰가 찾은 것 + 내가 고친 것"
+  - **docs(finalize) 커밋** = "스프린트 메타데이터 확정"
+  - 각 커밋은 독립적으로 revert 가능해야 한다
+  - 리뷰 보고서는 리뷰 시점의 스냅샷이며, 이후 작업 커밋의 내용까지 포함하지 않는다는 점을 인지할 것
+  - **스프린트 마무리 ≠ 스프린트 작업의 끝**. 마무리는 사용자 트리거로 시작되는 짧고 독립된 단계.
 
 - PRD 로드맵 구조 (`7. 우선순위 및 로드맵`)
   - **이전 스프린트**: 직전 1개만 (이전 이력은 `.spec/history/`)
