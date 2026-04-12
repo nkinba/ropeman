@@ -197,7 +197,13 @@
 
 	// --- U1-3: Export diagram ---
 	let exportMenuOpen = $state(false);
-	let exportFns = $state<{ exportPNG: () => void; exportSVG: () => void } | null>(null);
+	let exportFns = $state<{
+		exportPNG: () => void;
+		exportSVG: () => void;
+		exportMarkdown: () => void;
+		exportHtml: () => void;
+		exportPdf: () => void;
+	} | null>(null);
 
 	export function triggerExport() {
 		exportMenuOpen = !exportMenuOpen;
@@ -210,6 +216,21 @@
 
 	function handleExportSVG() {
 		exportFns?.exportSVG();
+		exportMenuOpen = false;
+	}
+
+	function handleExportMarkdown() {
+		exportFns?.exportMarkdown();
+		exportMenuOpen = false;
+	}
+
+	function handleExportHtml() {
+		exportFns?.exportHtml();
+		exportMenuOpen = false;
+	}
+
+	function handleExportPdf() {
+		exportFns?.exportPdf();
 		exportMenuOpen = false;
 	}
 
@@ -541,6 +562,9 @@
 					<div class="toolbar-dropdown export-menu">
 						<button class="export-menu-item" onclick={handleExportPNG}>PNG</button>
 						<button class="export-menu-item" onclick={handleExportSVG}>SVG</button>
+						<button class="export-menu-item" onclick={handleExportMarkdown}>Markdown</button>
+						<button class="export-menu-item" onclick={handleExportHtml}>HTML</button>
+						<button class="export-menu-item" onclick={handleExportPdf}>PDF</button>
 					</div>
 				{/if}
 			</div>

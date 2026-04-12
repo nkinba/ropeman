@@ -1,0 +1,147 @@
+/**
+ * explore — public gallery snapshot store (SH4 / ADR-19)
+ *
+ * Differences vs share.ts (intentional):
+ *   - KV entries have NO TTL (curated, refreshed manually).
+ *   - Slugs are caller-provided fixed identifiers (e.g. "react", "vue").
+ *   - POST requires an EXPLORE_ADMIN_TOKEN secret — only the maintainer
+ *     refreshes entries (no public writes).
+ *   - GET is fully public, no rate limit.
+ */
+import { getAllowedOrigin, corsHeaders, jsonResponse } from './shared';
+
+interface Env {
+	ALLOWED_ORIGINS: string;
+	ROPEMAN_EXPLORE_STORE: KVNamespace;
+	EXPLORE_ADMIN_TOKEN: string;
+}
+
+const SLUG_PATTERN = /^[a-z0-9][a-z0-9_-]{0,63}$/;
+const MAX_BODY_SIZE = 2_097_152; // 2 MB — explore snapshots can be larger than share (no per-user quota)
+
+function exploreCorsHeaders(origin: string): Record<string, string> {
+	return {
+		...corsHeaders(origin),
+		'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
+		'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+	};
+}
+
+export default {
+	async fetch(request: Request, env: Env): Promise<Response> {
+		const requestOrigin = request.headers.get('Origin');
+		const origin = getAllowedOrigin(requestOrigin, env.ALLOWED_ORIGINS);
+		if (!origin) {
+			return new Response('Origin not allowed', { status: 403 });
+		}
+		const cors = exploreCorsHeaders(origin);
+
+		if (request.method === 'OPTIONS') {
+			return new Response(null, { status: 204, headers: cors });
+		}
+
+		const url = new URL(request.url);
+		const path = url.pathname;
+
+		// GET /explore — list slugs (debug / verification)
+		if (request.method === 'GET' && path === '/explore') {
+			return handleList(env, cors);
+		}
+
+		const slugMatch = path.match(/^\/explore\/([a-z0-9][a-z0-9_-]{0,63})$/);
+
+		// GET /explore/{slug}
+		if (request.method === 'GET' && slugMatch) {
+			return handleGet(env, slugMatch[1], cors);
+		}
+
+		// POST /explore/{slug} — admin only
+		if (request.method === 'POST' && slugMatch) {
+			return handleUpsert(request, env, slugMatch[1], cors);
+		}
+
+		// DELETE /explore/{slug} — admin only
+		if (request.method === 'DELETE' && slugMatch) {
+			return handleDelete(request, env, slugMatch[1], cors);
+		}
+
+		return jsonResponse({ error: 'Not found' }, 404, cors);
+	},
+};
+
+function isAuthorized(request: Request, env: Env): boolean {
+	const auth = request.headers.get('Authorization');
+	if (!auth || !auth.startsWith('Bearer ')) return false;
+	const token = auth.slice(7);
+	return Boolean(env.EXPLORE_ADMIN_TOKEN) && token === env.EXPLORE_ADMIN_TOKEN;
+}
+
+async function handleGet(env: Env, slug: string, cors: Record<string, string>): Promise<Response> {
+	const data = await env.ROPEMAN_EXPLORE_STORE.get(slug);
+	if (!data) {
+		return jsonResponse({ error: 'Not found' }, 404, cors);
+	}
+	return new Response(data, {
+		status: 200,
+		headers: {
+			...cors,
+			'Content-Type': 'application/json',
+			// Public, immutable until admin overwrites — let CDNs cache aggressively.
+			'Cache-Control': 'public, max-age=300, s-maxage=3600',
+		},
+	});
+}
+
+async function handleList(env: Env, cors: Record<string, string>): Promise<Response> {
+	const list = await env.ROPEMAN_EXPLORE_STORE.list();
+	return jsonResponse(
+		{
+			slugs: list.keys.map((k) => k.name),
+		},
+		200,
+		cors,
+	);
+}
+
+async function handleUpsert(request: Request, env: Env, slug: string, cors: Record<string, string>): Promise<Response> {
+	if (!isAuthorized(request, env)) {
+		return jsonResponse({ error: 'Unauthorized' }, 401, cors);
+	}
+
+	if (!SLUG_PATTERN.test(slug)) {
+		return jsonResponse({ error: 'Invalid slug' }, 400, cors);
+	}
+
+	const contentLength = request.headers.get('Content-Length');
+	if (contentLength && parseInt(contentLength, 10) > MAX_BODY_SIZE) {
+		return jsonResponse({ error: 'Payload too large (max 2MB)' }, 413, cors);
+	}
+
+	let body: unknown;
+	try {
+		const text = await request.text();
+		if (text.length > MAX_BODY_SIZE) {
+			return jsonResponse({ error: 'Payload too large (max 2MB)' }, 413, cors);
+		}
+		body = JSON.parse(text);
+	} catch {
+		return jsonResponse({ error: 'Invalid JSON' }, 400, cors);
+	}
+
+	if (!body || typeof body !== 'object') {
+		return jsonResponse({ error: 'Invalid payload' }, 400, cors);
+	}
+
+	// No TTL — explore entries persist until manually overwritten.
+	await env.ROPEMAN_EXPLORE_STORE.put(slug, JSON.stringify(body));
+
+	return jsonResponse({ slug, ok: true }, 200, cors);
+}
+
+async function handleDelete(request: Request, env: Env, slug: string, cors: Record<string, string>): Promise<Response> {
+	if (!isAuthorized(request, env)) {
+		return jsonResponse({ error: 'Unauthorized' }, 401, cors);
+	}
+	await env.ROPEMAN_EXPLORE_STORE.delete(slug);
+	return jsonResponse({ slug, deleted: true }, 200, cors);
+}

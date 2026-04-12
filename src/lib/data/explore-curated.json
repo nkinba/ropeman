@@ -1,0 +1,59 @@
+{
+	"updatedAt": "2026-04-13",
+	"entries": [
+		{
+			"slug": "react",
+			"owner": "facebook",
+			"repo": "react",
+			"title": "React",
+			"language": "JavaScript",
+			"description": "A declarative, efficient, and flexible JavaScript library for building user interfaces.",
+			"stars": "230k+"
+		},
+		{
+			"slug": "vue",
+			"owner": "vuejs",
+			"repo": "core",
+			"title": "Vue",
+			"language": "TypeScript",
+			"description": "Progressive JavaScript framework for building modern web UIs.",
+			"stars": "47k+"
+		},
+		{
+			"slug": "svelte",
+			"owner": "sveltejs",
+			"repo": "svelte",
+			"title": "Svelte",
+			"language": "TypeScript",
+			"description": "Cybernetically enhanced web apps — a compile-time UI framework.",
+			"stars": "82k+"
+		},
+		{
+			"slug": "tailwindcss",
+			"owner": "tailwindlabs",
+			"repo": "tailwindcss",
+			"title": "Tailwind CSS",
+			"language": "JavaScript",
+			"description": "A utility-first CSS framework for rapidly building custom designs.",
+			"stars": "85k+"
+		},
+		{
+			"slug": "fastapi",
+			"owner": "tiangolo",
+			"repo": "fastapi",
+			"title": "FastAPI",
+			"language": "Python",
+			"description": "Modern, fast (high-performance) web framework for building APIs with Python type hints.",
+			"stars": "82k+"
+		},
+		{
+			"slug": "gin",
+			"owner": "gin-gonic",
+			"repo": "gin",
+			"title": "Gin",
+			"language": "Go",
+			"description": "HTTP web framework written in Go (Golang) — fast and minimal.",
+			"stars": "80k+"
+		}
+	]
+}
