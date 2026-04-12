@@ -68,6 +68,22 @@ interface HelpTranslations {
 	faqItems: { q: string; a: string }[];
 }
 
+interface ShareTranslations {
+	button: string;
+	confirmTitle: string;
+	confirmMessage: string;
+	confirmOk: string;
+	confirmCancel: string;
+	generating: string;
+	successTitle: string;
+	copyLink: string;
+	copied: string;
+	openNewTab: string;
+	errorTitle: string;
+	errorMessage: string;
+	close: string;
+}
+
 interface DocsTranslations {
 	title: string;
 	backToApp: string;
@@ -157,6 +173,7 @@ interface TranslationSet {
 		focusPrimary: string;
 		focusSecondary: string;
 	};
+	share: ShareTranslations;
 	help: HelpTranslations;
 	onboarding: OnboardingTranslations;
 	docs: DocsTranslations;
@@ -255,6 +272,21 @@ const translations: Record<Locale, TranslationSet> = {
 			toggleSplit: '분할 뷰 전환',
 			focusPrimary: '주 패인 포커스',
 			focusSecondary: '보조 패인 포커스'
+		},
+		share: {
+			button: '공유하기',
+			confirmTitle: '공유 링크 생성',
+			confirmMessage: '이 분석을 공개 링크로 생성하시겠습니까?',
+			confirmOk: '생성',
+			confirmCancel: '취소',
+			generating: '공유 링크 생성 중...',
+			successTitle: '공유 링크가 생성되었습니다',
+			copyLink: '링크 복사',
+			copied: '복사됨!',
+			openNewTab: '새 탭에서 열기',
+			errorTitle: '공유 실패',
+			errorMessage: '공유 링크를 생성하지 못했습니다. 잠시 후 다시 시도해주세요.',
+			close: '닫기'
 		},
 		help: {
 			title: '도움말',
@@ -459,6 +491,21 @@ const translations: Record<Locale, TranslationSet> = {
 			toggleSplit: 'Toggle Split',
 			focusPrimary: 'Focus Primary Pane',
 			focusSecondary: 'Focus Secondary Pane'
+		},
+		share: {
+			button: 'Share',
+			confirmTitle: 'Generate Share Link',
+			confirmMessage: 'Generate a public link for this analysis?',
+			confirmOk: 'Generate',
+			confirmCancel: 'Cancel',
+			generating: 'Generating share link...',
+			successTitle: 'Share link created',
+			copyLink: 'Copy Link',
+			copied: 'Copied!',
+			openNewTab: 'Open in new tab',
+			errorTitle: 'Share failed',
+			errorMessage: 'Could not generate a share link. Please try again later.',
+			close: 'Close'
 		},
 		help: {
 			title: 'Help',

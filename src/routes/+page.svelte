@@ -13,6 +13,7 @@
 	import HelpModal from '$lib/components/HelpModal.svelte';
 	import AnalyzeModal from '$lib/components/AnalyzeModal.svelte';
 	import OnboardingTour from '$lib/components/OnboardingTour.svelte';
+	import ShareDialog from '$lib/components/ShareDialog.svelte';
 	import { projectStore } from '$lib/stores/projectStore.svelte';
 	import { selectionStore } from '$lib/stores/selectionStore.svelte';
 	import { semanticStore, setSemanticCacheDeps } from '$lib/stores/semanticStore.svelte';
@@ -59,6 +60,7 @@
 	let showSettings = $state(false);
 	let showHelp = $state(false);
 	let showAnalyze = $state(false);
+	let showShare = $state(false);
 	// explorerCollapsed removed — sidebar icon bar is always visible,
 	// content panel is managed internally by Sidebar component
 	let isMobile = $state(false);
@@ -483,6 +485,7 @@
 		onnewproject={handleNewProject}
 		onconnect={() => (showAnalyze = true)}
 		onanalyze={() => (showAnalyze = true)}
+		onshare={() => (showShare = true)}
 	/>
 
 	{#if projectStore.isLoading}
@@ -607,6 +610,10 @@
 			onclose={() => (showAnalyze = false)}
 			onanalyze={handleTrackSelect}
 		/>
+	{/if}
+
+	{#if showShare}
+		<ShareDialog open={showShare} onclose={() => (showShare = false)} />
 	{/if}
 
 	{#if !supportsDirectoryPicker}

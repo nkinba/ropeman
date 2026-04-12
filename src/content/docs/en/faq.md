@@ -81,4 +81,12 @@ Firefox does not yet implement `showDirectoryPicker()`. Use drag-and-drop instea
 
 Drag-and-drop folder upload works. File System Access API features (live re-reads) and WebGPU mode are unavailable. Demo, API Key, and Bridge modes otherwise function normally.
 
+### Can I analyze a GitHub repository by URL?
+
+Yes. Paste a public GitHub repository URL into the input field on the landing page and click **Load**. Ropeman fetches the file structure and analyzes it just like a local folder. Private repositories are not supported.
+
+### Can I share my analysis results?
+
+Yes. After AI analysis completes, click the **Share** button in the header to generate a public link. You can share this link with anyone to let them view the analysis.
+
 Still stuck? See [Troubleshooting](/docs/en/troubleshooting).

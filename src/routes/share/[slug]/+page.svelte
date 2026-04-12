@@ -1,0 +1,318 @@
+<script lang="ts">
+	import { page } from '$app/stores';
+	import { onMount } from 'svelte';
+	import { semanticStore } from '$lib/stores/semanticStore.svelte';
+	import { projectStore } from '$lib/stores/projectStore.svelte';
+	import { i18nStore } from '$lib/stores/i18nStore.svelte';
+	import { themeStore } from '$lib/stores/themeStore.svelte';
+	import ZUICanvas from '$lib/components/ZUICanvas.svelte';
+	import Breadcrumb from '$lib/components/Breadcrumb.svelte';
+	import SemanticDetailPanel from '$lib/components/SemanticDetailPanel.svelte';
+	import { resolve } from '$app/paths';
+	import { SHARE_URL } from '$lib/config';
+	import type { SemanticLevel } from '$lib/types/semantic';
+
+	let loading = $state(true);
+	let error = $state('');
+	let snapshotMeta = $state<{ projectName: string; fileCount: number } | null>(null);
+
+	const slug = $derived($page.params.slug);
+	const hasSemanticSelection = $derived(
+		semanticStore.selectedSemanticNode !== null && !semanticStore.panelDismissed
+	);
+
+	onMount(async () => {
+		try {
+			const shareBase = SHARE_URL || '';
+			const res = await fetch(`${shareBase}/share/${slug}`);
+			if (!res.ok) {
+				if (res.status === 404) {
+					error =
+						i18nStore.locale === 'ko'
+							? '공유 링크를 찾을 수 없습니다. 만료되었거나 잘못된 링크입니다.'
+							: 'Share link not found. It may have expired or the link is invalid.';
+				} else {
+					error =
+						i18nStore.locale === 'ko'
+							? '공유 데이터를 불러오는데 실패했습니다.'
+							: 'Failed to load shared data.';
+				}
+				return;
+			}
+
+			const snapshot = await res.json();
+
+			// Validate snapshot shape
+			if (!snapshot || typeof snapshot !== 'object' || !snapshot.semanticLevels) {
+				throw new Error('Invalid snapshot');
+			}
+
+			const projectName =
+				typeof snapshot.projectName === 'string' ? snapshot.projectName : 'Shared Project';
+
+			// Inject into stores (read-only mode)
+			projectStore.projectName = projectName;
+
+			// Restore semantic cache levels with structural validation
+			const cacheMap = new Map<string, SemanticLevel>();
+			for (const [key, value] of Object.entries(snapshot.semanticLevels)) {
+				const level = value as Record<string, unknown>;
+				if (
+					level &&
+					typeof level === 'object' &&
+					Array.isArray(level.nodes) &&
+					Array.isArray(level.edges) &&
+					typeof level.breadcrumbLabel === 'string' &&
+					(level.parentId === null || typeof level.parentId === 'string')
+				) {
+					cacheMap.set(key, level as unknown as SemanticLevel);
+				}
+			}
+
+			// Find root level
+			const rootLevel =
+				cacheMap.get('__root__') ?? [...cacheMap.values()].find((l) => l.parentId === null);
+			if (rootLevel) {
+				semanticStore.currentLevel = rootLevel;
+			}
+
+			// Restore cache for drill-down
+			for (const [key, level] of cacheMap) {
+				semanticStore.setCachedLevel(key, level);
+			}
+
+			const filePaths = Array.isArray(snapshot.filePaths) ? snapshot.filePaths : [];
+			snapshotMeta = {
+				projectName,
+				fileCount: filePaths.length
+			};
+		} catch (err) {
+			error =
+				i18nStore.locale === 'ko'
+					? '공유 데이터를 불러오는데 실패했습니다.'
+					: 'Failed to load shared data.';
+		} finally {
+			loading = false;
+		}
+	});
+</script>
+
+<svelte:head>
+	<title>{snapshotMeta?.projectName ?? 'Shared'} | Ropeman</title>
+	<meta
+		name="description"
+		content={snapshotMeta
+			? `${snapshotMeta.projectName} — AI semantic architecture diagram (${snapshotMeta.fileCount} files)`
+			: 'Shared code architecture diagram'}
+	/>
+	<meta property="og:title" content={`${snapshotMeta?.projectName ?? 'Shared'} | Ropeman`} />
+	<meta property="og:description" content="AI-powered code architecture visualization" />
+	<meta property="og:type" content="website" />
+</svelte:head>
+
+<div class="share-page" data-theme={themeStore.current}>
+	<!-- Header -->
+	<header class="share-header">
+		<a href={resolve('/')} class="share-logo">ROPEMAN</a>
+		<span class="share-project-name">{snapshotMeta?.projectName ?? ''}</span>
+		<span class="share-badge">
+			{i18nStore.locale === 'ko' ? '공유됨' : 'Shared'}
+		</span>
+		<div class="share-header-actions">
+			<button class="share-cta" onclick={() => (window.location.href = resolve('/'))}>
+				<span class="material-symbols-outlined" style="font-size: 16px;">add</span>
+				{i18nStore.locale === 'ko' ? '내 프로젝트 분석하기' : 'Analyze your own'}
+			</button>
+		</div>
+	</header>
+
+	<!-- Content -->
+	<div class="share-content">
+		{#if loading}
+			<div class="share-loading">
+				<div class="loading-ring"></div>
+				<p>{i18nStore.locale === 'ko' ? '공유 데이터 불러오는 중...' : 'Loading shared data...'}</p>
+			</div>
+		{:else if error}
+			<div class="share-error">
+				<span class="material-symbols-outlined share-error-icon">link_off</span>
+				<h2>{i18nStore.locale === 'ko' ? '링크를 찾을 수 없습니다' : 'Link not found'}</h2>
+				<p>{error}</p>
+				<a href={resolve('/')} class="share-cta">
+					{i18nStore.locale === 'ko' ? 'Ropeman으로 이동' : 'Go to Ropeman'}
+				</a>
+			</div>
+		{:else}
+			<div class="share-breadcrumb">
+				<Breadcrumb />
+			</div>
+			<div class="share-canvas-area">
+				<ZUICanvas />
+			</div>
+			{#if hasSemanticSelection}
+				<div class="share-detail-panel">
+					<SemanticDetailPanel ondismiss={() => (semanticStore.panelDismissed = true)} />
+				</div>
+			{/if}
+		{/if}
+	</div>
+</div>
+
+<style>
+	.share-page {
+		display: flex;
+		flex-direction: column;
+		height: 100vh;
+		background: var(--bg-primary);
+		color: var(--text-primary);
+	}
+
+	.share-header {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+		height: var(--header-height, 48px);
+		padding: 0 16px;
+		background: var(--sidebar-icon-bg, #0f141a);
+		border-bottom: 1px solid var(--ghost-border);
+	}
+
+	.share-logo {
+		font-family: var(--font-display);
+		font-size: 18px;
+		font-weight: 700;
+		color: var(--accent);
+		text-decoration: none;
+		text-transform: uppercase;
+		letter-spacing: 0.1em;
+	}
+
+	.share-project-name {
+		font-family: var(--font-code);
+		font-size: 13px;
+		color: var(--text-secondary);
+	}
+
+	.share-badge {
+		font-size: 10px;
+		font-weight: 700;
+		text-transform: uppercase;
+		padding: 2px 8px;
+		border-radius: 9999px;
+		background: var(--accent-bg);
+		color: var(--accent);
+		letter-spacing: 0.05em;
+	}
+
+	.share-header-actions {
+		margin-left: auto;
+	}
+
+	.share-cta {
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		padding: 6px 14px;
+		background: var(--accent);
+		color: var(--sidebar-icon-bg, #0f141a);
+		border: none;
+		border-radius: 6px;
+		font-family: var(--font-display);
+		font-size: 12px;
+		font-weight: 700;
+		cursor: pointer;
+		text-decoration: none;
+		transition: opacity 0.15s;
+	}
+
+	.share-cta:hover {
+		opacity: 0.85;
+	}
+
+	.share-content {
+		flex: 1;
+		display: flex;
+		position: relative;
+		overflow: hidden;
+	}
+
+	.share-breadcrumb {
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		z-index: 10;
+		padding: 8px 16px;
+	}
+
+	.share-canvas-area {
+		flex: 1;
+		min-height: 0;
+		position: relative;
+	}
+
+	.share-detail-panel {
+		width: 320px;
+		border-left: 1px solid var(--ghost-border);
+		overflow-y: auto;
+	}
+
+	.share-loading {
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: 16px;
+		color: var(--text-secondary);
+	}
+
+	.loading-ring {
+		width: 48px;
+		height: 48px;
+		border-radius: 50%;
+		border: 2px solid rgba(163, 166, 255, 0.1);
+		border-top-color: var(--accent);
+		animation: spin 0.8s linear infinite;
+	}
+
+	@keyframes spin {
+		to {
+			transform: rotate(360deg);
+		}
+	}
+
+	.share-error {
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: 12px;
+		text-align: center;
+		color: var(--text-secondary);
+	}
+
+	.share-error-icon {
+		font-size: 48px;
+		color: var(--text-muted);
+	}
+
+	.share-error h2 {
+		font-family: var(--font-display);
+		font-size: 24px;
+		color: var(--text-primary);
+	}
+
+	.share-error p {
+		max-width: 400px;
+		font-size: 14px;
+		line-height: 1.6;
+	}
+
+	@media (max-width: 768px) {
+		.share-detail-panel {
+			display: none;
+		}
+	}
+</style>

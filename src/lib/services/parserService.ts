@@ -1,6 +1,7 @@
 import type { ASTSymbol } from '$lib/types/ast';
 import type { FileNode } from '$lib/types/fileTree';
 import { isSupported } from '$lib/utils/languageDetector';
+import { pathPriority, MAX_FILE_SIZE, MAX_TOTAL_SIZE, MAX_FILES } from '$lib/utils/filePriority';
 
 interface ParseRequest {
 	filePath: string;
@@ -104,8 +105,6 @@ export async function parseFile(
 	});
 }
 
-const MAX_FILE_SIZE = 500_000; // 500KB — skip very large files
-
 export interface ParseProgress {
 	done: number;
 	total: number;
@@ -122,6 +121,7 @@ export async function parseAllFiles(
 	onProgress?.({ done: 0, total });
 
 	let done = 0;
+	let totalParsedSize = 0;
 	const resultMap = new Map(existingAstMap);
 
 	for (const file of files) {
@@ -136,7 +136,14 @@ export async function parseAllFiles(
 					onProgress?.({ done, total });
 					continue;
 				}
+				// Stop if total parsed size exceeds limit
+				if (totalParsedSize + fileObj.size > MAX_TOTAL_SIZE) {
+					done++;
+					onProgress?.({ done, total });
+					continue;
+				}
 				content = await fileObj.text();
+				totalParsedSize += fileObj.size;
 			} else {
 				continue;
 			}
@@ -171,7 +178,10 @@ function collectSupportedFiles(root: FileNode): FileNode[] {
 		}
 	}
 
-	return result;
+	// Priority sort: core source first, tests/examples last
+	result.sort((a, b) => pathPriority(a.path, true) - pathPriority(b.path, true));
+
+	return result.slice(0, MAX_FILES);
 }
 
 export function destroy() {

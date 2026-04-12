@@ -156,14 +156,193 @@ cache.set(key, level);
 
 ---
 
+## AP-8: 외부 JSON을 타입 검증 없이 스토어 주입
+
+**문제**: `src/routes/share/[slug]/+page.svelte` 초기 구현에서 `await res.json()`의 결과를 `as SemanticLevel` 캐스팅만 하고 `semanticStore`에 주입 — runtime 형태 검증 없음
+**영향**: KV 저장소가 변조되거나 저장 스키마가 바뀌면 runtime 오류 또는 silent corruption
+**해결**: unknown으로 받고 구조 가드로 검증 후 주입
+
+```typescript
+// Bad
+const snapshot = await res.json();
+for (const [key, level] of Object.entries(snapshot.semanticLevels)) {
+	cacheMap.set(key, level as SemanticLevel); // 검증 없음
+}
+
+// Good
+const snapshot = await res.json();
+if (!snapshot || typeof snapshot !== 'object' || !snapshot.semanticLevels) {
+	throw new Error('Invalid snapshot');
+}
+for (const [key, value] of Object.entries(snapshot.semanticLevels)) {
+	const level = value as Record<string, unknown>;
+	if (level && Array.isArray(level.nodes) && Array.isArray(level.edges)) {
+		cacheMap.set(key, level as unknown as SemanticLevel);
+	}
+}
+```
+
+**교훈**: 시스템 경계(네트워크, KV, localStorage, File System) 넘어 들어오는 데이터는 항상 runtime 검증.
+**관련 스프린트**: 2026-04-12-01
+
+---
+
+## AP-9: FileSystemFileHandle 만료에 대한 잘못된 진단
+
+**문제**: "폴더 오픈 후 파일 클릭 시 권한 에러" 현상을 "핸들 만료"로 잘못 진단 → LRU 캐시를 추가해 우회하려 함
+**실제 원인**: HMR/배포로 **페이지가 리로드**되면서 메모리의 핸들이 사라짐. 핸들 자체에는 만료 시간이 없음.
+**해결**:
+
+1. 로컬 폴더는 원래 동작대로 유지 (리로드 시 재드롭 요구)
+2. GitHub 로더는 핸들이 없으므로 `raw.githubusercontent.com`에서 on-demand fetch
+
+```typescript
+// 잘못된 해결 (과도한 캐시)
+projectStore.fileContents; // Map<path, string> — 전체 파일 메모리 캐시
+
+// 올바른 접근
+// CodeViewer에서 소스별 fetch 전략 분기
+if (fileNode?.handle) return await fileNode.handle.getFile().text(); // 로컬
+if (githubInfo) return await fetch(rawUrl).text(); // GitHub on-demand
+```
+
+**교훈**: 증상이 반복되어도 **근본 원인 진단 전에 해결책을 구현하지 말 것**. 가설을 사용자에게 검증받고 진행.
+**관련 스프린트**: 2026-04-11-01, 2026-04-12-01
+
+---
+
+## AP-10: wrangler.toml에서 최상위 키를 테이블 헤더 뒤에 배치
+
+**문제**: `[[kv_namespaces]]` 헤더 이후에 `routes = [...]`를 작성하면 TOML이 `routes`를 해당 테이블의 필드로 해석 → `Unexpected fields found in kv_namespaces[0] field: "routes"` 경고
+**영향**: 라우트 설정이 적용되지 않아 커스텀 도메인 바인딩이 누락
+**해결**: 최상위 키(`routes`, `name`, `main` 등)는 **모든 테이블 헤더가 등장하기 전**에 선언
+
+```toml
+# Bad — routes가 kv_namespaces 테이블의 필드로 해석됨
+[[kv_namespaces]]
+binding = "X"
+id = "..."
+
+routes = [
+  { pattern = "share.ropeman.dev", custom_domain = true }
+]
+
+# Good — 최상위 키를 테이블 헤더 전에
+name = "ropeman-share"
+main = "src/share.ts"
+compatibility_date = "2026-03-10"
+
+routes = [
+  { pattern = "share.ropeman.dev", custom_domain = true }
+]
+
+[[kv_namespaces]]
+binding = "X"
+id = "..."
+```
+
+**교훈**: TOML 테이블 헤더 이후의 모든 키는 그 테이블에 속한다. 최상위 키와 테이블을 섞지 말 것.
+**관련 스프린트**: 2026-04-12-01
+
+---
+
+## AP-11: Dropzone에 projectStore.isLoading을 직접 설정
+
+**문제**: GitHub URL 로딩 중 `projectStore.isLoading = true`로 설정 → `+page.svelte`의 `{#if !hasProject && !isLoading}` 조건에서 Dropzone이 언마운트됨 → 에러 후 재마운트되면서 로컬 `error` 상태가 초기화되어 에러 메시지 표시 실패
+**영향**: 사용자가 왜 로딩이 실패했는지 알 수 없음
+**해결**: Dropzone 내부에 `isLoadingGithub` 로컬 상태 도입, `projectStore.isLoading`은 건드리지 않음. 에러 시 `resetStores()`로 원상복귀.
+
+```typescript
+// Bad — Dropzone이 projectStore.isLoading을 토글
+projectStore.isLoading = true;
+try {
+	await loadGitHubRepo(parsed);
+} catch (err) {
+	error = '...';
+	projectStore.isLoading = false; // Dropzone 재마운트 → error 초기화
+}
+
+// Good — 로컬 상태로 처리
+isLoadingGithub = true;
+try {
+	resetStores(); // fileTree null → hasProject false 유지
+	await loadGitHubRepo(parsed);
+	onload?.();
+} catch (err) {
+	resetStores(); // 에러 시 원상복귀, 언마운트 없음
+	error = '...';
+} finally {
+	isLoadingGithub = false;
+}
+```
+
+**교훈**: 컴포넌트 로컬 UI 상태는 **글로벌 스토어와 분리**. 글로벌 상태 변경이 해당 컴포넌트의 마운트/언마운트를 트리거하면 로컬 state가 소실될 수 있음.
+**관련 스프린트**: 2026-04-11-01
+
+---
+
+## AP-12: tabStore.viewMode가 primary 패인만 참조
+
+**문제**: `viewMode` derived가 `activeTabId`(primary 패인 활성 탭)만 기준으로 `'semantic' | 'code'`를 결정 → 분할 뷰에서 다이어그램이 secondary에 있으면 `viewMode === 'code'`로 판정 → `hasSemanticSelection`이 false → 노드 클릭 시 윙패널 미표시
+**영향**: 분할 뷰에서 특정 배치일 때만 UI가 제대로 동작하지 않는 미묘한 버그
+**해결**: split 모드에서는 `focusedPane`의 활성 탭을 기준으로 계산
+
+```typescript
+// Bad
+get viewMode(): 'semantic' | 'code' {
+    const active = tabs.find((t) => t.id === activeTabId);
+    return active?.type === 'diagram' ? 'semantic' : 'code';
+}
+
+// Good
+get viewMode(): 'semantic' | 'code' {
+    if (layoutStore.isSplit) {
+        const focusedTabId = layoutStore.focusedPane === 'secondary'
+            ? layoutStore.secondaryActiveTabId
+            : activeTabId;
+        const active = tabs.find((t) => t.id === focusedTabId);
+        return active?.type === 'diagram' ? 'semantic' : 'code';
+    }
+    const active = tabs.find((t) => t.id === activeTabId);
+    return active?.type === 'diagram' ? 'semantic' : 'code';
+}
+```
+
+**교훈**: 분할 뷰/멀티 패널 구조에서 파생값(derived)을 계산할 때 **모든 패널을 고려**. "primary만 보면 되겠지"는 함정.
+**관련 스프린트**: 2026-04-11-01
+
+---
+
+## AP-13: 요구사항 ID 네임스페이스 충돌
+
+**문제**: `S1`이 이미 "Snippet analysis"에 할당되어 있는데 Share 관련 태스크(`S1 share-persistence`, `S2 share-route`, `S3 share-button`)를 같은 접두사로 새로 생성 → 파일명만 다르고 ID가 충돌
+**영향**: PRD 구현 현황 표에서 동일 ID 두 번 등장, 로드맵 참조 모호
+**해결**: 충돌 시 즉시 새 접두사 할당 (여기서는 `SH`), PRD의 "요구사항 ID 체계" 표에도 추가
+
+```
+S — Snippet (기존)
+SH — Share  (신규)
+```
+
+**교훈**: 새 태스크 생성 전 `ls .spec/tasks/TASK-{접두사}*.md`로 충돌 확인. 애매하면 두 글자 접두사 사용.
+**관련 스프린트**: 2026-04-12-01
+
+---
+
 ## 우선순위
 
-| ID   | 영향도 | 난이도 | 권장 시기         |
-| ---- | ------ | ------ | ----------------- |
-| AP-3 | 높음   | 중간   | 다음 스프린트     |
-| AP-4 | 높음   | 낮음   | 다음 스프린트     |
-| AP-1 | 중간   | 낮음   | 리팩토링 스프린트 |
-| AP-2 | 중간   | 중간   | 리팩토링 스프린트 |
-| AP-7 | 중간   | 중간   | 리팩토링 스프린트 |
-| AP-5 | 낮음   | 낮음   | 필요 시           |
-| AP-6 | 낮음   | 낮음   | 필요 시           |
+| ID    | 영향도 | 난이도 | 권장 시기               |
+| ----- | ------ | ------ | ----------------------- |
+| AP-3  | 높음   | 중간   | 다음 스프린트           |
+| AP-4  | 높음   | 낮음   | 다음 스프린트           |
+| AP-8  | 높음   | 낮음   | 경계 데이터 검증 습관화 |
+| AP-9  | 높음   | 낮음   | 진단 프로세스 원칙      |
+| AP-1  | 중간   | 낮음   | 리팩토링 스프린트       |
+| AP-2  | 중간   | 중간   | 리팩토링 스프린트       |
+| AP-7  | 중간   | 중간   | 리팩토링 스프린트       |
+| AP-11 | 중간   | 낮음   | 즉시 준수               |
+| AP-12 | 중간   | 낮음   | 즉시 준수               |
+| AP-10 | 낮음   | 낮음   | 참고                    |
+| AP-13 | 낮음   | 낮음   | 참고                    |
+| AP-5  | 낮음   | 낮음   | 필요 시                 |
+| AP-6  | 낮음   | 낮음   | 필요 시                 |
