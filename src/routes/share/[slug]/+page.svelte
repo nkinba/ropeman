@@ -110,7 +110,7 @@
 	<meta property="og:type" content="website" />
 </svelte:head>
 
-<div class="share-page" data-theme={themeStore.theme}>
+<div class="share-page" data-theme={themeStore.current}>
 	<!-- Header -->
 	<header class="share-header">
 		<a href={resolve('/')} class="share-logo">ROPEMAN</a>
