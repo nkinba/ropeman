@@ -19,6 +19,37 @@ interface Env {
 const SLUG_PATTERN = /^[a-z0-9][a-z0-9_-]{0,63}$/;
 const MAX_BODY_SIZE = 2_097_152; // 2 MB — explore snapshots can be larger than share (no per-user quota)
 
+/**
+ * Defensive structural validation of admin-uploaded snapshot payloads.
+ *
+ * Even though POST is admin-only, we still validate at the storage boundary
+ * (AP-8): a typo in a curl command or a stale snapshot from a refactored
+ * exporter could otherwise corrupt KV with garbage that the gallery viewer
+ * can't render. We mirror the shape that `exploreService.validateSnapshot`
+ * enforces on the read side.
+ */
+function isValidSnapshot(body: unknown): boolean {
+	if (!body || typeof body !== 'object') return false;
+	const obj = body as Record<string, unknown>;
+	if (typeof obj.projectName !== 'string') return false;
+	if (!obj.semanticLevels || typeof obj.semanticLevels !== 'object') return false;
+
+	const levels = obj.semanticLevels as Record<string, unknown>;
+	const keys = Object.keys(levels);
+	if (keys.length === 0) return false;
+
+	for (const key of keys) {
+		const lvl = levels[key];
+		if (!lvl || typeof lvl !== 'object') return false;
+		const l = lvl as Record<string, unknown>;
+		if (!Array.isArray(l.nodes)) return false;
+		if (!Array.isArray(l.edges)) return false;
+		if (typeof l.breadcrumbLabel !== 'string') return false;
+		if (l.parentId !== null && typeof l.parentId !== 'string') return false;
+	}
+	return true;
+}
+
 function exploreCorsHeaders(origin: string): Record<string, string> {
 	return {
 		...corsHeaders(origin),
@@ -128,8 +159,8 @@ async function handleUpsert(request: Request, env: Env, slug: string, cors: Reco
 		return jsonResponse({ error: 'Invalid JSON' }, 400, cors);
 	}
 
-	if (!body || typeof body !== 'object') {
-		return jsonResponse({ error: 'Invalid payload' }, 400, cors);
+	if (!isValidSnapshot(body)) {
+		return jsonResponse({ error: 'Invalid snapshot structure' }, 400, cors);
 	}
 
 	// No TTL — explore entries persist until manually overwritten.
