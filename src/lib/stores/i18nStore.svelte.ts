@@ -19,6 +19,10 @@ interface LandingTranslations {
 	githubRateLimit: string;
 	githubPrivate: string;
 	githubLoadError: string;
+	specLocalFirst: string;
+	specWebgpu: string;
+	specSemantic: string;
+	specNoData: string;
 }
 
 interface SnippetTranslations {
@@ -224,7 +228,7 @@ const translations: Record<Locale, TranslationSet> = {
 		landing: {
 			headline: 'AI로 코드 구조를<br/><span class="headline-accent">시각화하세요</span>',
 			subheadline:
-				'AI가 코드베이스를 의미론적으로 분석하여, 역할과 의존 관계를 다이어그램으로 즉시 시각화합니다.',
+				'AI가 코드베이스를 의미론적으로 분석하여 역할과 의존 관계를 다이어그램으로 즉시 시각화합니다. 로컬 폴더를 바로 열어 분석하며, 소스 코드 원문은 외부로 전송되지 않습니다.',
 			cta: '폴더 열기',
 			dragHint: 'or drag & drop a folder here',
 			featureAiTitle: 'AI 의미론적 분석',
@@ -242,7 +246,11 @@ const translations: Record<Locale, TranslationSet> = {
 			githubNotFound: '저장소를 찾을 수 없습니다. URL을 확인해주세요.',
 			githubRateLimit: 'GitHub API 요청 한도 초과. 잠시 후 다시 시도해주세요.',
 			githubPrivate: '비공개 저장소는 지원하지 않습니다.',
-			githubLoadError: 'GitHub 저장소 로딩에 실패했습니다.'
+			githubLoadError: 'GitHub 저장소 로딩에 실패했습니다.',
+			specLocalFirst: '로컬 분석',
+			specWebgpu: 'WebGPU 가속',
+			specSemantic: '시맨틱 인식',
+			specNoData: '데이터 수집 없음'
 		},
 		snippet: {
 			divider: '또는 코드 스니펫으로 체험하기',
@@ -442,7 +450,7 @@ const translations: Record<Locale, TranslationSet> = {
 		landing: {
 			headline: 'Visualize code<br/><span class="headline-accent">architecture with AI</span>',
 			subheadline:
-				'AI semantically analyzes your codebase, instantly visualizing roles and dependencies as diagrams.',
+				'AI semantically analyzes your codebase, instantly visualizing roles and dependencies as diagrams. Load local folders directly — source code never leaves your browser.',
 			cta: 'Open Folder',
 			dragHint: 'or drag & drop a folder here',
 			featureAiTitle: 'AI Semantic Analysis',
@@ -461,7 +469,11 @@ const translations: Record<Locale, TranslationSet> = {
 			githubNotFound: 'Repository not found. Please check the URL.',
 			githubRateLimit: 'GitHub API rate limit exceeded. Please try again later.',
 			githubPrivate: 'Private repositories are not supported.',
-			githubLoadError: 'Failed to load GitHub repository.'
+			githubLoadError: 'Failed to load GitHub repository.',
+			specLocalFirst: 'Local-First Analysis',
+			specWebgpu: 'WebGPU Accelerated',
+			specSemantic: 'Semantic Recognition',
+			specNoData: 'Zero Data Collection'
 		},
 		snippet: {
 			divider: 'or try a code snippet',

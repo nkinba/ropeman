@@ -291,17 +291,10 @@
 											: 'AI-generated architectures of React, Tokio, Transformers'}
 									</p>
 								</div>
-								<div class="explore-card-chips">
-									<span class="explore-chip">React</span>
-									<!-- <span class="explore-chip">Spring Boot</span> -->
-									<span class="explore-chip">Tokio</span>
-									<span class="explore-chip">Transformers</span>
-									<span class="explore-chip">Gin</span>
+								<div class="explore-card-cta">
+									EXPLORE GALLERY
+									<span class="material-symbols-outlined">arrow_forward</span>
 								</div>
-							</div>
-							<div class="explore-card-cta">
-								{i18nStore.locale === 'ko' ? '갤러리 열기' : 'Explore gallery'}
-								<span class="material-symbols-outlined">arrow_forward</span>
 							</div>
 						</a>
 						<div class="github-input-section">
@@ -344,6 +337,26 @@
 						<HeroIllustration />
 					</div>
 				</section>
+
+				<!-- Technical Specs Strip (Stitch v2) -->
+				<div class="landing-specs-strip">
+					<div class="specs-item">
+						<span class="material-symbols-outlined">verified_user</span>
+						<span>{i18nStore.t('landing.specLocalFirst')}</span>
+					</div>
+					<div class="specs-item">
+						<span class="material-symbols-outlined">memory</span>
+						<span>{i18nStore.t('landing.specWebgpu')}</span>
+					</div>
+					<div class="specs-item">
+						<span class="material-symbols-outlined">psychology</span>
+						<span>{i18nStore.t('landing.specSemantic')}</span>
+					</div>
+					<div class="specs-item">
+						<span class="material-symbols-outlined">visibility_off</span>
+						<span>{i18nStore.t('landing.specNoData')}</span>
+					</div>
+				</div>
 
 				<section class="landing-features">
 					<div class="feature-card">
@@ -455,22 +468,56 @@
 	}
 
 	.landing-hero {
+		position: relative;
 		display: grid;
-		grid-template-columns: 1fr 1fr;
-		gap: 48px;
+		grid-template-columns: 1.5fr 1fr;
+		gap: 64px;
 		align-items: center;
 		min-height: 500px;
-		padding: 48px;
+		padding: 64px 48px;
 		border-radius: 16px;
-		background-image: url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='100%25' fill='none' stroke='%23a3a6ff44' stroke-width='2' stroke-dasharray='8%2c 8' stroke-linecap='square'/%3e%3c/svg%3e");
+		overflow: hidden;
+	}
+
+	/* Radial glow backdrop — Stitch Hero Redesign v2 */
+	.landing-hero::before,
+	.landing-hero::after {
+		content: '';
+		position: absolute;
+		pointer-events: none;
+		border-radius: 50%;
+		filter: blur(120px);
+		z-index: 0;
+	}
+
+	.landing-hero::before {
+		top: -10%;
+		left: -10%;
+		width: 500px;
+		height: 500px;
+		background: color-mix(in srgb, var(--accent, #a3a6ff) 5%, transparent);
+	}
+
+	.landing-hero::after {
+		bottom: -15%;
+		right: -15%;
+		width: 600px;
+		height: 600px;
+		background: color-mix(in srgb, var(--accent-secondary, #53ddfc) 5%, transparent);
+	}
+
+	.landing-hero > * {
+		position: relative;
+		z-index: 1;
 	}
 
 	.hero-text h1 {
 		font-family: var(--font-display);
-		font-size: 48px;
+		font-size: 44px;
 		font-weight: 700;
 		color: var(--text-primary);
-		line-height: 1.25;
+		line-height: 1.2;
+		letter-spacing: -0.01em;
 		margin-bottom: 0;
 	}
 
@@ -480,10 +527,10 @@
 
 	.hero-sub {
 		font-family: var(--font-body);
-		font-size: 18px;
-		line-height: 1.625;
+		font-size: 16px;
+		line-height: 1.6;
 		color: var(--text-secondary);
-		max-width: 448px;
+		max-width: 520px;
 		margin-top: 16px;
 		margin-bottom: 32px;
 	}
@@ -491,17 +538,17 @@
 	.cta-btn {
 		display: inline-flex;
 		align-items: center;
-		gap: 12px;
-		padding: 16px 32px;
-		background: var(--accent);
-		color: #0f141a;
+		gap: 10px;
+		padding: 14px 28px;
+		background: linear-gradient(135deg, var(--accent, #a3a6ff) 0%, #9396ff 100%);
+		color: #ffffff;
 		border-radius: 8px;
 		font-family: var(--font-display);
-		font-size: 18px;
-		font-weight: 700;
+		font-size: 16px;
+		font-weight: 600;
 		cursor: pointer;
 		box-shadow:
-			0 10px 15px -3px color-mix(in srgb, var(--accent) 20%, transparent),
+			0 10px 20px -5px color-mix(in srgb, var(--accent) 30%, transparent),
 			0 4px 6px -4px color-mix(in srgb, var(--accent) 20%, transparent);
 		transition: all 0.15s ease;
 	}
@@ -558,9 +605,10 @@
 
 	.explore-card-inner {
 		display: flex;
-		align-items: flex-start;
+		align-items: center;
+		justify-content: space-between;
 		gap: 20px;
-		padding: 24px;
+		padding: 20px 24px;
 	}
 
 	.explore-card-icon {
@@ -611,60 +659,45 @@
 		color: var(--text-muted);
 	}
 
-	.explore-card-chips {
-		display: flex;
-		flex-wrap: wrap;
-		justify-content: flex-end;
-		gap: 8px;
-		max-width: 160px;
-	}
-
-	.explore-chip {
-		padding: 2px 8px;
-		border-radius: 9999px;
-		background: var(--bg-highest, #20262f);
-		font-family: var(--font-code);
-		font-size: 10px;
-		color: var(--text-muted);
-		white-space: nowrap;
-	}
-
 	.explore-card-cta {
-		position: absolute;
-		bottom: 16px;
-		right: 24px;
+		flex-shrink: 0;
 		display: inline-flex;
 		align-items: center;
-		gap: 4px;
+		gap: 6px;
 		font-family: var(--font-display);
-		font-size: 11px;
+		font-size: 12px;
 		font-weight: 700;
 		color: var(--accent-secondary, #53ddfc);
 		text-transform: uppercase;
 		letter-spacing: 0.08em;
-		opacity: 0;
-		transition: opacity 0.3s ease;
+		transition: transform 0.3s ease;
 	}
 
 	.explore-card-cta .material-symbols-outlined {
-		font-size: 14px;
+		font-size: 16px;
 	}
 
 	.explore-card:hover .explore-card-cta {
-		opacity: 1;
+		transform: translateX(4px);
+	}
+
+	/* Accent bar thickens on hover (Stitch v2 spec) */
+	.explore-card:hover .explore-card-accent {
+		width: 4px;
+	}
+
+	.explore-card-accent {
+		transition: width 0.3s ease;
 	}
 
 	@media (max-width: 640px) {
 		.explore-card {
 			max-width: none;
 		}
-		.explore-card-chips {
-			display: none;
-		}
-		.explore-card-cta {
-			position: static;
-			margin: 0 24px 18px 80px;
-			opacity: 1;
+		.explore-card-inner {
+			flex-direction: column;
+			align-items: flex-start;
+			gap: 16px;
 		}
 	}
 
@@ -768,6 +801,39 @@
 	.hero-visual {
 		display: flex;
 		justify-content: center;
+	}
+
+	/* Technical Specs Strip — Stitch v2 */
+	.landing-specs-strip {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: space-between;
+		align-items: center;
+		gap: 32px;
+		margin-top: 32px;
+		padding: 24px 48px;
+		border-top: 1px solid color-mix(in srgb, var(--text-muted, #64748b) 20%, transparent);
+		background: color-mix(in srgb, var(--bg-secondary, #151a21) 40%, transparent);
+		border-radius: 8px;
+		opacity: 0.7;
+	}
+
+	.specs-item {
+		display: inline-flex;
+		align-items: center;
+		gap: 10px;
+		font-family: var(--font-display);
+		font-size: 10px;
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.12em;
+		color: var(--text-secondary);
+	}
+
+	.specs-item .material-symbols-outlined {
+		font-size: 18px;
+		color: var(--accent-secondary, #53ddfc);
+		opacity: 0.8;
 	}
 
 	/* Feature cards */
@@ -923,6 +989,11 @@
 		.landing-hero {
 			grid-template-columns: 1fr;
 			text-align: center;
+			padding: 40px 24px;
+		}
+
+		.hero-text h1 {
+			font-size: 32px;
 		}
 
 		.hero-sub {
@@ -931,6 +1002,12 @@
 
 		.hero-visual {
 			order: -1;
+		}
+
+		.landing-specs-strip {
+			padding: 20px 24px;
+			gap: 20px;
+			justify-content: center;
 		}
 
 		.landing-features {
