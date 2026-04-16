@@ -40,21 +40,17 @@
 			</div>
 
 			<h2 class="prompt-title">
-				{i18nStore.locale === 'ko'
-					? `${nodeLabel} 상세 분석이 없습니다`
-					: `No deep analysis for ${nodeLabel}`}
+				{nodeLabel} — {i18nStore.t('landing.explorePromptTitle')}
 			</h2>
 
 			<p class="prompt-body">
-				{i18nStore.locale === 'ko'
-					? '이 도메인의 하위 구조는 큐레이션된 스냅샷에 포함되지 않았습니다. 직접 분석하시려면 원본 프로젝트를 홈에서 불러오세요.'
-					: "This domain's internal structure isn't part of the curated snapshot. To explore deeper, load the original project from the home page."}
+				{i18nStore.t('landing.explorePromptMessage')}
 			</p>
 
 			<div class="prompt-actions">
 				<a href={resolve('/')} class="btn btn-primary">
 					<span class="material-symbols-outlined">folder_open</span>
-					{i18nStore.locale === 'ko' ? '홈에서 분석하기' : 'Analyze from home'}
+					{i18nStore.t('landing.explorePromptAnalyze')}
 				</a>
 				{#if meta?.owner && meta?.repo}
 					<a
@@ -63,7 +59,7 @@
 						rel="noopener noreferrer"
 						class="btn btn-secondary"
 					>
-						{i18nStore.locale === 'ko' ? 'GitHub에서 보기' : 'View on GitHub'}
+						{i18nStore.t('landing.explorePromptGithub')}
 						<span class="material-symbols-outlined btn-icon-small">open_in_new</span>
 					</a>
 				{/if}

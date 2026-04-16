@@ -273,10 +273,14 @@
 			}
 
 			// U5: Add cache status and reanalyze callback
+			// hasCachedLevel(id) = "a child level for THIS node id exists in the
+			// semantic cache" (i.e., drilldown target is available without AI).
 			const isCached = semanticStore.hasCachedLevel(n.id);
-			// ADR-19 follow-up: in snapshot read-only mode, nodes without a
-			// cached child level are "unavailable for deep dive" — mark them
-			// so the node component can render a muted/dashed state.
+			// ADR-19 follow-up: in snapshot read-only mode (share/explore viewer),
+			// a node without a cached child level means the curated snapshot did
+			// not include its deep-dive → render muted/dashed so users know not
+			// to expect drilldown, and requestDrilldown() will show the prompt
+			// dialog instead of triggering an AI call.
 			const snapshotUnavailable = semanticStore.readOnlyMode === 'snapshot' && !isCached;
 
 			// Always render as the standard SemanticNode — selection state is

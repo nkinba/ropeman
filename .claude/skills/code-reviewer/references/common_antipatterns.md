@@ -329,6 +329,39 @@ SH — Share  (신규)
 
 ---
 
+## AP-14: 컴포넌트 내부에 i18n 한/영 ternary 인라인 작성
+
+**증상**: 컴포넌트 템플릿에 `i18nStore.locale === 'ko' ? '한국어' : 'English'` 직접 박힘. `i18nStore.t()` 미사용.
+
+```svelte
+<!-- BAD -->
+<h3>{i18nStore.locale === 'ko' ? '처음이신가요?' : 'New here?'}</h3>
+<button>EXPLORE GALLERY</button>
+<!-- 더 나쁨: 번역조차 없음 -->
+```
+
+**원인**: 새 UI 파편 작성 시 interface에 키 추가가 번거로움. "한두 줄이니 지금은 인라인, 나중에 정리"가 누적.
+
+**영향**:
+
+- 같은 문구가 여러 컴포넌트에 산재, 수정 시 grep 의존
+- 타입 보호 없음 (문자열 리터럴이라 컴파일러 감지 불가)
+- 새 로케일 확장 시 모든 인라인 ternary 수작업 마이그레이션
+- CLAUDE.md "모든 UI 문자열 i18n" 원칙 위반
+
+**해결**:
+
+1. 신규 UI 문자열은 **반드시** `i18nStore.svelte.ts`의 관련 Translations interface에 키 추가 + ko/en 정의
+2. 컴포넌트는 `i18nStore.t('namespace.key')`만 호출
+3. 플레이스홀더 필요 시 prefix/suffix 키로 분할 또는 템플릿 문자열과 키를 조합 (예: `{nodeLabel} — {i18nStore.t('...')}`)
+4. 기존 인라인 ternary는 리뷰에서 Warning 등재 후 마이그레이션
+
+**검출**: Grep 패턴 `i18nStore\.locale\s*===\s*['"]ko['"]` 전체 스캔 또는 하드코딩 한글/영문 병기를 리뷰 시 확인
+
+**관련 스프린트**: 2026-04-13-01 (2차 리뷰에서 Dropzone.svelte, ExploreDrilldownPromptDialog.svelte에서 발견·수정)
+
+---
+
 ## 우선순위
 
 | ID    | 영향도 | 난이도 | 권장 시기               |
@@ -344,5 +377,6 @@ SH — Share  (신규)
 | AP-12 | 중간   | 낮음   | 즉시 준수               |
 | AP-10 | 낮음   | 낮음   | 참고                    |
 | AP-13 | 낮음   | 낮음   | 참고                    |
+| AP-14 | 중간   | 낮음   | 신규 UI 작성 시 준수    |
 | AP-5  | 낮음   | 낮음   | 필요 시                 |
 | AP-6  | 낮음   | 낮음   | 필요 시                 |

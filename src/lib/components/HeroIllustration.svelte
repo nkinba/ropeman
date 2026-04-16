@@ -45,21 +45,21 @@
 	<!-- Node 1 — AppContainer (primary) -->
 	<div class="hero-node pos-tl">
 		<div class="node-bar" style="background: var(--accent, #a3a6ff);"></div>
-		<div class="node-title">AppContainer</div>
+		<div class="node-title">App Container</div>
 		<div class="node-sub">Primary Entry Point</div>
 	</div>
 
 	<!-- Node 2 — AuthModule (secondary) -->
 	<div class="hero-node pos-tr">
 		<div class="node-bar" style="background: var(--accent-secondary, #53ddfc);"></div>
-		<div class="node-title">AuthModule</div>
+		<div class="node-title">Auth Module</div>
 		<div class="node-sub">JWT / Middleware</div>
 	</div>
 
 	<!-- Node 3 — DataStore (tertiary) -->
 	<div class="hero-node pos-br">
 		<div class="node-bar" style="background: var(--accent-tertiary, #ac8aff);"></div>
-		<div class="node-title">DataStore</div>
+		<div class="node-title">Data Store</div>
 		<div class="node-sub">State Management</div>
 	</div>
 </div>
@@ -213,6 +213,17 @@
 	@media (max-width: 1024px) {
 		.hero-illustration {
 			display: none;
+		}
+	}
+
+	/* Respect users who prefer reduced motion — OS-level a11y setting.
+	   Animations (float / pulse / dash flow) would be distracting for
+	   those users, so we disable them while keeping the static layout. */
+	@media (prefers-reduced-motion: reduce) {
+		.hero-node,
+		.hero-pulse,
+		.edge-flow {
+			animation: none;
 		}
 	}
 </style>

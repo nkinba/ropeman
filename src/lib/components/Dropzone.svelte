@@ -303,21 +303,14 @@
 								</div>
 								<div class="explore-card-text">
 									<span class="explore-card-eyebrow">
-										{i18nStore.locale === 'ko'
-											? '처음이신가요? 예시 둘러보기'
-											: 'New here? Browse examples'}
+										{i18nStore.t('landing.exploreCardEyebrow')}
 									</span>
 									<h3 class="explore-card-title">
-										{i18nStore.locale === 'ko' ? '예시로 시작해보기' : 'Start with an example'}
+										{i18nStore.t('landing.exploreCardTitle')}
 									</h3>
-									<!-- <p class="explore-card-sub">
-										{i18nStore.locale === 'ko'
-											? 'React, Tokio, Transformers의 AI 생성 아키텍처'
-											: 'AI-generated architectures of React, Tokio, Transformers'}
-									</p> -->
 								</div>
 								<div class="explore-card-cta">
-									EXPLORE GALLERY
+									{i18nStore.t('landing.exploreCardCta')}
 									<span class="material-symbols-outlined">arrow_forward</span>
 								</div>
 							</div>

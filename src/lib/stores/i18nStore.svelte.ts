@@ -23,6 +23,13 @@ interface LandingTranslations {
 	specWebgpu: string;
 	specSemantic: string;
 	specNoData: string;
+	exploreCardEyebrow: string;
+	exploreCardTitle: string;
+	exploreCardCta: string;
+	explorePromptTitle: string;
+	explorePromptMessage: string;
+	explorePromptAnalyze: string;
+	explorePromptGithub: string;
 }
 
 interface SnippetTranslations {
@@ -250,7 +257,15 @@ const translations: Record<Locale, TranslationSet> = {
 			specLocalFirst: '로컬 분석',
 			specWebgpu: 'WebGPU 가속',
 			specSemantic: '시맨틱 인식',
-			specNoData: '데이터 수집 없음'
+			specNoData: '데이터 수집 없음',
+			exploreCardEyebrow: '처음이신가요? 예시 둘러보기',
+			exploreCardTitle: '예시로 시작해보기',
+			exploreCardCta: 'Explore Gallery',
+			explorePromptTitle: '이 도메인은 상세 분석이 없습니다',
+			explorePromptMessage:
+				'이 도메인의 하위 구조는 큐레이션된 스냅샷에 포함되지 않았습니다. 직접 분석하려면 원본 프로젝트를 홈에서 불러오세요.',
+			explorePromptAnalyze: '홈에서 분석하기',
+			explorePromptGithub: 'GitHub에서 보기'
 		},
 		snippet: {
 			divider: '또는 코드 스니펫으로 체험하기',
@@ -473,7 +488,15 @@ const translations: Record<Locale, TranslationSet> = {
 			specLocalFirst: 'Local-First Analysis',
 			specWebgpu: 'WebGPU Accelerated',
 			specSemantic: 'Semantic Recognition',
-			specNoData: 'Zero Data Collection'
+			specNoData: 'Zero Data Collection',
+			exploreCardEyebrow: 'New here? Browse examples',
+			exploreCardTitle: 'Start with an example',
+			exploreCardCta: 'Explore Gallery',
+			explorePromptTitle: 'No deep analysis for this domain',
+			explorePromptMessage:
+				"This domain's internal structure isn't part of the curated snapshot. To explore deeper, load the original project from the home page.",
+			explorePromptAnalyze: 'Analyze from home',
+			explorePromptGithub: 'View on GitHub'
 		},
 		snippet: {
 			divider: 'or try a code snippet',
