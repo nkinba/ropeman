@@ -423,7 +423,6 @@
 		position: relative;
 		border: none;
 		transition: all 0.2s ease;
-		cursor: pointer;
 		overflow-y: auto;
 		overflow-x: hidden;
 		background-color: var(--bg-primary);
@@ -449,8 +448,11 @@
 		color: var(--text-primary);
 	}
 
+	/* Show the standard "copy" cursor ONLY while an actual drag is in progress,
+	   so idle hover over body text behaves normally. */
 	.dropzone.dragover {
 		background-color: color-mix(in srgb, var(--accent) 5%, transparent);
+		cursor: copy;
 	}
 
 	.dropzone-content {
@@ -844,7 +846,7 @@
 
 	.specs-item .material-symbols-outlined {
 		font-size: 18px;
-		color: var(--accent-secondary, #53ddfc);
+		color: var(--text-secondary, #53ddfc);
 		opacity: 0.8;
 	}
 
@@ -857,25 +859,15 @@
 		margin-bottom: 80px;
 	}
 
+	/* Feature cards are informational only — no click handler, so avoid
+	   hover affordances (pointer cursor, border highlight) that would
+	   suggest otherwise. */
 	.feature-card {
 		background: var(--bg-secondary);
 		border: 1px solid rgba(255, 255, 255, 0.05);
 		border-radius: 12px;
 		padding: 32px;
 		text-align: left;
-		transition: border-color 0.2s ease;
-	}
-
-	.feature-card:nth-child(1):hover {
-		border-color: color-mix(in srgb, var(--accent) 30%, transparent);
-	}
-
-	.feature-card:nth-child(2):hover {
-		border-color: color-mix(in srgb, var(--accent-secondary) 30%, transparent);
-	}
-
-	.feature-card:nth-child(3):hover {
-		border-color: color-mix(in srgb, var(--accent-tertiary) 30%, transparent);
 	}
 
 	.feature-mat-icon {
