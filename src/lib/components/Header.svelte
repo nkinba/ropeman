@@ -132,6 +132,13 @@
 		</button>
 		<a
 			class="header-btn header-link"
+			href={resolve('/explore')}
+			title={i18nStore.locale === 'ko' ? '갤러리' : 'Explore gallery'}
+		>
+			<span class="material-symbols-outlined" style="font-size:18px;">photo_library</span>
+		</a>
+		<a
+			class="header-btn header-link"
 			href={resolve(`/docs/${i18nStore.locale}/getting-started`)}
 			title={i18nStore.t('docs.headerLink')}
 		>

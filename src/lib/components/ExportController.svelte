@@ -2,11 +2,24 @@
 	import { useSvelteFlow } from '@xyflow/svelte';
 	import { getViewportForBounds } from '@xyflow/system';
 	import { exportAsPNG, exportAsSVG } from '$lib/services/exportService';
+	import { exportAsMarkdown } from '$lib/services/markdownExporter';
+	import { exportAsHtml } from '$lib/services/htmlExporter';
+	import { exportAsPdf } from '$lib/services/pdfExporter';
 	import { projectStore } from '$lib/stores/projectStore.svelte';
+	import { semanticStore } from '$lib/stores/semanticStore.svelte';
 	import { onMount } from 'svelte';
 
-	let { onready }: { onready: (fns: { exportPNG: () => void; exportSVG: () => void }) => void } =
-		$props();
+	let {
+		onready
+	}: {
+		onready: (fns: {
+			exportPNG: () => void;
+			exportSVG: () => void;
+			exportMarkdown: () => void;
+			exportHtml: () => void;
+			exportPdf: () => void;
+		}) => void;
+	} = $props();
 
 	const { getNodes, getNodesBounds } = useSvelteFlow();
 
@@ -70,7 +83,44 @@
 		}
 	}
 
+	async function handleExportMarkdown() {
+		const root = semanticStore.currentLevel;
+		if (!root) return;
+		await exportAsMarkdown({
+			projectName: projectStore.projectName || 'project',
+			rootLevel: root,
+			cache: semanticStore.cache,
+			includeNested: true
+		});
+	}
+
+	async function handleExportHtml() {
+		const root = semanticStore.currentLevel;
+		if (!root) return;
+		await exportAsHtml({
+			projectName: projectStore.projectName || 'project',
+			rootLevel: root,
+			cache: semanticStore.cache
+		});
+	}
+
+	async function handleExportPdf() {
+		const root = semanticStore.currentLevel;
+		if (!root) return;
+		await exportAsPdf({
+			projectName: projectStore.projectName || 'project',
+			rootLevel: root,
+			cache: semanticStore.cache
+		});
+	}
+
 	onMount(() => {
-		onready({ exportPNG: handleExportPNG, exportSVG: handleExportSVG });
+		onready({
+			exportPNG: handleExportPNG,
+			exportSVG: handleExportSVG,
+			exportMarkdown: handleExportMarkdown,
+			exportHtml: handleExportHtml,
+			exportPdf: handleExportPdf
+		});
 	});
 </script>

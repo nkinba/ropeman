@@ -8,6 +8,7 @@
 	const moreCount = (data.keySymbols?.length ?? 0) - maxSymbols;
 	const isLeaf = data.fileCount === 1;
 	const isCached: boolean = data.isCached ?? false;
+	const snapshotUnavailable: boolean = data.snapshotUnavailable ?? false;
 
 	const targetHandleCount: number = data.targetHandleCount ?? 1;
 	const sourceHandleCount: number = data.sourceHandleCount ?? 1;
@@ -33,6 +34,8 @@
 	class:dimmed={data.dimmed}
 	class:selected={data.selected}
 	class:node-glow={data.glow}
+	class:snapshot-unavailable={snapshotUnavailable}
+	title={snapshotUnavailable ? 'Not in this snapshot — double-click for details' : undefined}
 	style="
 		--node-color: {data.color};
 	"
@@ -132,6 +135,25 @@
 		transition:
 			opacity 0.3s ease,
 			filter 0.3s ease;
+	}
+
+	/* Snapshot viewers (share/explore): node's deeper analysis is not in the
+	   curated data. Dashed border + muted to set expectation; still clickable
+	   so the user can open the "analyze it yourself" prompt. */
+	.semantic-node.snapshot-unavailable {
+		border-style: dashed;
+		border-color: var(--ghost-border, rgba(148, 163, 184, 0.25));
+		opacity: 0.72;
+	}
+	.semantic-node.snapshot-unavailable:hover {
+		opacity: 0.92;
+	}
+	.semantic-node.snapshot-unavailable .drilldown-icon {
+		color: var(--accent-secondary, #53ddfc);
+		opacity: 0.6;
+	}
+	.semantic-node.snapshot-unavailable:hover .drilldown-icon {
+		opacity: 1;
 	}
 
 	@keyframes pulse {

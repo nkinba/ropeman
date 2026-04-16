@@ -167,15 +167,15 @@ describe('bridgeService', () => {
 			await expect(sendPromise).rejects.toThrow('CLI not found');
 		});
 
-		it('times out after 2 minutes', async () => {
+		it('times out after 5 minutes', async () => {
 			const p = connectBridge(9800);
 			wsInstances[wsInstances.length - 1].simulateOpen();
 			await p;
 
 			const sendPromise = sendViaBridge('test');
 
-			// Advance 2 minutes
-			vi.advanceTimersByTime(120000);
+			// Advance 5 minutes (CLI subprocess can be slow for large projects)
+			vi.advanceTimersByTime(300000);
 
 			await expect(sendPromise).rejects.toThrow('Bridge request timeout');
 		});

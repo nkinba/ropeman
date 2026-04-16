@@ -183,13 +183,13 @@ export function sendViaBridge(message: string, cli?: string): Promise<string> {
 
 		ws.send(JSON.stringify({ id, type: 'chat', message, cli }));
 
-		// Timeout after 2 minutes (CLI subprocess can be slow for large projects)
+		// Timeout after 5 minutes (CLI subprocess can be slow for large projects)
 		setTimeout(() => {
 			if (pendingRequests.has(id)) {
 				pendingRequests.delete(id);
 				reject(new Error('Bridge request timeout'));
 			}
-		}, 120000);
+		}, 300000);
 	});
 }
 

@@ -1,0 +1,24 @@
+name = "ropeman-explore"
+main = "src/explore.ts"
+compatibility_date = "2026-04-13"
+compatibility_flags = ["nodejs_compat"]
+
+routes = [
+  { pattern = "explore.ropeman.dev", custom_domain = true }
+]
+
+[observability]
+enabled = true
+
+[vars]
+ALLOWED_ORIGINS = "https://ropeman.dev,http://localhost:5173,http://localhost:5174,http://localhost:4173"
+
+# KV namespace must be created before first deploy:
+#   wrangler kv namespace create ROPEMAN_EXPLORE_STORE -c wrangler.explore.toml
+# then paste the returned id below.
+[[kv_namespaces]]
+binding = "ROPEMAN_EXPLORE_STORE"
+id = "5967bfaab9f54a83b0bc7b6f1559865e"
+
+# Admin token for write/delete operations. Set with:
+#   wrangler secret put EXPLORE_ADMIN_TOKEN -c wrangler.explore.toml

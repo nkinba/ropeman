@@ -19,6 +19,17 @@ interface LandingTranslations {
 	githubRateLimit: string;
 	githubPrivate: string;
 	githubLoadError: string;
+	specLocalFirst: string;
+	specWebgpu: string;
+	specSemantic: string;
+	specNoData: string;
+	exploreCardEyebrow: string;
+	exploreCardTitle: string;
+	exploreCardCta: string;
+	explorePromptTitle: string;
+	explorePromptMessage: string;
+	explorePromptAnalyze: string;
+	explorePromptGithub: string;
 }
 
 interface SnippetTranslations {
@@ -224,7 +235,7 @@ const translations: Record<Locale, TranslationSet> = {
 		landing: {
 			headline: 'AI로 코드 구조를<br/><span class="headline-accent">시각화하세요</span>',
 			subheadline:
-				'AI가 코드베이스를 의미론적으로 분석하여, 역할과 의존 관계를 다이어그램으로 즉시 시각화합니다.',
+				'AI 기반 시맨틱 아키텍처 다이어그램. 모두 브라우저에서. 소스 코드 업로드 없이 로컬 폴더를 즉시 로드합니다.',
 			cta: '폴더 열기',
 			dragHint: 'or drag & drop a folder here',
 			featureAiTitle: 'AI 의미론적 분석',
@@ -236,13 +247,25 @@ const translations: Record<Locale, TranslationSet> = {
 			featureBrowserDesc:
 				'Demo · API Key · Local Bridge · Browser AI — 4가지 분석 방식을 제공합니다. 소스 코드 원문은 어떤 모드에서도 외부로 전송되지 않습니다.',
 			githubPlaceholder: 'https://github.com/owner/repo',
-			githubLoad: '분석',
+			githubLoad: '불러오기',
 			githubOr: '또는 GitHub 저장소 URL을 입력하세요',
 			githubInvalidUrl: '유효한 GitHub 저장소 URL을 입력해주세요.',
 			githubNotFound: '저장소를 찾을 수 없습니다. URL을 확인해주세요.',
 			githubRateLimit: 'GitHub API 요청 한도 초과. 잠시 후 다시 시도해주세요.',
 			githubPrivate: '비공개 저장소는 지원하지 않습니다.',
-			githubLoadError: 'GitHub 저장소 로딩에 실패했습니다.'
+			githubLoadError: 'GitHub 저장소 로딩에 실패했습니다.',
+			specLocalFirst: '로컬 분석',
+			specWebgpu: 'WebGPU 가속',
+			specSemantic: '시맨틱 인식',
+			specNoData: '데이터 수집 없음',
+			exploreCardEyebrow: '처음이신가요? 예시 둘러보기',
+			exploreCardTitle: '예시로 시작해보기',
+			exploreCardCta: 'Explore Gallery',
+			explorePromptTitle: '이 도메인은 상세 분석이 없습니다',
+			explorePromptMessage:
+				'이 도메인의 하위 구조는 큐레이션된 스냅샷에 포함되지 않았습니다. 직접 분석하려면 원본 프로젝트를 홈에서 불러오세요.',
+			explorePromptAnalyze: '홈에서 분석하기',
+			explorePromptGithub: 'GitHub에서 보기'
 		},
 		snippet: {
 			divider: '또는 코드 스니펫으로 체험하기',
@@ -442,7 +465,7 @@ const translations: Record<Locale, TranslationSet> = {
 		landing: {
 			headline: 'Visualize code<br/><span class="headline-accent">architecture with AI</span>',
 			subheadline:
-				'AI semantically analyzes your codebase, instantly visualizing roles and dependencies as diagrams.',
+				'AI-powered semantic architecture diagrams. All in your browser. Load local folders instantly without uploading source code.',
 			cta: 'Open Folder',
 			dragHint: 'or drag & drop a folder here',
 			featureAiTitle: 'AI Semantic Analysis',
@@ -461,7 +484,19 @@ const translations: Record<Locale, TranslationSet> = {
 			githubNotFound: 'Repository not found. Please check the URL.',
 			githubRateLimit: 'GitHub API rate limit exceeded. Please try again later.',
 			githubPrivate: 'Private repositories are not supported.',
-			githubLoadError: 'Failed to load GitHub repository.'
+			githubLoadError: 'Failed to load GitHub repository.',
+			specLocalFirst: 'Local-First Analysis',
+			specWebgpu: 'WebGPU Accelerated',
+			specSemantic: 'Semantic Recognition',
+			specNoData: 'Zero Data Collection',
+			exploreCardEyebrow: 'New here? Browse examples',
+			exploreCardTitle: 'Start with an example',
+			exploreCardCta: 'Explore Gallery',
+			explorePromptTitle: 'No deep analysis for this domain',
+			explorePromptMessage:
+				"This domain's internal structure isn't part of the curated snapshot. To explore deeper, load the original project from the home page.",
+			explorePromptAnalyze: 'Analyze from home',
+			explorePromptGithub: 'View on GitHub'
 		},
 		snippet: {
 			divider: 'or try a code snippet',

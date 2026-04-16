@@ -295,6 +295,26 @@
 								</button>
 							</div>
 						</div>
+						<a class="explore-card" href={resolve('/explore')} data-tour-step="explore">
+							<div class="explore-card-accent"></div>
+							<div class="explore-card-inner">
+								<div class="explore-card-icon">
+									<span class="material-symbols-outlined">photo_library</span>
+								</div>
+								<div class="explore-card-text">
+									<span class="explore-card-eyebrow">
+										{i18nStore.t('landing.exploreCardEyebrow')}
+									</span>
+									<h3 class="explore-card-title">
+										{i18nStore.t('landing.exploreCardTitle')}
+									</h3>
+								</div>
+								<div class="explore-card-cta">
+									{i18nStore.t('landing.exploreCardCta')}
+									<span class="material-symbols-outlined">arrow_forward</span>
+								</div>
+							</div>
+						</a>
 						<div class="hero-languages">
 							{#each languages as lang}
 								<span class="hero-lang" style="color: {lang.color}">
@@ -310,6 +330,26 @@
 						<HeroIllustration />
 					</div>
 				</section>
+
+				<!-- Technical Specs Strip (Stitch v2) -->
+				<div class="landing-specs-strip">
+					<div class="specs-item">
+						<span class="material-symbols-outlined">verified_user</span>
+						<span>{i18nStore.t('landing.specLocalFirst')}</span>
+					</div>
+					<div class="specs-item">
+						<span class="material-symbols-outlined">memory</span>
+						<span>{i18nStore.t('landing.specWebgpu')}</span>
+					</div>
+					<div class="specs-item">
+						<span class="material-symbols-outlined">psychology</span>
+						<span>{i18nStore.t('landing.specSemantic')}</span>
+					</div>
+					<div class="specs-item">
+						<span class="material-symbols-outlined">visibility_off</span>
+						<span>{i18nStore.t('landing.specNoData')}</span>
+					</div>
+				</div>
 
 				<section class="landing-features">
 					<div class="feature-card">
@@ -341,6 +381,9 @@
 
 				<footer class="landing-footer">
 					<span class="footer-copy">&copy; 2026 Ropeman. All rights reserved.</span>
+					<a class="footer-link" href={resolve('/explore')}>
+						{i18nStore.locale === 'ko' ? '갤러리' : 'Explore'}
+					</a>
 					<a class="footer-link" href={resolve(`/docs/${i18nStore.locale}/getting-started`)}>
 						{i18nStore.t('docs.footerLink')}
 					</a>
@@ -373,7 +416,6 @@
 		position: relative;
 		border: none;
 		transition: all 0.2s ease;
-		cursor: pointer;
 		overflow-y: auto;
 		overflow-x: hidden;
 		background-color: var(--bg-primary);
@@ -399,8 +441,11 @@
 		color: var(--text-primary);
 	}
 
+	/* Show the standard "copy" cursor ONLY while an actual drag is in progress,
+	   so idle hover over body text behaves normally. */
 	.dropzone.dragover {
 		background-color: color-mix(in srgb, var(--accent) 5%, transparent);
+		cursor: copy;
 	}
 
 	.dropzone-content {
@@ -414,26 +459,60 @@
 
 	/* Landing layout */
 	.landing {
+		position: relative;
 		animation: fadeInUp 0.5s ease both;
+	}
+
+	/* Radial glow backdrop spans the whole landing, not just hero, so the
+	   hero section blends seamlessly with the page background (Stitch v2). */
+	.landing::before,
+	.landing::after {
+		content: '';
+		position: absolute;
+		pointer-events: none;
+		border-radius: 50%;
+		filter: blur(120px);
+		z-index: 0;
+	}
+
+	.landing::before {
+		top: -5%;
+		left: -10%;
+		width: 500px;
+		height: 500px;
+		background: color-mix(in srgb, var(--accent, #a3a6ff) 5%, transparent);
+	}
+
+	.landing::after {
+		top: 40%;
+		right: -15%;
+		width: 600px;
+		height: 600px;
+		background: color-mix(in srgb, var(--accent-secondary, #53ddfc) 5%, transparent);
+	}
+
+	.landing > * {
+		position: relative;
+		z-index: 1;
 	}
 
 	.landing-hero {
 		display: grid;
-		grid-template-columns: 1fr 1fr;
-		gap: 48px;
+		grid-template-columns: 1.5fr 1fr;
+		gap: 64px;
 		align-items: center;
 		min-height: 500px;
-		padding: 48px;
-		border-radius: 16px;
-		background-image: url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='100%25' fill='none' stroke='%23a3a6ff44' stroke-width='2' stroke-dasharray='8%2c 8' stroke-linecap='square'/%3e%3c/svg%3e");
+		padding: 64px 48px;
+		background: transparent;
 	}
 
 	.hero-text h1 {
 		font-family: var(--font-display);
-		font-size: 48px;
+		font-size: 44px;
 		font-weight: 700;
 		color: var(--text-primary);
-		line-height: 1.25;
+		line-height: 1.2;
+		letter-spacing: -0.01em;
 		margin-bottom: 0;
 	}
 
@@ -443,28 +522,40 @@
 
 	.hero-sub {
 		font-family: var(--font-body);
-		font-size: 18px;
-		line-height: 1.625;
+		font-size: 16px;
+		line-height: 1.6;
 		color: var(--text-secondary);
-		max-width: 448px;
+		max-width: 520px;
 		margin-top: 16px;
 		margin-bottom: 32px;
+	}
+
+	/* Click targets (buttons / icon rows / card CTA) should not behave like
+	   selectable text — prevents accidental highlighting on click/drag while
+	   leaving body copy (headline, subheadline, feature cards, footer) freely
+	   selectable for a11y / copy-paste. */
+	.cta-btn,
+	.github-load-btn,
+	.explore-card-cta,
+	.hero-lang {
+		-webkit-user-select: none;
+		user-select: none;
 	}
 
 	.cta-btn {
 		display: inline-flex;
 		align-items: center;
-		gap: 12px;
-		padding: 16px 32px;
-		background: var(--accent);
-		color: #0f141a;
+		gap: 10px;
+		padding: 14px 28px;
+		background: linear-gradient(135deg, var(--accent, #a3a6ff) 0%, #9396ff 100%);
+		color: #ffffff;
 		border-radius: 8px;
 		font-family: var(--font-display);
-		font-size: 18px;
-		font-weight: 700;
+		font-size: 16px;
+		font-weight: 600;
 		cursor: pointer;
 		box-shadow:
-			0 10px 15px -3px color-mix(in srgb, var(--accent) 20%, transparent),
+			0 10px 20px -5px color-mix(in srgb, var(--accent) 30%, transparent),
 			0 4px 6px -4px color-mix(in srgb, var(--accent) 20%, transparent);
 		transition: all 0.15s ease;
 	}
@@ -489,9 +580,137 @@
 		color: var(--text-muted);
 	}
 
+	/* Explore Gallery card — Stitch design "Ropeman Landing - Gallery Focus"
+	   (.stitch-html/landing-gallery-focus.html) */
+	.explore-card {
+		position: relative;
+		display: block;
+		margin-top: 36px;
+		margin-left: 8px;
+		max-width: 640px;
+		background: var(--bg-tertiary, #1b2028);
+		border-radius: 12px;
+		overflow: hidden;
+		text-decoration: none;
+		color: var(--text-primary);
+		cursor: pointer;
+		transition: background 0.3s ease;
+	}
+
+	.explore-card:hover {
+		background: var(--bg-highest, #20262f);
+	}
+
+	.explore-card-accent {
+		position: absolute;
+		left: 0;
+		top: 0;
+		bottom: 0;
+		width: 2px;
+		background: var(--accent-secondary, #53ddfc);
+	}
+
+	.explore-card-inner {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 20px;
+		padding: 20px 24px;
+	}
+
+	.explore-card-icon {
+		flex-shrink: 0;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 44px;
+		height: 44px;
+		border-radius: 8px;
+		background: rgba(83, 221, 252, 0.1);
+		color: var(--accent-secondary, #53ddfc);
+	}
+
+	.explore-card-icon .material-symbols-outlined {
+		font-size: 22px;
+	}
+
+	.explore-card-text {
+		flex: 1;
+		min-width: 0;
+	}
+
+	.explore-card-eyebrow {
+		display: block;
+		margin-bottom: 4px;
+		font-family: var(--font-display);
+		font-size: 11px;
+		font-weight: 700;
+		color: var(--accent-secondary, #53ddfc);
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+	}
+
+	.explore-card-title {
+		margin: 0 0 4px;
+		font-family: var(--font-display);
+		font-size: 15px;
+		font-weight: 500;
+		color: var(--text-primary);
+	}
+
+	.explore-card-sub {
+		margin: 0;
+		font-family: var(--font-body, 'Inter', sans-serif);
+		font-size: 12px;
+		line-height: 1.5;
+		color: var(--text-muted);
+	}
+
+	.explore-card-cta {
+		flex-shrink: 0;
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		font-family: var(--font-display);
+		font-size: 12px;
+		font-weight: 700;
+		color: var(--accent-secondary, #53ddfc);
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+		transition: transform 0.3s ease;
+	}
+
+	.explore-card-cta .material-symbols-outlined {
+		font-size: 16px;
+	}
+
+	.explore-card:hover .explore-card-cta {
+		transform: translateX(4px);
+	}
+
+	/* Accent bar thickens on hover (Stitch v2 spec) */
+	.explore-card:hover .explore-card-accent {
+		width: 4px;
+	}
+
+	.explore-card-accent {
+		transition: width 0.3s ease;
+	}
+
+	@media (max-width: 640px) {
+		.explore-card {
+			max-width: none;
+		}
+		.explore-card-inner {
+			flex-direction: column;
+			align-items: flex-start;
+			gap: 16px;
+		}
+	}
+
 	/* GitHub URL input */
 	.github-input-section {
-		margin-top: 20px;
+		margin-top: 36px;
 	}
 
 	.github-or {
@@ -591,6 +810,39 @@
 		justify-content: center;
 	}
 
+	/* Technical Specs Strip — Stitch v2 */
+	.landing-specs-strip {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: space-between;
+		align-items: center;
+		gap: 32px;
+		margin-top: 32px;
+		padding: 24px 48px;
+		border-top: 1px solid color-mix(in srgb, var(--text-muted, #64748b) 20%, transparent);
+		background: color-mix(in srgb, var(--bg-secondary, #151a21) 40%, transparent);
+		border-radius: 8px;
+		opacity: 0.7;
+	}
+
+	.specs-item {
+		display: inline-flex;
+		align-items: center;
+		gap: 10px;
+		font-family: var(--font-display);
+		font-size: 10px;
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.12em;
+		color: var(--text-secondary);
+	}
+
+	.specs-item .material-symbols-outlined {
+		font-size: 18px;
+		color: var(--text-secondary, #53ddfc);
+		opacity: 0.8;
+	}
+
 	/* Feature cards */
 	.landing-features {
 		display: grid;
@@ -600,25 +852,15 @@
 		margin-bottom: 80px;
 	}
 
+	/* Feature cards are informational only — no click handler, so avoid
+	   hover affordances (pointer cursor, border highlight) that would
+	   suggest otherwise. */
 	.feature-card {
 		background: var(--bg-secondary);
 		border: 1px solid rgba(255, 255, 255, 0.05);
 		border-radius: 12px;
 		padding: 32px;
 		text-align: left;
-		transition: border-color 0.2s ease;
-	}
-
-	.feature-card:nth-child(1):hover {
-		border-color: color-mix(in srgb, var(--accent) 30%, transparent);
-	}
-
-	.feature-card:nth-child(2):hover {
-		border-color: color-mix(in srgb, var(--accent-secondary) 30%, transparent);
-	}
-
-	.feature-card:nth-child(3):hover {
-		border-color: color-mix(in srgb, var(--accent-tertiary) 30%, transparent);
 	}
 
 	.feature-mat-icon {
@@ -744,6 +986,11 @@
 		.landing-hero {
 			grid-template-columns: 1fr;
 			text-align: center;
+			padding: 40px 24px;
+		}
+
+		.hero-text h1 {
+			font-size: 32px;
 		}
 
 		.hero-sub {
@@ -752,6 +999,12 @@
 
 		.hero-visual {
 			order: -1;
+		}
+
+		.landing-specs-strip {
+			padding: 20px 24px;
+			gap: 20px;
+			justify-content: center;
 		}
 
 		.landing-features {
