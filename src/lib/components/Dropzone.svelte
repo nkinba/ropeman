@@ -535,6 +535,18 @@
 		margin-bottom: 32px;
 	}
 
+	/* Click targets (buttons / icon rows / card CTA) should not behave like
+	   selectable text — prevents accidental highlighting on click/drag while
+	   leaving body copy (headline, subheadline, feature cards, footer) freely
+	   selectable for a11y / copy-paste. */
+	.cta-btn,
+	.github-load-btn,
+	.explore-card-cta,
+	.hero-lang {
+		-webkit-user-select: none;
+		user-select: none;
+	}
+
 	.cta-btn {
 		display: inline-flex;
 		align-items: center;
