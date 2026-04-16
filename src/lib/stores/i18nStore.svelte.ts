@@ -247,7 +247,7 @@ const translations: Record<Locale, TranslationSet> = {
 			featureBrowserDesc:
 				'Demo · API Key · Local Bridge · Browser AI — 4가지 분석 방식을 제공합니다. 소스 코드 원문은 어떤 모드에서도 외부로 전송되지 않습니다.',
 			githubPlaceholder: 'https://github.com/owner/repo',
-			githubLoad: '분석',
+			githubLoad: '불러오기',
 			githubOr: '또는 GitHub 저장소 URL을 입력하세요',
 			githubInvalidUrl: '유효한 GitHub 저장소 URL을 입력해주세요.',
 			githubNotFound: '저장소를 찾을 수 없습니다. URL을 확인해주세요.',
