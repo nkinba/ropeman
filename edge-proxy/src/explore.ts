@@ -60,12 +60,24 @@ function exploreCorsHeaders(origin: string): Record<string, string> {
 
 export default {
 	async fetch(request: Request, env: Env): Promise<Response> {
+		// CORS policy (ADR-19 follow-up):
+		//   - When the caller is a browser, the `Origin` header must be in the
+		//     allowlist; otherwise the browser would reject the response anyway
+		//     and responding with 403 here is a clearer failure.
+		//   - Non-browser callers (curl, CI, admin CLI) do not send `Origin`.
+		//     Those are permitted through — the Bearer token on admin methods
+		//     (POST/DELETE) is the real authorization layer, and GET is fully
+		//     public. The allowlist is a browser-side protection, not a
+		//     server-side access control.
 		const requestOrigin = request.headers.get('Origin');
-		const origin = getAllowedOrigin(requestOrigin, env.ALLOWED_ORIGINS);
-		if (!origin) {
-			return new Response('Origin not allowed', { status: 403 });
+		let cors: Record<string, string> = {};
+		if (requestOrigin) {
+			const origin = getAllowedOrigin(requestOrigin, env.ALLOWED_ORIGINS);
+			if (!origin) {
+				return new Response('Origin not allowed', { status: 403 });
+			}
+			cors = exploreCorsHeaders(origin);
 		}
-		const cors = exploreCorsHeaders(origin);
 
 		if (request.method === 'OPTIONS') {
 			return new Response(null, { status: 204, headers: cors });

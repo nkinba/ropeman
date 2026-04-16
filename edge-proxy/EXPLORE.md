@@ -117,3 +117,14 @@ Repeat for each entry in `src/lib/data/explore-curated.json`.
 - KV storage is ~$0.50/GB/month — six 200KB snapshots cost essentially $0.
 - The admin token is the only thing standing between malicious uploads and KV;
   rotate it if it leaks: `wrangler secret put EXPLORE_ADMIN_TOKEN -c wrangler.explore.toml`.
+
+## CORS policy note
+
+The explore worker's `ALLOWED_ORIGINS` allowlist applies **only when the
+request has an `Origin` header** — i.e. when a browser is calling from
+another site. Server-to-server callers (curl, CI, admin scripts) do not
+send `Origin`, so the allowlist is skipped for them and the request
+proceeds straight to routing. For admin `POST` / `DELETE`, the Bearer
+token is the real authorization check; the `Origin` allowlist only
+guards browser traffic that would otherwise bypass CORS. This means
+the `curl` examples above work without needing `-H "Origin: ..."`.
