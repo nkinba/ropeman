@@ -1,41 +1,14 @@
 {
-	"updatedAt": "2026-04-13",
+	"updatedAt": "2026-04-16",
 	"entries": [
 		{
-			"slug": "react",
-			"owner": "facebook",
-			"repo": "react",
-			"title": "React",
-			"language": "JavaScript",
-			"description": "A declarative, efficient, and flexible JavaScript library for building user interfaces.",
-			"stars": "230k+"
-		},
-		{
-			"slug": "vue",
-			"owner": "vuejs",
-			"repo": "core",
-			"title": "Vue",
-			"language": "TypeScript",
-			"description": "Progressive JavaScript framework for building modern web UIs.",
-			"stars": "47k+"
-		},
-		{
-			"slug": "svelte",
-			"owner": "sveltejs",
-			"repo": "svelte",
-			"title": "Svelte",
-			"language": "TypeScript",
-			"description": "Cybernetically enhanced web apps — a compile-time UI framework.",
-			"stars": "82k+"
-		},
-		{
-			"slug": "tailwindcss",
-			"owner": "tailwindlabs",
-			"repo": "tailwindcss",
-			"title": "Tailwind CSS",
-			"language": "JavaScript",
-			"description": "A utility-first CSS framework for rapidly building custom designs.",
-			"stars": "85k+"
+			"slug": "transformers",
+			"owner": "huggingface",
+			"repo": "transformers",
+			"title": "Transformers",
+			"language": "Python",
+			"description": "State-of-the-art machine learning for JAX, PyTorch and TensorFlow — pretrained models for NLP, CV and audio.",
+			"stars": "140k+"
 		},
 		{
 			"slug": "fastapi",
@@ -54,6 +27,24 @@
 			"language": "Go",
 			"description": "HTTP web framework written in Go (Golang) — fast and minimal.",
 			"stars": "80k+"
+		},
+		{
+			"slug": "react",
+			"owner": "facebook",
+			"repo": "react",
+			"title": "React",
+			"language": "JavaScript",
+			"description": "A declarative, efficient, and flexible JavaScript library for building user interfaces.",
+			"stars": "230k+"
+		},
+		{
+			"slug": "tokio",
+			"owner": "tokio-rs",
+			"repo": "tokio",
+			"title": "Tokio",
+			"language": "Rust",
+			"description": "A runtime for writing reliable asynchronous applications with Rust — the de-facto async standard.",
+			"stars": "28k+"
 		}
 	]
 }

@@ -103,7 +103,7 @@
 
 		{#if data.manifest.updatedAt}
 			<footer class="explore-footer">
-				{i18nStore.locale === 'ko' ? '마지막 갱신' : 'Last updated'}: {data.manifest.updatedAt}
+				Last updated: {data.manifest.updatedAt}
 			</footer>
 		{/if}
 	</main>
@@ -261,8 +261,7 @@
 		color: var(--accent);
 		border-radius: 9999px;
 		font-weight: 600;
-		text-transform: uppercase;
-		letter-spacing: 0.05em;
+		letter-spacing: 0.02em;
 	}
 
 	.card-stars {

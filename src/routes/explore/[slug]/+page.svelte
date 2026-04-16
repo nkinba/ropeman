@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onMount, onDestroy } from 'svelte';
 	import { resolve } from '$app/paths';
 	import { semanticStore } from '$lib/stores/semanticStore.svelte';
 	import { projectStore } from '$lib/stores/projectStore.svelte';
@@ -34,6 +34,16 @@
 	);
 
 	onMount(async () => {
+		// Mark the store as a read-only snapshot viewer BEFORE injecting data,
+		// so the first render already shows nodes as "snapshot-unavailable"
+		// where appropriate (ADR-19 follow-up).
+		semanticStore.readOnlyMode = 'snapshot';
+		semanticStore.snapshotMeta = {
+			owner: data.entry.owner,
+			repo: data.entry.repo,
+			title: data.entry.title
+		};
+
 		const result = await fetchExploreSnapshot(data.entry.slug);
 		if (!result.ok) {
 			status = result.status;
@@ -58,6 +68,13 @@
 		}
 
 		loading = false;
+	});
+
+	onDestroy(() => {
+		// Restore default mode so returning to the main app does not keep
+		// the gallery's "snapshot" guard applied.
+		semanticStore.readOnlyMode = 'none';
+		semanticStore.snapshotMeta = null;
 	});
 </script>
 
@@ -117,12 +134,22 @@
 				</h2>
 				<p>
 					{i18nStore.locale === 'ko'
-						? '이 프로젝트의 아키텍처 분석은 곧 추가됩니다. 그동안 직접 분석해보세요.'
-						: "This project's architecture snapshot will be added soon. In the meantime, you can analyze it yourself."}
+						? `${data.entry.title}의 아키텍처 스냅샷은 곧 추가됩니다. 그동안 홈에서 GitHub URL로 직접 분석해보세요.`
+						: `The architecture snapshot for ${data.entry.title} will be added soon. You can analyze it yourself by pasting the GitHub URL on the home page.`}
 				</p>
-				<button class="cta" onclick={() => (window.location.href = resolve('/'))}>
-					{i18nStore.locale === 'ko' ? '직접 분석하기' : 'Analyze it yourself'}
-				</button>
+				<div class="state-actions">
+					<a href={resolve('/')} class="cta">
+						{i18nStore.locale === 'ko' ? '홈에서 분석하기' : 'Analyze from home'}
+					</a>
+					<a
+						href={`https://github.com/${data.entry.owner}/${data.entry.repo}`}
+						target="_blank"
+						rel="noopener noreferrer"
+						class="cta cta-secondary"
+					>
+						{i18nStore.locale === 'ko' ? 'GitHub에서 보기' : 'View on GitHub'} ↗
+					</a>
+				</div>
 			</div>
 		{:else if status === 'error'}
 			<div class="state state-error">
@@ -235,6 +262,25 @@
 	}
 	.cta:hover {
 		opacity: 0.85;
+	}
+
+	.cta-secondary {
+		background: transparent;
+		color: var(--text-primary);
+		border: 1px solid var(--ghost-border);
+	}
+
+	.cta-secondary:hover {
+		background: var(--ghost-bg, rgba(255, 255, 255, 0.05));
+		opacity: 1;
+	}
+
+	.state-actions {
+		display: flex;
+		gap: 12px;
+		flex-wrap: wrap;
+		justify-content: center;
+		margin-top: 8px;
 	}
 
 	.explore-content {

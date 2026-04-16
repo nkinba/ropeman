@@ -147,10 +147,59 @@ export type FetchSnapshotResult =
 	| { ok: true; snapshot: ExploreSnapshot }
 	| { ok: false; status: 'not-analyzed' | 'error'; message: string };
 
-export async function fetchExploreSnapshot(slug: string): Promise<FetchSnapshotResult> {
-	const base = EXPLORE_URL || '';
+export type UploadSnapshotResult = { ok: true } | { ok: false; message: string };
+
+/**
+ * Upload a curated snapshot to the explore worker (admin-only).
+ * Requires the worker deployed + EXPLORE_ADMIN_TOKEN configured.
+ * Intended to be called from a dev-only console helper
+ * (`__uploadExplore`), never from production UI code.
+ */
+export async function uploadExploreSnapshot(
+	slug: string,
+	snapshot: ExploreSnapshot,
+	token: string
+): Promise<UploadSnapshotResult> {
+	if (!EXPLORE_URL) {
+		return { ok: false, message: 'EXPLORE_URL is not configured.' };
+	}
+	if (!token) {
+		return { ok: false, message: 'Admin token is required.' };
+	}
 	try {
-		const res = await fetch(`${base}/explore/${slug}`);
+		const res = await fetch(`${EXPLORE_URL}/explore/${slug}`, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+				Authorization: `Bearer ${token}`
+			},
+			body: JSON.stringify(snapshot)
+		});
+		if (res.ok) return { ok: true };
+		const text = await res.text().catch(() => '');
+		return { ok: false, message: `HTTP ${res.status}: ${text || res.statusText}` };
+	} catch (err) {
+		return {
+			ok: false,
+			message: err instanceof Error ? err.message : 'Network error'
+		};
+	}
+}
+
+export async function fetchExploreSnapshot(slug: string): Promise<FetchSnapshotResult> {
+	// If EXPLORE_URL is not configured, the worker is not deployed yet —
+	// treat it as "not analyzed" so the viewer shows the friendly fallback
+	// instead of a confusing error screen.
+	if (!EXPLORE_URL) {
+		return {
+			ok: false,
+			status: 'not-analyzed',
+			message: 'This project has not been analyzed yet.'
+		};
+	}
+
+	try {
+		const res = await fetch(`${EXPLORE_URL}/explore/${slug}`);
 		if (res.status === 404) {
 			return {
 				ok: false,
@@ -171,11 +220,14 @@ export async function fetchExploreSnapshot(slug: string): Promise<FetchSnapshotR
 			return { ok: false, status: 'error', message: 'Invalid snapshot payload.' };
 		}
 		return { ok: true, snapshot };
-	} catch (err) {
+	} catch {
+		// Network-level failure (DNS, CORS, offline) — most likely the
+		// explore worker is unreachable. Degrade gracefully to the
+		// "not analyzed yet" state rather than surfacing a raw fetch error.
 		return {
 			ok: false,
-			status: 'error',
-			message: err instanceof Error ? err.message : 'Network error'
+			status: 'not-analyzed',
+			message: 'This project has not been analyzed yet.'
 		};
 	}
 }

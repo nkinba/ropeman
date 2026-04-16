@@ -270,6 +270,40 @@
 							{i18nStore.t('landing.cta')}
 						</button>
 						<p class="drag-hint">{i18nStore.t('landing.dragHint')}</p>
+						<a class="explore-card" href={resolve('/explore')} data-tour-step="explore">
+							<div class="explore-card-accent"></div>
+							<div class="explore-card-inner">
+								<div class="explore-card-icon">
+									<span class="material-symbols-outlined">photo_library</span>
+								</div>
+								<div class="explore-card-text">
+									<span class="explore-card-eyebrow">
+										{i18nStore.locale === 'ko'
+											? '처음이신가요? 예시 둘러보기'
+											: 'New here? Browse examples'}
+									</span>
+									<h3 class="explore-card-title">
+										{i18nStore.locale === 'ko' ? '예시로 시작해보기' : 'Start with an example'}
+									</h3>
+									<p class="explore-card-sub">
+										{i18nStore.locale === 'ko'
+											? 'React, Tokio, Transformers의 AI 생성 아키텍처'
+											: 'AI-generated architectures of React, Tokio, Transformers'}
+									</p>
+								</div>
+								<div class="explore-card-chips">
+									<span class="explore-chip">React</span>
+									<!-- <span class="explore-chip">Spring Boot</span> -->
+									<span class="explore-chip">Tokio</span>
+									<span class="explore-chip">Transformers</span>
+									<span class="explore-chip">Gin</span>
+								</div>
+							</div>
+							<div class="explore-card-cta">
+								{i18nStore.locale === 'ko' ? '갤러리 열기' : 'Explore gallery'}
+								<span class="material-symbols-outlined">arrow_forward</span>
+							</div>
+						</a>
 						<div class="github-input-section">
 							<p class="github-or">{i18nStore.t('landing.githubOr')}</p>
 							<div class="github-input-row">
@@ -341,6 +375,9 @@
 
 				<footer class="landing-footer">
 					<span class="footer-copy">&copy; 2026 Ropeman. All rights reserved.</span>
+					<a class="footer-link" href={resolve('/explore')}>
+						{i18nStore.locale === 'ko' ? '갤러리' : 'Explore'}
+					</a>
 					<a class="footer-link" href={resolve(`/docs/${i18nStore.locale}/getting-started`)}>
 						{i18nStore.t('docs.footerLink')}
 					</a>
@@ -487,6 +524,148 @@
 		font-family: var(--font-code);
 		font-size: 14px;
 		color: var(--text-muted);
+	}
+
+	/* Explore Gallery card — Stitch design "Ropeman Landing - Gallery Focus"
+	   (.stitch-html/landing-gallery-focus.html) */
+	.explore-card {
+		position: relative;
+		display: block;
+		margin-top: 24px;
+		margin-left: 8px;
+		max-width: 640px;
+		background: var(--bg-tertiary, #1b2028);
+		border-radius: 12px;
+		overflow: hidden;
+		text-decoration: none;
+		color: var(--text-primary);
+		cursor: pointer;
+		transition: background 0.3s ease;
+	}
+
+	.explore-card:hover {
+		background: var(--bg-highest, #20262f);
+	}
+
+	.explore-card-accent {
+		position: absolute;
+		left: 0;
+		top: 0;
+		bottom: 0;
+		width: 2px;
+		background: var(--accent-secondary, #53ddfc);
+	}
+
+	.explore-card-inner {
+		display: flex;
+		align-items: flex-start;
+		gap: 20px;
+		padding: 24px;
+	}
+
+	.explore-card-icon {
+		flex-shrink: 0;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 44px;
+		height: 44px;
+		border-radius: 8px;
+		background: rgba(83, 221, 252, 0.1);
+		color: var(--accent-secondary, #53ddfc);
+	}
+
+	.explore-card-icon .material-symbols-outlined {
+		font-size: 22px;
+	}
+
+	.explore-card-text {
+		flex: 1;
+		min-width: 0;
+	}
+
+	.explore-card-eyebrow {
+		display: block;
+		margin-bottom: 4px;
+		font-family: var(--font-display);
+		font-size: 11px;
+		font-weight: 700;
+		color: var(--accent-secondary, #53ddfc);
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+	}
+
+	.explore-card-title {
+		margin: 0 0 4px;
+		font-family: var(--font-display);
+		font-size: 15px;
+		font-weight: 500;
+		color: var(--text-primary);
+	}
+
+	.explore-card-sub {
+		margin: 0;
+		font-family: var(--font-body, 'Inter', sans-serif);
+		font-size: 12px;
+		line-height: 1.5;
+		color: var(--text-muted);
+	}
+
+	.explore-card-chips {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: flex-end;
+		gap: 8px;
+		max-width: 160px;
+	}
+
+	.explore-chip {
+		padding: 2px 8px;
+		border-radius: 9999px;
+		background: var(--bg-highest, #20262f);
+		font-family: var(--font-code);
+		font-size: 10px;
+		color: var(--text-muted);
+		white-space: nowrap;
+	}
+
+	.explore-card-cta {
+		position: absolute;
+		bottom: 16px;
+		right: 24px;
+		display: inline-flex;
+		align-items: center;
+		gap: 4px;
+		font-family: var(--font-display);
+		font-size: 11px;
+		font-weight: 700;
+		color: var(--accent-secondary, #53ddfc);
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+		opacity: 0;
+		transition: opacity 0.3s ease;
+	}
+
+	.explore-card-cta .material-symbols-outlined {
+		font-size: 14px;
+	}
+
+	.explore-card:hover .explore-card-cta {
+		opacity: 1;
+	}
+
+	@media (max-width: 640px) {
+		.explore-card {
+			max-width: none;
+		}
+		.explore-card-chips {
+			display: none;
+		}
+		.explore-card-cta {
+			position: static;
+			margin: 0 24px 18px 80px;
+			opacity: 1;
+		}
 	}
 
 	/* GitHub URL input */

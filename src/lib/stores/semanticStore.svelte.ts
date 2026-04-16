@@ -4,6 +4,20 @@ import { saveSemanticLevel, loadSemanticCache } from '$lib/services/semanticCach
 
 export type ViewMode = 'semantic' | 'code';
 
+/**
+ * Read-only viewing mode. `'snapshot'` is used by the `/share/[slug]` and
+ * `/explore/[slug]` routes to signal that the loaded analysis is a frozen
+ * snapshot — drilldowns into non-cached nodes should not trigger AI calls,
+ * and the UI should guide visitors to the main app instead.
+ */
+export type ReadOnlyMode = 'none' | 'snapshot';
+
+export interface SnapshotMeta {
+	owner?: string;
+	repo?: string;
+	title?: string;
+}
+
 export interface AnalysisRequest {
 	nodeId: string;
 	nodeLabel: string;
@@ -26,6 +40,8 @@ function createSemanticStore() {
 	let cache = $state<Map<string, SemanticLevel>>(new Map());
 	let selectedSemanticNode = $state<SemanticNode | null>(null);
 	let panelDismissed = $state(false);
+	let readOnlyMode = $state<ReadOnlyMode>('none');
+	let snapshotMeta = $state<SnapshotMeta | null>(null);
 
 	return {
 		get currentLevel() {
@@ -145,6 +161,20 @@ function createSemanticStore() {
 		},
 		set panelDismissed(v: boolean) {
 			panelDismissed = v;
+		},
+
+		get readOnlyMode(): ReadOnlyMode {
+			return readOnlyMode;
+		},
+		set readOnlyMode(v: ReadOnlyMode) {
+			readOnlyMode = v;
+		},
+
+		get snapshotMeta(): SnapshotMeta | null {
+			return snapshotMeta;
+		},
+		set snapshotMeta(v: SnapshotMeta | null) {
+			snapshotMeta = v;
 		},
 
 		get highlightedFilePaths(): string[] {
@@ -288,6 +318,8 @@ function createSemanticStore() {
 			cache = new Map();
 			selectedSemanticNode = null;
 			panelDismissed = false;
+			readOnlyMode = 'none';
+			snapshotMeta = null;
 			tabStore.clear();
 		}
 	};

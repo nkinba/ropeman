@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/stores';
-	import { onMount } from 'svelte';
+	import { onMount, onDestroy } from 'svelte';
 	import { semanticStore } from '$lib/stores/semanticStore.svelte';
 	import { projectStore } from '$lib/stores/projectStore.svelte';
 	import { i18nStore } from '$lib/stores/i18nStore.svelte';
@@ -22,6 +22,10 @@
 	);
 
 	onMount(async () => {
+		// Mark the store as a read-only snapshot viewer so drilldowns into
+		// non-cached nodes route to the "analyze it yourself" prompt instead
+		// of triggering AI calls on the visitor's credentials (ADR-19 follow-up).
+		semanticStore.readOnlyMode = 'snapshot';
 		try {
 			const shareBase = SHARE_URL || '';
 			const res = await fetch(`${shareBase}/share/${slug}`);
@@ -94,6 +98,12 @@
 		} finally {
 			loading = false;
 		}
+	});
+
+	onDestroy(() => {
+		// Restore default mode when leaving the share viewer, so navigating
+		// back to the main app doesn't keep the "snapshot" guard applied.
+		semanticStore.readOnlyMode = 'none';
 	});
 </script>
 

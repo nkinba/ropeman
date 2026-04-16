@@ -311,6 +311,8 @@ describe('semanticStore', () => {
 			semanticStore.isAnalyzing = true;
 			semanticStore.cacheLevel('key', makeSemanticLevel([]));
 			semanticStore.selectedSemanticNode = makeSemanticNode('n1', 'UI');
+			semanticStore.readOnlyMode = 'snapshot';
+			semanticStore.snapshotMeta = { owner: 'facebook', repo: 'react' };
 
 			semanticStore.clear();
 
@@ -320,6 +322,36 @@ describe('semanticStore', () => {
 			expect(semanticStore.isAnalyzing).toBe(false);
 			expect(semanticStore.cache.size).toBe(0);
 			expect(semanticStore.selectedSemanticNode).toBeNull();
+			expect(semanticStore.readOnlyMode).toBe('none');
+			expect(semanticStore.snapshotMeta).toBeNull();
+		});
+	});
+
+	describe('readOnlyMode', () => {
+		it("defaults to 'none'", () => {
+			semanticStore.clear();
+			expect(semanticStore.readOnlyMode).toBe('none');
+		});
+
+		it("can be set to 'snapshot' for share/explore viewers", () => {
+			semanticStore.readOnlyMode = 'snapshot';
+			expect(semanticStore.readOnlyMode).toBe('snapshot');
+		});
+
+		it('holds snapshotMeta alongside readOnlyMode', () => {
+			semanticStore.snapshotMeta = {
+				owner: 'facebook',
+				repo: 'react',
+				title: 'React'
+			};
+			expect(semanticStore.snapshotMeta?.owner).toBe('facebook');
+			expect(semanticStore.snapshotMeta?.repo).toBe('react');
+			expect(semanticStore.snapshotMeta?.title).toBe('React');
+		});
+
+		it('snapshotMeta defaults to null', () => {
+			semanticStore.clear();
+			expect(semanticStore.snapshotMeta).toBeNull();
 		});
 	});
 });

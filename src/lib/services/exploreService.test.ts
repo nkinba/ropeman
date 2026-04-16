@@ -6,8 +6,10 @@ import {
 	filterEntries,
 	listLanguages,
 	fetchExploreSnapshot,
+	uploadExploreSnapshot,
 	getCuratedManifest,
-	type CuratedEntry
+	type CuratedEntry,
+	type ExploreSnapshot
 } from './exploreService';
 
 const SAMPLE_ENTRIES: CuratedEntry[] = [
@@ -256,13 +258,84 @@ describe('fetchExploreSnapshot', () => {
 		}
 	});
 
-	it('handles network errors gracefully', async () => {
+	it('degrades network errors to not-analyzed (worker unreachable)', async () => {
+		// When the explore worker is not deployed or unreachable, the viewer
+		// should show the friendly "not analyzed yet" fallback rather than
+		// surfacing a raw fetch error to the user.
 		vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('connection refused')));
 		const result = await fetchExploreSnapshot('react');
 		expect(result.ok).toBe(false);
 		if (!result.ok) {
-			expect(result.status).toBe('error');
-			expect(result.message).toContain('connection refused');
+			expect(result.status).toBe('not-analyzed');
+		}
+	});
+});
+
+describe('uploadExploreSnapshot', () => {
+	const VALID_SNAPSHOT: ExploreSnapshot = {
+		projectName: 'React',
+		owner: 'facebook',
+		repo: 'react',
+		analyzedAt: '2026-04-16',
+		semanticLevels: {
+			__root__: {
+				parentId: null,
+				breadcrumbLabel: 'React',
+				nodes: [],
+				edges: []
+			}
+		}
+	};
+
+	beforeEach(() => {
+		vi.restoreAllMocks();
+	});
+
+	it('requires a non-empty admin token', async () => {
+		const result = await uploadExploreSnapshot('react', VALID_SNAPSHOT, '');
+		expect(result.ok).toBe(false);
+		if (!result.ok) {
+			expect(result.message).toContain('token');
+		}
+	});
+
+	it('sends POST with Bearer authorization header', async () => {
+		const fetchMock = vi.fn().mockResolvedValue(new Response('{}', { status: 200 }));
+		vi.stubGlobal('fetch', fetchMock);
+
+		const result = await uploadExploreSnapshot('react', VALID_SNAPSHOT, 'secret-token');
+		expect(result.ok).toBe(true);
+		expect(fetchMock).toHaveBeenCalledOnce();
+		const [url, init] = fetchMock.mock.calls[0];
+		expect(url).toContain('/explore/react');
+		expect(init.method).toBe('POST');
+		expect(init.headers.Authorization).toBe('Bearer secret-token');
+		expect(init.headers['Content-Type']).toBe('application/json');
+		expect(JSON.parse(init.body)).toEqual(VALID_SNAPSHOT);
+	});
+
+	it('returns HTTP error message on non-2xx response', async () => {
+		vi.stubGlobal(
+			'fetch',
+			vi
+				.fn()
+				.mockResolvedValue(
+					new Response('Unauthorized', { status: 401, statusText: 'Unauthorized' })
+				)
+		);
+		const result = await uploadExploreSnapshot('react', VALID_SNAPSHOT, 'bad-token');
+		expect(result.ok).toBe(false);
+		if (!result.ok) {
+			expect(result.message).toContain('401');
+		}
+	});
+
+	it('returns network error message on fetch rejection', async () => {
+		vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('DNS failure')));
+		const result = await uploadExploreSnapshot('react', VALID_SNAPSHOT, 'token');
+		expect(result.ok).toBe(false);
+		if (!result.ok) {
+			expect(result.message).toContain('DNS failure');
 		}
 	});
 });
@@ -270,7 +343,7 @@ describe('fetchExploreSnapshot', () => {
 describe('getCuratedManifest', () => {
 	it('loads bundled curated manifest with the seed entries', () => {
 		const m = getCuratedManifest();
-		expect(m.entries.length).toBeGreaterThanOrEqual(6);
+		expect(m.entries.length).toBeGreaterThanOrEqual(5);
 		// React must be present per the seed data
 		expect(m.entries.find((e) => e.slug === 'react')).toBeDefined();
 	});

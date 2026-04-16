@@ -13,14 +13,32 @@
 	import ExportController from './ExportController.svelte';
 	import SemanticNodeComponent from './nodes/SemanticNode.svelte';
 	import DrilldownConfirmModal from './DrilldownConfirmModal.svelte';
+	import ExploreDrilldownPromptDialog from './ExploreDrilldownPromptDialog.svelte';
 	import type { SemanticNode } from '$lib/types/semantic';
 
 	let drilldownConfirmOpen = $state(false);
 	let pendingDrilldownNode = $state<SemanticNode | null>(null);
+	let exploreDrilldownPromptOpen = $state(false);
+	let exploreDrilldownPromptLabel = $state('');
 
 	function requestDrilldown(semNode: SemanticNode) {
 		// U5-1: Cached nodes drill down immediately without confirmation
-		if (semanticStore.hasCachedLevel(semNode.id) || settingsStore.skipDrilldownConfirm) {
+		if (semanticStore.hasCachedLevel(semNode.id)) {
+			executeDrilldown(semNode);
+			return;
+		}
+
+		// ADR-19 follow-up: in snapshot read-only mode (share/explore viewers),
+		// do NOT trigger AI analysis for nodes missing from the curated snapshot.
+		// Instead, guide the visitor to the main app where they can load the
+		// original project themselves.
+		if (semanticStore.readOnlyMode === 'snapshot') {
+			exploreDrilldownPromptLabel = semNode.label;
+			exploreDrilldownPromptOpen = true;
+			return;
+		}
+
+		if (settingsStore.skipDrilldownConfirm) {
 			executeDrilldown(semNode);
 		} else {
 			pendingDrilldownNode = semNode;
@@ -256,6 +274,10 @@
 
 			// U5: Add cache status and reanalyze callback
 			const isCached = semanticStore.hasCachedLevel(n.id);
+			// ADR-19 follow-up: in snapshot read-only mode, nodes without a
+			// cached child level are "unavailable for deep dive" — mark them
+			// so the node component can render a muted/dashed state.
+			const snapshotUnavailable = semanticStore.readOnlyMode === 'snapshot' && !isCached;
 
 			// Always render as the standard SemanticNode — selection state is
 			// communicated via `highlighted` / `dimmed` / `selected` flags so
@@ -269,6 +291,7 @@
 					dimmed: !isSelected,
 					selected: isSelected,
 					isCached,
+					snapshotUnavailable,
 					nodeId: n.id,
 					onReanalyze: handleReanalyze
 				};
@@ -279,6 +302,7 @@
 					dimmed: false,
 					selected: false,
 					isCached,
+					snapshotUnavailable,
 					nodeId: n.id,
 					onReanalyze: handleReanalyze
 				};
@@ -635,6 +659,12 @@
 	nodeLabel={pendingDrilldownNode?.label ?? ''}
 	onconfirm={confirmDrilldown}
 	oncancel={cancelDrilldown}
+/>
+
+<ExploreDrilldownPromptDialog
+	open={exploreDrilldownPromptOpen}
+	nodeLabel={exploreDrilldownPromptLabel}
+	onclose={() => (exploreDrilldownPromptOpen = false)}
 />
 
 <style>
