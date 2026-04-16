@@ -218,4 +218,54 @@ describe('renderSemanticLevelSvg', () => {
 		// Should not throw — orphan edges silently dropped
 		expect(() => renderSemanticLevelSvg(lvl)).not.toThrow();
 	});
+
+	describe('edge label rendering guards', () => {
+		it('draws a translucent background rect behind the label for readability', () => {
+			const { svg } = renderSemanticLevelSvg(makeLevel());
+			// "token check" label exists on the sem:auth→sem:api edge
+			expect(svg).toContain('fill-opacity="0.85"');
+			expect(svg).toContain('token check');
+		});
+
+		it('truncates long edge labels to ~24 chars with an ellipsis', () => {
+			const lvl = makeLevel();
+			const longLabel = 'this is an overly verbose edge label that nobody wants to read';
+			lvl.edges[1].label = longLabel;
+			const { svg } = renderSemanticLevelSvg(lvl);
+			// Ellipsis character must appear in rendered output
+			expect(svg).toContain('…');
+			// Extract just the display text (between </title> and </text>),
+			// the full label legitimately lives inside <title> for the tooltip.
+			const displayMatch = svg.match(/<\/title>([^<]+)<\/text>/);
+			expect(displayMatch).not.toBeNull();
+			const displayed = displayMatch![1];
+			expect(displayed).not.toBe(longLabel);
+			expect(displayed.endsWith('…')).toBe(true);
+			expect(displayed.length).toBeLessThanOrEqual(24);
+		});
+
+		it('preserves the full label in a <title> tooltip when truncated', () => {
+			const lvl = makeLevel();
+			const longLabel = 'exactly twenty-five chars!!';
+			lvl.edges[1].label = longLabel;
+			const { svg } = renderSemanticLevelSvg(lvl);
+			expect(svg).toContain(`<title>${longLabel}</title>`);
+		});
+
+		it('omits <title> for labels under the truncation threshold', () => {
+			const lvl = makeLevel();
+			lvl.edges[1].label = 'short';
+			const { svg } = renderSemanticLevelSvg(lvl);
+			// Short label should not wrap itself in <title>
+			expect(svg).not.toContain('<title>short</title>');
+			expect(svg).toContain('>short</text>');
+		});
+
+		// Note: the renderer also skips labels when the edge path length is
+		// below MIN_PATH_FOR_LABEL (80px). Under dagre's LR layout with
+		// NODE_WIDTH=220 this guard is effectively defensive — even a
+		// self-loop produces a path ~220px long. We keep the guard but
+		// don't unit-test a near-zero-length path because the layout engine
+		// never produces one in practice.
+	});
 });

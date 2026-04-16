@@ -155,11 +155,36 @@ export function renderSemanticLevelSvg(
 			`<path d="M ${sx} ${sy} C ${cx1} ${sy}, ${cx2} ${ty}, ${tx} ${ty}" fill="none" stroke="${color}" stroke-width="2" marker-end="url(#arrow-${edge.type})" opacity="0.85"/>`
 		);
 		if (edge.label) {
-			const mx = (sx + tx) / 2;
-			const my = (sy + ty) / 2 - 6;
-			parts.push(
-				`<text x="${mx}" y="${my}" text-anchor="middle" font-size="11" fill="${color}" font-family="ui-sans-serif, system-ui, sans-serif">${escapeXml(edge.label)}</text>`
-			);
+			// Edge label rendering with three guards to prevent encroachment
+			// into adjacent node areas:
+			//   1. Skip labels on very short paths (< MIN_PATH_FOR_LABEL px) —
+			//      there's no room between source/target nodes anyway.
+			//   2. Truncate long labels to MAX_LABEL_CHARS with an ellipsis;
+			//      preserve full text in a <title> tooltip.
+			//   3. Draw a translucent background rect so the label stays
+			//      readable if it happens to overlap a node or another edge.
+			const pathDx = tx - sx;
+			const pathDy = ty - sy;
+			const pathLen = Math.sqrt(pathDx * pathDx + pathDy * pathDy);
+			const MIN_PATH_FOR_LABEL = 80;
+			if (pathLen >= MIN_PATH_FOR_LABEL) {
+				const MAX_LABEL_CHARS = 24;
+				const truncated =
+					edge.label.length > MAX_LABEL_CHARS
+						? edge.label.slice(0, MAX_LABEL_CHARS - 1) + '…'
+						: edge.label;
+				const mx = (sx + tx) / 2;
+				const my = (sy + ty) / 2 - 6;
+				// Approximate width: ~6.2px per char at font-size 11 + padding
+				const labelWidth = Math.ceil(truncated.length * 6.2) + 10;
+				const labelHeight = 14;
+				parts.push(
+					`<rect x="${mx - labelWidth / 2}" y="${my - labelHeight + 3}" width="${labelWidth}" height="${labelHeight}" rx="3" fill="${palette.nodeBg}" fill-opacity="0.85"/>`
+				);
+				const textOpen = `<text x="${mx}" y="${my}" text-anchor="middle" font-size="11" fill="${color}" font-family="ui-sans-serif, system-ui, sans-serif">`;
+				const titleTag = edge.label === truncated ? '' : `<title>${escapeXml(edge.label)}</title>`;
+				parts.push(`${textOpen}${titleTag}${escapeXml(truncated)}</text>`);
+			}
 		}
 	}
 
