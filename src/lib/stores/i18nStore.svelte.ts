@@ -228,7 +228,7 @@ const translations: Record<Locale, TranslationSet> = {
 		landing: {
 			headline: 'AI로 코드 구조를<br/><span class="headline-accent">시각화하세요</span>',
 			subheadline:
-				'AI가 코드베이스를 의미론적으로 분석하여 역할과 의존 관계를 다이어그램으로 즉시 시각화합니다. 로컬 폴더를 바로 열어 분석하며, 소스 코드 원문은 외부로 전송되지 않습니다.',
+				'AI 기반 시맨틱 아키텍처 다이어그램. 모두 브라우저에서. 소스 코드 업로드 없이 로컬 폴더를 즉시 로드합니다.',
 			cta: '폴더 열기',
 			dragHint: 'or drag & drop a folder here',
 			featureAiTitle: 'AI 의미론적 분석',
@@ -450,7 +450,7 @@ const translations: Record<Locale, TranslationSet> = {
 		landing: {
 			headline: 'Visualize code<br/><span class="headline-accent">architecture with AI</span>',
 			subheadline:
-				'AI semantically analyzes your codebase, instantly visualizing roles and dependencies as diagrams. Load local folders directly — source code never leaves your browser.',
+				'AI-powered semantic architecture diagrams. All in your browser. Load local folders instantly without uploading source code.',
 			cta: 'Open Folder',
 			dragHint: 'or drag & drop a folder here',
 			featureAiTitle: 'AI Semantic Analysis',

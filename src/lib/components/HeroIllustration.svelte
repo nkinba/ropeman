@@ -11,7 +11,7 @@
 	<!-- SVG edges (dashed, colored like ZUICanvas edges) -->
 	<svg class="hero-edges" viewBox="0 0 400 400" preserveAspectRatio="none">
 		<path
-			class="edge-glow"
+			class="edge-glow edge-flow"
 			d="M120 150 Q 200 100 280 150"
 			fill="none"
 			stroke="var(--accent-secondary, #53ddfc)"
@@ -20,6 +20,7 @@
 			opacity="0.6"
 		/>
 		<path
+			class="edge-flow edge-flow-slow"
 			d="M120 150 Q 200 250 280 250"
 			fill="none"
 			stroke="var(--accent, #a3a6ff)"
@@ -28,7 +29,7 @@
 			opacity="0.4"
 		/>
 		<path
-			class="edge-glow"
+			class="edge-glow edge-flow edge-flow-fast"
 			d="M280 150 Q 320 200 280 250"
 			fill="none"
 			stroke="var(--accent-secondary, #53ddfc)"
@@ -98,6 +99,24 @@
 		filter: drop-shadow(0 0 4px rgba(83, 221, 252, 0.3));
 	}
 
+	/* Flowing dash animation along each edge path */
+	.edge-flow {
+		animation: dash-flow 6s linear infinite;
+	}
+	.edge-flow-slow {
+		animation-duration: 9s;
+		animation-direction: reverse;
+	}
+	.edge-flow-fast {
+		animation-duration: 4s;
+	}
+
+	@keyframes dash-flow {
+		to {
+			stroke-dashoffset: -80;
+		}
+	}
+
 	.hero-pulse {
 		position: absolute;
 		top: 50%;
@@ -135,21 +154,35 @@
 		border-radius: 8px;
 		box-shadow: 0 24px 48px rgba(0, 0, 0, 0.5);
 		z-index: 2;
+		animation: hero-float 6s ease-in-out infinite;
+	}
+
+	@keyframes hero-float {
+		0%,
+		100% {
+			transform: translateY(0);
+		}
+		50% {
+			transform: translateY(-8px);
+		}
 	}
 
 	.pos-tl {
 		top: 120px;
 		left: 60px;
+		animation-delay: 0s;
 	}
 
 	.pos-tr {
 		top: 120px;
 		right: 40px;
+		animation-delay: 2s;
 	}
 
 	.pos-br {
 		bottom: 120px;
 		right: 60px;
+		animation-delay: 4s;
 	}
 
 	.node-bar {

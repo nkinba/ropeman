@@ -270,33 +270,6 @@
 							{i18nStore.t('landing.cta')}
 						</button>
 						<p class="drag-hint">{i18nStore.t('landing.dragHint')}</p>
-						<a class="explore-card" href={resolve('/explore')} data-tour-step="explore">
-							<div class="explore-card-accent"></div>
-							<div class="explore-card-inner">
-								<div class="explore-card-icon">
-									<span class="material-symbols-outlined">photo_library</span>
-								</div>
-								<div class="explore-card-text">
-									<span class="explore-card-eyebrow">
-										{i18nStore.locale === 'ko'
-											? '처음이신가요? 예시 둘러보기'
-											: 'New here? Browse examples'}
-									</span>
-									<h3 class="explore-card-title">
-										{i18nStore.locale === 'ko' ? '예시로 시작해보기' : 'Start with an example'}
-									</h3>
-									<p class="explore-card-sub">
-										{i18nStore.locale === 'ko'
-											? 'React, Tokio, Transformers의 AI 생성 아키텍처'
-											: 'AI-generated architectures of React, Tokio, Transformers'}
-									</p>
-								</div>
-								<div class="explore-card-cta">
-									EXPLORE GALLERY
-									<span class="material-symbols-outlined">arrow_forward</span>
-								</div>
-							</div>
-						</a>
 						<div class="github-input-section">
 							<p class="github-or">{i18nStore.t('landing.githubOr')}</p>
 							<div class="github-input-row">
@@ -322,6 +295,33 @@
 								</button>
 							</div>
 						</div>
+						<a class="explore-card" href={resolve('/explore')} data-tour-step="explore">
+							<div class="explore-card-accent"></div>
+							<div class="explore-card-inner">
+								<div class="explore-card-icon">
+									<span class="material-symbols-outlined">photo_library</span>
+								</div>
+								<div class="explore-card-text">
+									<span class="explore-card-eyebrow">
+										{i18nStore.locale === 'ko'
+											? '처음이신가요? 예시 둘러보기'
+											: 'New here? Browse examples'}
+									</span>
+									<h3 class="explore-card-title">
+										{i18nStore.locale === 'ko' ? '예시로 시작해보기' : 'Start with an example'}
+									</h3>
+									<!-- <p class="explore-card-sub">
+										{i18nStore.locale === 'ko'
+											? 'React, Tokio, Transformers의 AI 생성 아키텍처'
+											: 'AI-generated architectures of React, Tokio, Transformers'}
+									</p> -->
+								</div>
+								<div class="explore-card-cta">
+									EXPLORE GALLERY
+									<span class="material-symbols-outlined">arrow_forward</span>
+								</div>
+							</div>
+						</a>
 						<div class="hero-languages">
 							{#each languages as lang}
 								<span class="hero-lang" style="color: {lang.color}">
@@ -464,24 +464,14 @@
 
 	/* Landing layout */
 	.landing {
+		position: relative;
 		animation: fadeInUp 0.5s ease both;
 	}
 
-	.landing-hero {
-		position: relative;
-		display: grid;
-		grid-template-columns: 1.5fr 1fr;
-		gap: 64px;
-		align-items: center;
-		min-height: 500px;
-		padding: 64px 48px;
-		border-radius: 16px;
-		overflow: hidden;
-	}
-
-	/* Radial glow backdrop — Stitch Hero Redesign v2 */
-	.landing-hero::before,
-	.landing-hero::after {
+	/* Radial glow backdrop spans the whole landing, not just hero, so the
+	   hero section blends seamlessly with the page background (Stitch v2). */
+	.landing::before,
+	.landing::after {
 		content: '';
 		position: absolute;
 		pointer-events: none;
@@ -490,25 +480,35 @@
 		z-index: 0;
 	}
 
-	.landing-hero::before {
-		top: -10%;
+	.landing::before {
+		top: -5%;
 		left: -10%;
 		width: 500px;
 		height: 500px;
 		background: color-mix(in srgb, var(--accent, #a3a6ff) 5%, transparent);
 	}
 
-	.landing-hero::after {
-		bottom: -15%;
+	.landing::after {
+		top: 40%;
 		right: -15%;
 		width: 600px;
 		height: 600px;
 		background: color-mix(in srgb, var(--accent-secondary, #53ddfc) 5%, transparent);
 	}
 
-	.landing-hero > * {
+	.landing > * {
 		position: relative;
 		z-index: 1;
+	}
+
+	.landing-hero {
+		display: grid;
+		grid-template-columns: 1.5fr 1fr;
+		gap: 64px;
+		align-items: center;
+		min-height: 500px;
+		padding: 64px 48px;
+		background: transparent;
 	}
 
 	.hero-text h1 {
@@ -578,7 +578,7 @@
 	.explore-card {
 		position: relative;
 		display: block;
-		margin-top: 24px;
+		margin-top: 36px;
 		margin-left: 8px;
 		max-width: 640px;
 		background: var(--bg-tertiary, #1b2028);
@@ -703,7 +703,7 @@
 
 	/* GitHub URL input */
 	.github-input-section {
-		margin-top: 20px;
+		margin-top: 36px;
 	}
 
 	.github-or {
