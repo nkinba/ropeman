@@ -71,10 +71,13 @@
 	});
 
 	onDestroy(() => {
-		// Restore default mode so returning to the main app does not keep
-		// the gallery's "snapshot" guard applied.
-		semanticStore.readOnlyMode = 'none';
-		semanticStore.snapshotMeta = null;
+		// Full reset when leaving the gallery viewer so the main app lands
+		// clean — otherwise the header would keep the snapshot project name
+		// (e.g. "react") and the semantic cache would bleed into the next
+		// analysis. clear() also resets readOnlyMode/snapshotMeta.
+		semanticStore.clear();
+		projectStore.projectName = '';
+		projectStore.githubInfo = null;
 	});
 </script>
 

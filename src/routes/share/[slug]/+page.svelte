@@ -101,9 +101,13 @@
 	});
 
 	onDestroy(() => {
-		// Restore default mode when leaving the share viewer, so navigating
-		// back to the main app doesn't keep the "snapshot" guard applied.
-		semanticStore.readOnlyMode = 'none';
+		// Full reset when leaving the share viewer so the main app lands
+		// clean — otherwise the header would keep the shared project name
+		// and the semantic cache would bleed into the next analysis.
+		// clear() also resets readOnlyMode/snapshotMeta.
+		semanticStore.clear();
+		projectStore.projectName = '';
+		projectStore.githubInfo = null;
 	});
 </script>
 
