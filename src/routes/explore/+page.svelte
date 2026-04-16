@@ -34,8 +34,22 @@
 	<header class="explore-header">
 		<a href={resolve('/')} class="explore-logo">ROPEMAN</a>
 		<nav class="explore-nav">
-			<a href={resolve('/')}>{i18nStore.locale === 'ko' ? '홈' : 'Home'}</a>
-			<a href={resolve('/docs/en/getting-started')}>Docs</a>
+			<a
+				class="explore-nav-btn"
+				href={resolve('/')}
+				title={i18nStore.locale === 'ko' ? '홈' : 'Home'}
+				aria-label={i18nStore.locale === 'ko' ? '홈' : 'Home'}
+			>
+				<span class="material-symbols-outlined">home</span>
+			</a>
+			<a
+				class="explore-nav-btn"
+				href={resolve(`/docs/${i18nStore.locale}/getting-started`)}
+				title={i18nStore.t('docs.headerLink')}
+				aria-label="Docs"
+			>
+				<span class="material-symbols-outlined">menu_book</span>
+			</a>
 		</nav>
 	</header>
 
@@ -93,9 +107,6 @@
 						<h2 class="card-title">{entry.title}</h2>
 						<div class="card-repo">{entry.owner}/{entry.repo}</div>
 						<p class="card-desc">{entry.description}</p>
-						<div class="card-cta">
-							{i18nStore.locale === 'ko' ? '아키텍처 보기 →' : 'View architecture →'}
-						</div>
 					</a>
 				{/each}
 			{/if}
@@ -118,14 +129,19 @@
 		flex-direction: column;
 	}
 
+	/* Match Header.svelte spacing so gallery pages visually align with
+	   the rest of the app (padding 16px, header-left gap 32px). */
 	.explore-header {
 		display: flex;
 		align-items: center;
-		gap: 24px;
-		padding: 0 24px;
+		gap: 32px;
+		padding: 0 16px;
 		height: var(--header-height, 48px);
 		background: var(--sidebar-icon-bg, #0f141a);
 		border-bottom: 1px solid var(--ghost-border);
+		position: sticky;
+		top: 0;
+		z-index: 50;
 	}
 
 	.explore-logo {
@@ -140,18 +156,32 @@
 
 	.explore-nav {
 		display: flex;
-		gap: 16px;
+		align-items: center;
+		gap: 8px;
 		margin-left: auto;
 	}
 
-	.explore-nav a {
+	.explore-nav-btn {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 32px;
+		height: 32px;
+		padding: 4px;
+		border-radius: 4px;
 		color: var(--text-secondary);
 		text-decoration: none;
-		font-size: 13px;
-		transition: color 0.15s;
+		transition:
+			background-color 0.15s ease,
+			color 0.15s ease;
 	}
 
-	.explore-nav a:hover {
+	.explore-nav-btn .material-symbols-outlined {
+		font-size: 18px;
+	}
+
+	.explore-nav-btn:hover {
+		background: var(--bg-tertiary);
 		color: var(--text-primary);
 	}
 
