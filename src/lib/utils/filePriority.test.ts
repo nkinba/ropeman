@@ -132,4 +132,11 @@ describe('shouldSkipPath', () => {
 	it('does not skip .env as hidden', () => {
 		expect(shouldSkipPath('.env/something')).toBe(false);
 	});
+
+	it('skips root-level skip directories with trailing slash', () => {
+		expect(shouldSkipPath('tests/')).toBe(true);
+		expect(shouldSkipPath('examples/')).toBe(true);
+		expect(shouldSkipPath('docs/')).toBe(true);
+		expect(shouldSkipPath('.git/')).toBe(true);
+	});
 });

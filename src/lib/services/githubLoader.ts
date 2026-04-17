@@ -88,6 +88,7 @@ function buildFileTree(repoName: string, items: GitHubTreeItem[]): FileNode {
 	}
 
 	for (const item of items) {
+		// Trailing slash ensures shouldSkipPath checks the dir name itself (not just parents)
 		if (shouldSkipPath(item.path + '/')) continue;
 		if (item.type === 'tree') {
 			ensureDir(item.path);
