@@ -1,43 +1,6 @@
 import type { FileNode } from '$lib/types/fileTree';
 import { detectLanguage } from '$lib/utils/languageDetector';
-
-const DEFAULT_SKIP_PATTERNS = new Set([
-	'node_modules',
-	'.git',
-	'dist',
-	'build',
-	'__pycache__',
-	'.svelte-kit',
-	'.next',
-	'.nuxt',
-	'.venv',
-	'venv',
-	// Python ecosystem
-	'.tox',
-	'.mypy_cache',
-	'.pytest_cache',
-	'.ruff_cache',
-	'.eggs',
-	'*.egg-info',
-	// Large non-source directories
-	'tests',
-	'test',
-	'docs',
-	'doc',
-	'examples',
-	'benchmarks',
-	'benchmark',
-	'benchmark_v2',
-	'notebooks',
-	'fixtures',
-	'coverage',
-	'.coverage',
-	'htmlcov',
-	// Other
-	'.idea',
-	'.vscode',
-	'vendor',
-]);
+import { SKIP_DIRS } from '$lib/utils/filePriority';
 
 export async function openDirectory(): Promise<FileSystemDirectoryHandle> {
 	if (!('showDirectoryPicker' in window)) {
@@ -57,7 +20,7 @@ interface ScanContext {
 export async function readDirectoryRecursive(
 	dirHandle: FileSystemDirectoryHandle,
 	basePath = '',
-	skipPatterns = DEFAULT_SKIP_PATTERNS,
+	skipPatterns = SKIP_DIRS,
 	depth = 0,
 	ctx?: ScanContext
 ): Promise<FileNode> {
@@ -73,7 +36,7 @@ export async function readDirectoryRecursive(
 			path: basePath || dirHandle.name,
 			kind: 'directory',
 			children: [],
-			handle: dirHandle,
+			handle: dirHandle
 		};
 	}
 
@@ -103,7 +66,7 @@ export async function readDirectoryRecursive(
 				path: entryPath,
 				kind: 'file',
 				handle: entry as FileSystemFileHandle,
-				language: language ?? undefined,
+				language: language ?? undefined
 			});
 		}
 	}
@@ -119,13 +82,11 @@ export async function readDirectoryRecursive(
 		path: basePath || dirHandle.name,
 		kind: 'directory',
 		children,
-		handle: dirHandle,
+		handle: dirHandle
 	};
 }
 
-export async function readFileContent(
-	fileHandle: FileSystemFileHandle
-): Promise<string> {
+export async function readFileContent(fileHandle: FileSystemFileHandle): Promise<string> {
 	const file = await fileHandle.getFile();
 	return await file.text();
 }
@@ -135,7 +96,7 @@ export function handleFallbackInput(files: FileList): FileNode {
 		name: extractProjectName(files),
 		path: '',
 		kind: 'directory',
-		children: [],
+		children: []
 	};
 
 	const dirMap = new Map<string, FileNode>();
@@ -154,14 +115,14 @@ export function handleFallbackInput(files: FileList): FileNode {
 			const dirName = pathParts[i];
 			const dirPath = currentPath ? `${currentPath}/${dirName}` : dirName;
 
-			if (DEFAULT_SKIP_PATTERNS.has(dirName)) break;
+			if (SKIP_DIRS.has(dirName)) break;
 
 			if (!dirMap.has(dirPath)) {
 				const dirNode: FileNode = {
 					name: dirName,
 					path: dirPath,
 					kind: 'directory',
-					children: [],
+					children: []
 				};
 				dirMap.set(dirPath, dirNode);
 				parentNode.children!.push(dirNode);
@@ -173,7 +134,7 @@ export function handleFallbackInput(files: FileList): FileNode {
 
 		const fileName = pathParts[pathParts.length - 1];
 		// Check if any ancestor was skipped
-		if (pathParts.slice(0, -1).some((p) => DEFAULT_SKIP_PATTERNS.has(p))) continue;
+		if (pathParts.slice(0, -1).some((p) => SKIP_DIRS.has(p))) continue;
 
 		const filePath = currentPath ? `${currentPath}/${fileName}` : fileName;
 		const language = detectLanguage(fileName);
@@ -188,8 +149,8 @@ export function handleFallbackInput(files: FileList): FileNode {
 			handle: {
 				kind: 'file' as const,
 				name: fileName,
-				getFile: () => Promise.resolve(file),
-			} as unknown as FileSystemFileHandle,
+				getFile: () => Promise.resolve(file)
+			} as unknown as FileSystemFileHandle
 		});
 	}
 
