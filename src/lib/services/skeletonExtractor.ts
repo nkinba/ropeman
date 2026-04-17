@@ -45,18 +45,18 @@ const EXCLUDE_DIR_PATTERNS = [
 	/^notebooks?\//
 ];
 
-function filePriority(filePath: string): number {
-	// 제외 대상: 가장 낮은 우선순위
+function filePriority(filePath: string, projectName?: string): number {
+	let normalized = filePath;
+	if (projectName && normalized.startsWith(projectName + '/')) {
+		normalized = normalized.slice(projectName.length + 1);
+	}
 	for (const pat of EXCLUDE_DIR_PATTERNS) {
-		if (pat.test(filePath)) return 0;
+		if (pat.test(normalized)) return 0;
 	}
-	// 핵심 디렉토리: 높은 우선순위
 	for (const pat of CORE_DIR_PATTERNS) {
-		if (pat.test(filePath)) return 3;
+		if (pat.test(normalized)) return 3;
 	}
-	// 루트 파일 (setup.py, main.py 등): 중간
-	if (!filePath.includes('/')) return 2;
-	// 그 외
+	if (!normalized.includes('/')) return 2;
 	return 1;
 }
 
@@ -99,7 +99,7 @@ export function extractSkeleton(
 		if (symbols.length === 0 && imports.length === 0) continue;
 
 		const language = inferLanguage(filePath);
-		const priority = filePriority(filePath);
+		const priority = filePriority(filePath, projectName);
 		fileEntries.push({
 			path: filePath,
 			symbols,

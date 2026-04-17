@@ -511,9 +511,6 @@
 						<div class="split-drop-hint">Drop to split</div>
 					</div>
 				{/if}
-				{#if semanticStore.isAnalyzing}
-					<div class="canvas-dimming"></div>
-				{/if}
 				{#if layoutStore.isSplit && !isMobile}
 					<SplitPane
 						zuiCanvasBindPrimary={(ref) => {
@@ -671,14 +668,6 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		pointer-events: none;
-	}
-
-	.canvas-dimming {
-		position: absolute;
-		inset: 0;
-		background: rgba(10, 14, 20, 0.4);
-		z-index: 5;
 		pointer-events: none;
 	}
 

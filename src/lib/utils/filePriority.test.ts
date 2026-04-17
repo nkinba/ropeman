@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { pathPriority } from './filePriority';
+import { pathPriority, shouldSkipPath, SKIP_DIRS } from './filePriority';
 
 describe('pathPriority', () => {
 	describe('GitHub tree paths (no repo prefix)', () => {
@@ -74,5 +74,69 @@ describe('pathPriority', () => {
 			const sorted = [...paths].sort((a, b) => pathPriority(a) - pathPriority(b));
 			expect(sorted).toEqual(['src/core.ts', 'root.ts', 'scripts/a.ts', 'tests/a.ts']);
 		});
+	});
+});
+
+describe('SKIP_DIRS', () => {
+	it('contains expected directory names', () => {
+		expect(SKIP_DIRS.has('tests')).toBe(true);
+		expect(SKIP_DIRS.has('test')).toBe(true);
+		expect(SKIP_DIRS.has('examples')).toBe(true);
+		expect(SKIP_DIRS.has('docs')).toBe(true);
+		expect(SKIP_DIRS.has('node_modules')).toBe(true);
+		expect(SKIP_DIRS.has('.git')).toBe(true);
+		expect(SKIP_DIRS.has('vendor')).toBe(true);
+	});
+
+	it('does not contain source directories', () => {
+		expect(SKIP_DIRS.has('src')).toBe(false);
+		expect(SKIP_DIRS.has('lib')).toBe(false);
+		expect(SKIP_DIRS.has('app')).toBe(false);
+	});
+});
+
+describe('shouldSkipPath', () => {
+	it('skips paths with skip-dir segments', () => {
+		expect(shouldSkipPath('tests/foo.rs')).toBe(true);
+		expect(shouldSkipPath('tokio/tests/io_read.rs')).toBe(true);
+		expect(shouldSkipPath('examples/hello.rs')).toBe(true);
+		expect(shouldSkipPath('docs/guide.md')).toBe(true);
+		expect(shouldSkipPath('node_modules/pkg/index.js')).toBe(true);
+	});
+
+	it('skips hidden directories', () => {
+		expect(shouldSkipPath('.github/workflows/ci.yml')).toBe(true);
+		expect(shouldSkipPath('.vscode/settings.json')).toBe(true);
+	});
+
+	it('skips egg-info directories', () => {
+		expect(shouldSkipPath('my_pkg.egg-info/PKG-INFO')).toBe(true);
+	});
+
+	it('does not skip core source paths', () => {
+		expect(shouldSkipPath('src/main.rs')).toBe(false);
+		expect(shouldSkipPath('tokio/src/runtime/mod.rs')).toBe(false);
+		expect(shouldSkipPath('lib/utils.ts')).toBe(false);
+	});
+
+	it('does not skip root-level files', () => {
+		expect(shouldSkipPath('Cargo.toml')).toBe(false);
+		expect(shouldSkipPath('README.md')).toBe(false);
+	});
+
+	it('does not skip directories with hyphenated names containing skip words', () => {
+		expect(shouldSkipPath('tests-integration/tests_macro.rs')).toBe(false);
+		expect(shouldSkipPath('tests-build/pass/main.rs')).toBe(false);
+	});
+
+	it('does not skip .env as hidden', () => {
+		expect(shouldSkipPath('.env/something')).toBe(false);
+	});
+
+	it('skips root-level skip directories with trailing slash', () => {
+		expect(shouldSkipPath('tests/')).toBe(true);
+		expect(shouldSkipPath('examples/')).toBe(true);
+		expect(shouldSkipPath('docs/')).toBe(true);
+		expect(shouldSkipPath('.git/')).toBe(true);
 	});
 });

@@ -37,6 +37,7 @@
 	let expandedCard = $state<CardId | null>(null);
 	let showWebGPUSetup = $state(false);
 	let showPreview = $state(false);
+	let copyFeedback = $state(false);
 
 	// BYOK state
 	let selectedProvider = $state<AIProviderId>(settingsStore.aiProvider);
@@ -448,10 +449,27 @@
 				<!-- Payload Preview -->
 				{#if skeleton}
 					<div class="preview-section">
-						<button class="preview-toggle" onclick={() => (showPreview = !showPreview)}>
-							Payload preview
-							<span class="toggle-arrow" class:expanded={showPreview}>&#9656;</span>
-						</button>
+						<div class="preview-header">
+							<button class="preview-toggle" onclick={() => (showPreview = !showPreview)}>
+								Payload preview
+								<span class="toggle-arrow" class:expanded={showPreview}>&#9656;</span>
+							</button>
+							{#if showPreview}
+								<button
+									class="copy-json-btn"
+									onclick={async () => {
+										await navigator.clipboard.writeText(payloadPreview);
+										copyFeedback = true;
+										setTimeout(() => (copyFeedback = false), 1500);
+									}}
+									title="Copy JSON"
+								>
+									<span class="material-symbols-outlined"
+										>{copyFeedback ? 'check' : 'content_copy'}</span
+									>
+								</button>
+							{/if}
+						</div>
 						<div class="preview-meta">
 							{#if payloadSize}
 								<span class="meta-item">{payloadSize.formatted}</span>
@@ -639,6 +657,11 @@
 		margin-top: 4px;
 		padding-top: 10px;
 	}
+	.preview-header {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+	}
 	.preview-toggle {
 		display: flex;
 		align-items: center;
@@ -652,6 +675,23 @@
 	}
 	.preview-toggle:hover {
 		color: var(--text-primary);
+	}
+	.copy-json-btn {
+		display: flex;
+		align-items: center;
+		background: none;
+		border: none;
+		padding: 2px;
+		cursor: pointer;
+		color: var(--text-secondary);
+		border-radius: 4px;
+	}
+	.copy-json-btn:hover {
+		color: var(--text-primary);
+		background: var(--bg-secondary);
+	}
+	.copy-json-btn .material-symbols-outlined {
+		font-size: 14px;
 	}
 	.toggle-arrow {
 		font-size: 10px;

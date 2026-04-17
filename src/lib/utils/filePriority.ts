@@ -53,3 +53,75 @@ export const MAX_FILE_SIZE = 500_000; // 500KB
 
 /** Maximum file count safety cap. */
 export const MAX_FILES = 2000;
+
+/**
+ * Directory names to exclude from file collection.
+ * Shared by fileSystemService (local) and githubLoader (remote).
+ */
+export const SKIP_DIRS = new Set([
+	'node_modules',
+	'.git',
+	'dist',
+	'build',
+	'__pycache__',
+	'.svelte-kit',
+	'.next',
+	'.nuxt',
+	'.venv',
+	'venv',
+	'.tox',
+	'.mypy_cache',
+	'.pytest_cache',
+	'.ruff_cache',
+	'.eggs',
+	'tests',
+	'test',
+	'docs',
+	'doc',
+	'examples',
+	'benchmarks',
+	'benchmark',
+	'benchmark_v2',
+	'notebooks',
+	'fixtures',
+	'coverage',
+	'.coverage',
+	'htmlcov',
+	'.idea',
+	'.vscode',
+	'vendor'
+]);
+
+/**
+ * Sort FileNode children: directories first, then alphabetically.
+ * Recurses into all subdirectories.
+ */
+export function sortFileTree(root: import('$lib/types/fileTree').FileNode): void {
+	const stack = [root];
+	while (stack.length > 0) {
+		const node = stack.pop()!;
+		if (!node.children) continue;
+		node.children.sort((a, b) => {
+			if (a.kind !== b.kind) return a.kind === 'directory' ? -1 : 1;
+			return a.name.localeCompare(b.name);
+		});
+		for (const child of node.children) {
+			if (child.kind === 'directory') stack.push(child);
+		}
+	}
+}
+
+/**
+ * Check if a file path should be skipped based on directory skip patterns.
+ * Returns true if any path segment matches SKIP_DIRS or is hidden.
+ */
+export function shouldSkipPath(filePath: string): boolean {
+	const segments = filePath.split('/');
+	for (let i = 0; i < segments.length - 1; i++) {
+		const seg = segments[i];
+		if (SKIP_DIRS.has(seg)) return true;
+		if (seg.startsWith('.') && seg !== '.env') return true;
+		if (seg.endsWith('.egg-info')) return true;
+	}
+	return false;
+}

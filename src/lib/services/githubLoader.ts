@@ -4,7 +4,14 @@ import { detectLanguage, isSupported } from '$lib/utils/languageDetector';
 import { parseFile } from '$lib/services/parserService';
 import { projectStore } from '$lib/stores/projectStore.svelte';
 import { GITHUB_PROXY_URL } from '$lib/config';
-import { pathPriority, MAX_FILES, MAX_FILE_SIZE, MAX_TOTAL_SIZE } from '$lib/utils/filePriority';
+import {
+	pathPriority,
+	MAX_FILES,
+	MAX_FILE_SIZE,
+	MAX_TOTAL_SIZE,
+	shouldSkipPath,
+	sortFileTree
+} from '$lib/utils/filePriority';
 
 interface GitHubTreeItem {
 	path: string;
@@ -82,6 +89,8 @@ function buildFileTree(repoName: string, items: GitHubTreeItem[]): FileNode {
 	}
 
 	for (const item of items) {
+		// Trailing slash ensures shouldSkipPath checks the dir name itself (not just parents)
+		if (shouldSkipPath(item.path + '/')) continue;
 		if (item.type === 'tree') {
 			ensureDir(item.path);
 		} else if (item.type === 'blob') {
@@ -101,6 +110,7 @@ function buildFileTree(repoName: string, items: GitHubTreeItem[]): FileNode {
 		}
 	}
 
+	sortFileTree(root);
 	return root;
 }
 
@@ -112,6 +122,7 @@ function collectSupportedItems(items: GitHubTreeItem[]): GitHubTreeItem[] {
 		.filter(
 			(item) =>
 				item.type === 'blob' &&
+				!shouldSkipPath(item.path) &&
 				(item.size ?? 0) <= MAX_FILE_SIZE &&
 				detectLanguage(item.path) !== null &&
 				isSupported(detectLanguage(item.path)!)

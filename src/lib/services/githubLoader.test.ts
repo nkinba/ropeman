@@ -211,6 +211,121 @@ describe('loadGitHubRepo', () => {
 		expect(projectStore.astMap.has('repo/a.ts')).toBe(true);
 	});
 
+	it('excludes files in skip directories (tests, examples, docs, hidden)', async () => {
+		const skipTree = {
+			...mockTreeResponse,
+			tree: [
+				{ path: 'src', mode: '040000', type: 'tree' as const, sha: 'd1', url: '' },
+				{
+					path: 'src/main.ts',
+					mode: '100644',
+					type: 'blob' as const,
+					sha: 'f1',
+					url: '',
+					size: 100
+				},
+				{ path: 'tests', mode: '040000', type: 'tree' as const, sha: 'd2', url: '' },
+				{
+					path: 'tests/main.test.ts',
+					mode: '100644',
+					type: 'blob' as const,
+					sha: 'f2',
+					url: '',
+					size: 100
+				},
+				{ path: 'examples', mode: '040000', type: 'tree' as const, sha: 'd3', url: '' },
+				{
+					path: 'examples/demo.ts',
+					mode: '100644',
+					type: 'blob' as const,
+					sha: 'f3',
+					url: '',
+					size: 100
+				},
+				{ path: 'docs', mode: '040000', type: 'tree' as const, sha: 'd4', url: '' },
+				{
+					path: 'docs/guide.ts',
+					mode: '100644',
+					type: 'blob' as const,
+					sha: 'f4',
+					url: '',
+					size: 100
+				},
+				{ path: '.github', mode: '040000', type: 'tree' as const, sha: 'd5', url: '' },
+				{
+					path: '.github/ci.ts',
+					mode: '100644',
+					type: 'blob' as const,
+					sha: 'f5',
+					url: '',
+					size: 100
+				},
+				{
+					path: 'pkg/core.ts',
+					mode: '100644',
+					type: 'blob' as const,
+					sha: 'f6',
+					url: '',
+					size: 100
+				}
+			]
+		};
+
+		const fetchMock = vi.fn() as Mock;
+		fetchMock.mockResolvedValueOnce({ ok: true, json: async () => skipTree });
+		// Only 2 supported files should be downloaded: src/main.ts and pkg/core.ts
+		fetchMock.mockResolvedValue({ ok: true, text: async () => 'const x = 1;' });
+
+		vi.stubGlobal('fetch', fetchMock);
+
+		await loadGitHubRepo({ owner: 'owner', repo: 'repo' });
+
+		expect(projectStore.astMap.size).toBe(2);
+		expect(projectStore.astMap.has('repo/src/main.ts')).toBe(true);
+		expect(projectStore.astMap.has('repo/pkg/core.ts')).toBe(true);
+		expect(projectStore.astMap.has('repo/tests/main.test.ts')).toBe(false);
+		expect(projectStore.astMap.has('repo/examples/demo.ts')).toBe(false);
+		expect(projectStore.astMap.has('repo/docs/guide.ts')).toBe(false);
+		expect(projectStore.astMap.has('repo/.github/ci.ts')).toBe(false);
+
+		// File tree should also exclude skip directories
+		const topNames = projectStore.fileTree!.children!.map((c) => c.name);
+		expect(topNames).toContain('src');
+		expect(topNames).toContain('pkg');
+		expect(topNames).not.toContain('tests');
+		expect(topNames).not.toContain('examples');
+		expect(topNames).not.toContain('docs');
+		expect(topNames).not.toContain('.github');
+	});
+
+	it('keeps directories with hyphenated skip-word names (tests-integration)', async () => {
+		const hyphenTree = {
+			...mockTreeResponse,
+			tree: [
+				{ path: 'tests-integration', mode: '040000', type: 'tree' as const, sha: 'd1', url: '' },
+				{
+					path: 'tests-integration/macro.ts',
+					mode: '100644',
+					type: 'blob' as const,
+					sha: 'f1',
+					url: '',
+					size: 100
+				}
+			]
+		};
+
+		const fetchMock = vi.fn() as Mock;
+		fetchMock.mockResolvedValueOnce({ ok: true, json: async () => hyphenTree });
+		fetchMock.mockResolvedValue({ ok: true, text: async () => 'const x = 1;' });
+
+		vi.stubGlobal('fetch', fetchMock);
+
+		await loadGitHubRepo({ owner: 'owner', repo: 'repo' });
+
+		expect(projectStore.astMap.size).toBe(1);
+		expect(projectStore.astMap.has('repo/tests-integration/macro.ts')).toBe(true);
+	});
+
 	it('uses branch from info when provided', async () => {
 		const fetchMock = vi.fn() as Mock;
 		fetchMock.mockResolvedValueOnce({
