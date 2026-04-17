@@ -93,6 +93,25 @@ export const SKIP_DIRS = new Set([
 ]);
 
 /**
+ * Sort FileNode children: directories first, then alphabetically.
+ * Recurses into all subdirectories.
+ */
+export function sortFileTree(root: import('$lib/types/fileTree').FileNode): void {
+	const stack = [root];
+	while (stack.length > 0) {
+		const node = stack.pop()!;
+		if (!node.children) continue;
+		node.children.sort((a, b) => {
+			if (a.kind !== b.kind) return a.kind === 'directory' ? -1 : 1;
+			return a.name.localeCompare(b.name);
+		});
+		for (const child of node.children) {
+			if (child.kind === 'directory') stack.push(child);
+		}
+	}
+}
+
+/**
  * Check if a file path should be skipped based on directory skip patterns.
  * Returns true if any path segment matches SKIP_DIRS or is hidden.
  */

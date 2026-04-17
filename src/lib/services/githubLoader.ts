@@ -9,7 +9,8 @@ import {
 	MAX_FILES,
 	MAX_FILE_SIZE,
 	MAX_TOTAL_SIZE,
-	shouldSkipPath
+	shouldSkipPath,
+	sortFileTree
 } from '$lib/utils/filePriority';
 
 interface GitHubTreeItem {
@@ -109,6 +110,7 @@ function buildFileTree(repoName: string, items: GitHubTreeItem[]): FileNode {
 		}
 	}
 
+	sortFileTree(root);
 	return root;
 }
 

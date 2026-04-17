@@ -1,6 +1,6 @@
 import type { FileNode } from '$lib/types/fileTree';
 import { detectLanguage } from '$lib/utils/languageDetector';
-import { SKIP_DIRS } from '$lib/utils/filePriority';
+import { SKIP_DIRS, sortFileTree } from '$lib/utils/filePriority';
 
 export async function openDirectory(): Promise<FileSystemDirectoryHandle> {
 	if (!('showDirectoryPicker' in window)) {
@@ -71,19 +71,15 @@ export async function readDirectoryRecursive(
 		}
 	}
 
-	// Sort: directories first, then alphabetically
-	children.sort((a, b) => {
-		if (a.kind !== b.kind) return a.kind === 'directory' ? -1 : 1;
-		return a.name.localeCompare(b.name);
-	});
-
-	return {
+	const dirNode: FileNode = {
 		name: dirHandle.name,
 		path: basePath || dirHandle.name,
 		kind: 'directory',
 		children,
 		handle: dirHandle
 	};
+	if (depth === 0) sortFileTree(dirNode);
+	return dirNode;
 }
 
 export async function readFileContent(fileHandle: FileSystemFileHandle): Promise<string> {
@@ -154,8 +150,7 @@ export function handleFallbackInput(files: FileList): FileNode {
 		});
 	}
 
-	// Sort all directories recursively
-	sortTree(root);
+	sortFileTree(root);
 	return root;
 }
 
@@ -163,19 +158,4 @@ function extractProjectName(files: FileList): string {
 	if (files.length === 0) return 'project';
 	const first = files[0].webkitRelativePath;
 	return first.split('/')[0] || 'project';
-}
-
-function sortTree(root: FileNode) {
-	const stack: FileNode[] = [root];
-	while (stack.length > 0) {
-		const node = stack.pop()!;
-		if (!node.children) continue;
-		node.children.sort((a, b) => {
-			if (a.kind !== b.kind) return a.kind === 'directory' ? -1 : 1;
-			return a.name.localeCompare(b.name);
-		});
-		for (const child of node.children) {
-			if (child.kind === 'directory') stack.push(child);
-		}
-	}
 }
